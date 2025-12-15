@@ -35,7 +35,7 @@ import requests
 # =========================
 # Configure the slug here
 # =========================
-MARKET_SLUG = "payx-quarterly-earnings-nongaap-eps-12-18-2025-1pt23"
+MARKET_SLUG = "gis-quarterly-earnings-nongaap-eps-12-17-2025-1pt02"
 
 # =========================
 # Optional knobs
@@ -43,7 +43,7 @@ MARKET_SLUG = "payx-quarterly-earnings-nongaap-eps-12-18-2025-1pt23"
 INCLUDE_COMMENTS = False
 MAX_COMMENTS_TOTAL = 300  # can be big; increase if you really want "everything"
 
-INCLUDE_CLOB = True
+INCLUDE_CLOB = False
 INCLUDE_PRICE_HISTORY = False
 PRICE_HISTORY_INTERVAL = "1w"   # one of: 1m, 1w, 1d, 6h, 1h, max
 PRICE_HISTORY_FIDELITY = 15     # minutes per datapoint (smaller -> more points)
