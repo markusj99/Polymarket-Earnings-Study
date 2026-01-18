@@ -1,0 +1,22 @@
+# Core HTTP + CLI UX
+requests>=2.31,<3
+tqdm>=4.66,<5
+
+# Data wrangling / statistics (thesis analysis & backtests)
+numpy>=1.26,<3
+pandas>=2.2,<3
+scipy>=1.11,<2
+statsmodels>=0.14,<1
+matplotlib>=3.8,<4
+
+# Configuration + robustness
+python-dotenv>=1.0,<2
+tenacity>=8.2,<9
+
+# Websocket / async
+aiohttp>=3.9,<4
+websockets>=12,<14
+websocket-client>=1.7,<2
+
+# Optional: alternative Gamma SDK
+polymarket-gamma>=0.1.2,<0.2
