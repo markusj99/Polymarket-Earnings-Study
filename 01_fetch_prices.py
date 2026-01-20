@@ -1,184 +1,127 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 """
+01_fetch_prices.py
+
 Polymarket Earnings — Historical Snapshot Prices (YES + NO)
 
 What this script does
 ---------------------
-Given an input JSONL of *resolved* (closed) earnings markets (one JSON object per line),
-this script:
+For each Polymarket orderbook market in an input JSONL file, this script fetches
+historical price series for the YES and NO outcome tokens from the Polymarket
+CLOB API and produces snapshot prices at fixed offsets before an anchor time.
 
-1) For each market ID, fetches the full market detail from the Gamma API
-   to obtain the YES/NO CLOB token IDs.
-
-2) For each token (YES and NO), fetches historical prices from the CLOB API
-   using /prices-history.
-
-3) For each market, computes a set of “snapshot” prices at fixed offsets
-   before the market endDate (e.g., 1d before, 12h before, etc.),
-   taking the last known price at or before each target timestamp.
-
-4) Writes:
-   - historical_prices.jsonl: one output record per market (successful markets only)
-   - failed_markets.jsonl: only “hard failures” where we could not obtain any snapshot price
-     (across YES and NO) for the market.
-   - summary.txt: a human-readable summary of what happened.
-
-Important behavior / definitions
---------------------------------
-- “Success”:
-    A market is considered successful if at least ONE snapshot price exists
-    on either YES or NO side.
-
-- “Hard failure”:
-    A market is considered failed ONLY if:
-      - we could fetch detail & history successfully, but NONE of the snapshot
-        timestamps had prices on either side, OR
-      - we couldn’t fetch required IDs/history at all.
-
-- Fidelity:
-    CLOB /prices-history supports a “fidelity” parameter (minutes). Lower is more granular.
-    Resolved markets sometimes return empty history for small fidelity values, so we retry with
-    a coarser fidelity (default 12h).
-
-Progress / UX
--------------
-This version uses tqdm progress bars for:
-- Processing markets concurrently (completed / total)
-It also uses tqdm.write() for log lines so they don't break the progress bar.
-
-Requirements
+Key behavior
 ------------
-pip install requests tqdm
+- Snapshot anchor uses the **OBSERVED market end** = last timestamp found in
+  YES/NO history (instead of relying solely on Gamma endDate).
+- Snapshot targets are (observed_end_ts - offset_seconds).
+- Snapshot price is the last price with ts <= target_ts.
+- Complement check flags labels where |YES + NO - 1| > tolerance.
+
+Outputs
+-------
+- historical_prices.jsonl   (success records)
+- failed_markets.jsonl      (failure records)
+- summary.txt               (human-readable run summary)
+
+Notes for thesis/review
+-----------------------
+- Per-market outputs are JSONL (machine-readable).
+- Summary remains TXT (human-readable).
+- All timestamps in JSON outputs are UTC. Optional local debug fields are off by default.
+
 """
 
 from __future__ import annotations
 
+import argparse
 import json
+import os
+import random
 import time
 from bisect import bisect_right
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import requests
-from tqdm import tqdm  # NEW
+from tqdm import tqdm
 
-# =========================
-# TEST MODE
-# =========================
-TEST = False
-TEST_MAX_MARKETS = 15  # only used if TEST=True
-
-# =========================
-# CONFIG
-# =========================
-MAX_WORKERS = 10
-HTTP_TIMEOUT = 25
-RETRIES = 3
-RETRY_SLEEP_S = 0.8
-
-# Price history resolution in minutes (fine granularity attempt)
-PRICE_FIDELITY_MIN = 5
-
-# For resolved/closed markets, /prices-history can return [] for small fidelity.
-# Retry at 12h to get *some* history.
-MIN_FIDELITY_CLOSED_MIN = 60 * 12  # 720 minutes
-
-# Extra lookback padding before earliest snapshot (helps ensure we have history points)
-BUFFER_SECONDS = 2 * 3600
-
-# YES+NO complement tolerance:
-# If YES and NO are both present at a snapshot, we check y+n ~= 1.
-COMPLEMENT_TOLERANCE = 0.05
-
-# APIs
-GAMMA = "https://gamma-api.polymarket.com"
-CLOB = "https://clob.polymarket.com"
-
-HEADERS = {
-    "Accept": "application/json",
-    "User-Agent": "polymarket-historical-prices/1.6",
-}
-
-# =========================
-# Paths
-# =========================
-SCRIPT_DIR = Path(__file__).resolve().parent
-
-# Prefer your Windows data location if it exists, otherwise fall back to ./data next to the script.
-WIN_DATA_ROOT = Path(r"C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data")
-DATA_DIR = WIN_DATA_ROOT if WIN_DATA_ROOT.exists() else (SCRIPT_DIR / "data")
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-
-# Input file: output from the market-fetcher script
-INPUT_DIR = DATA_DIR / "markets"
-INPUT_DIR.mkdir(parents=True, exist_ok=True)
-IN_RESOLVED_JSONL = INPUT_DIR / "markets.jsonl"
-
-# Output directory for prices
-OUT_DIR = DATA_DIR / "prices"
-OUT_DIR.mkdir(parents=True, exist_ok=True)
-
-OUT_PRICES_JSONL = OUT_DIR / "historical_prices.jsonl"
-OUT_FAILED_JSONL = OUT_DIR / "failed_markets.jsonl"
-OUT_SUMMARY_TXT = OUT_DIR / "summary.txt"
-
-# =========================
-# Snapshot spec
-# =========================
-# Each tuple is: (label, seconds_before_endDate)
+# -------------------------
+# Snapshot spec (fixed)
+# -------------------------
 SNAPSHOTS: List[Tuple[str, int]] = [
     ("4w", 4 * 7 * 24 * 3600),
     ("3w", 3 * 7 * 24 * 3600),
     ("2w", 2 * 7 * 24 * 3600),
     ("1w", 1 * 7 * 24 * 3600),
-    ("7d", 7 * 24 * 3600),
     ("6d", 6 * 24 * 3600),
     ("5d", 5 * 24 * 3600),
     ("4d", 4 * 24 * 3600),
     ("3d", 3 * 24 * 3600),
     ("2d", 2 * 24 * 3600),
     ("1d", 1 * 24 * 3600),
-    ("24h", 24 * 3600),
     ("12h", 12 * 3600),
     ("6h", 6 * 3600),
 ]
 MAX_OFFSET_SECONDS = max(s for _, s in SNAPSHOTS)
 
-# =========================
-# Helpers (I/O, parsing, HTTP)
-# =========================
-def log(msg: str) -> None:
-    """
-    Logging helper. Uses tqdm.write() to avoid breaking progress bars.
-    """
-    ts = datetime.now().strftime("%H:%M:%S")
-    tqdm.write(f"[{ts}] {msg}")
 
-def atomic_write_text(path: Path, text: str) -> None:
+# -------------------------
+# Config
+# -------------------------
+@dataclass(frozen=True)
+class Config:
+    gamma_base: str
+    clob_base: str
+
+    max_workers: int
+    http_timeout: float
+    retries: int
+    retry_sleep_s: float
+
+    price_fidelity_min: int
+    min_fidelity_closed_min: int
+    buffer_seconds: int
+
+    complement_tolerance: float
+
+    include_local_debug_fields: bool
+    local_tz_name: str
+
+    test_mode: bool
+    test_max_markets: int
+
+    user_agent: str
+
+
+# -------------------------
+# Timezone helpers
+# -------------------------
+def _get_zoneinfo(name: str):
     """
-    Writes a file atomically:
-      - write to temp file
-      - rename/replace to target
-    This prevents partially-written outputs if the script is interrupted.
+    Return ZoneInfo(name) if available (py3.9+), else None.
     """
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(text, encoding="utf-8")
-    tmp.replace(path)
+    try:
+        from zoneinfo import ZoneInfo  # py3.9+
+        return ZoneInfo(name)
+    except Exception:
+        return None
+
 
 def parse_iso_dt(s: Any) -> Optional[datetime]:
     """
-    Parse ISO datetime strings (with 'Z' supported) into UTC datetime objects.
+    Parse an ISO-8601 string into an aware UTC datetime.
     Returns None on failure.
     """
     if not s or not isinstance(s, str):
         return None
     try:
-        ss = s.replace("Z", "+00:00")
+        ss = s.strip().replace("Z", "+00:00")
         dt = datetime.fromisoformat(ss)
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
@@ -186,110 +129,47 @@ def parse_iso_dt(s: Any) -> Optional[datetime]:
     except Exception:
         return None
 
-def fmt_dt(dt: Optional[datetime]) -> str:
-    """
-    Format datetime in UTC for summaries/logs.
-    """
+
+def fmt_dt_utc(dt: Optional[datetime]) -> str:
     if dt is None:
         return "N/A"
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
 
-def parse_json_list_maybe(v: Any) -> Optional[List[Any]]:
-    """
-    Some Gamma fields are lists, but occasionally appear as JSON-encoded strings.
-    This helper accepts:
-      - a list -> returns as-is
-      - a "[...]" string -> json.loads(...) -> list
-      - else -> None
-    """
-    if v is None:
+
+def ts_to_dt(ts: Optional[int]) -> Optional[datetime]:
+    if ts is None:
         return None
-    if isinstance(v, list):
-        return v
-    if isinstance(v, str):
-        s = v.strip()
-        if s.startswith("[") and s.endswith("]"):
-            try:
-                out = json.loads(s)
-                return out if isinstance(out, list) else None
-            except Exception:
-                return None
-    return None
+    return datetime.fromtimestamp(int(ts), tz=timezone.utc)
 
-def _request_json(
-    method: str,
-    url: str,
-    params: Optional[Dict[str, Any]] = None
-) -> Tuple[Optional[Any], Optional[Dict[str, Any]]]:
+
+# -------------------------
+# File helpers (atomic)
+# -------------------------
+def atomic_write_jsonl(path: Path, rows: Iterable[Dict[str, Any]]) -> None:
     """
-    Make an HTTP request with retries and return (payload, error).
-
-    - On success (HTTP 2xx): returns (parsed_json_or_text, None)
-    - On failure: returns (None, error_dict)
-
-    Retries on:
-      - HTTP 429, 500, 502, 503, 504
-      - network exceptions
-
-    Note:
-      This function does NOT raise; it returns structured errors.
+    Atomically write JSONL to `path` by streaming into a temp file then replacing.
     """
-    last_err: Optional[Dict[str, Any]] = None
-    for attempt in range(RETRIES + 1):
-        try:
-            resp = requests.request(
-                method=method.upper(),
-                url=url,
-                params=params,
-                headers=HEADERS,
-                timeout=HTTP_TIMEOUT,
-            )
-            try:
-                payload = resp.json()
-            except Exception:
-                payload = resp.text
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with tmp.open("w", encoding="utf-8", newline="\n") as f:
+        for r in rows:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    os.replace(tmp, path)
 
-            if 200 <= resp.status_code < 300:
-                return payload, None
 
-            last_err = {
-                "status_code": resp.status_code,
-                "url": url,
-                "params": params,
-                "response": payload if isinstance(payload, (dict, list)) else str(payload)[:1200],
-            }
-
-            if resp.status_code in (429, 500, 502, 503, 504) and attempt < RETRIES:
-                time.sleep(RETRY_SLEEP_S * (attempt + 1))
-                continue
-
-            return None, last_err
-
-        except Exception as e:
-            last_err = {"status_code": None, "url": url, "params": params, "exception": repr(e)}
-            if attempt < RETRIES:
-                time.sleep(RETRY_SLEEP_S * (attempt + 1))
-                continue
-            return None, last_err
-
-    return None, last_err
-
-def gamma_get(path: str, params: Optional[Dict[str, Any]] = None) -> Tuple[Optional[Any], Optional[Dict[str, Any]]]:
+def atomic_write_text(path: Path, text: str) -> None:
     """
-    Convenience wrapper for Gamma API GET.
+    Atomically write text to `path` (UTF-8).
     """
-    return _request_json("GET", f"{GAMMA}{path}", params=params)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(text, encoding="utf-8")
+    os.replace(tmp, path)
 
-def clob_get(path: str, params: Optional[Dict[str, Any]] = None) -> Tuple[Optional[Any], Optional[Dict[str, Any]]]:
-    """
-    Convenience wrapper for CLOB API GET.
-    """
-    return _request_json("GET", f"{CLOB}{path}", params=params)
 
 def load_jsonl(path: Path) -> List[Dict[str, Any]]:
     """
-    Load a JSONL file of dicts (one JSON object per line).
-    Invalid lines are skipped.
+    Load a JSONL file into a list of dicts (skips invalid lines).
     """
     if not path.exists():
         raise FileNotFoundError(f"Missing input JSONL: {path}")
@@ -307,87 +187,263 @@ def load_jsonl(path: Path) -> List[Dict[str, Any]]:
                 continue
     return out
 
+
+# -------------------------
+# HTTP helpers
+# -------------------------
+def _preview_payload(payload: Any, limit: int = 1200) -> Any:
+    if isinstance(payload, (dict, list)):
+        return payload
+    s = str(payload)
+    return s[:limit]
+
+
+def _request_json(
+    method: str,
+    url: str,
+    params: Optional[Dict[str, Any]],
+    headers: Dict[str, str],
+    timeout: float,
+    retries: int,
+    retry_sleep_s: float,
+) -> Tuple[Optional[Any], Optional[Dict[str, Any]]]:
+    """
+    Make an HTTP request and parse JSON when possible.
+
+    Retries on:
+      - 429, 500, 502, 503, 504
+      - network exceptions
+
+    Returns: (payload, error_dict)
+    """
+    last_err: Optional[Dict[str, Any]] = None
+
+    for attempt in range(retries + 1):
+        try:
+            resp = requests.request(
+                method=method.upper(),
+                url=url,
+                params=params,
+                headers=headers,
+                timeout=timeout,
+            )
+
+            try:
+                payload = resp.json()
+            except Exception:
+                payload = resp.text
+
+            if 200 <= resp.status_code < 300:
+                return payload, None
+
+            last_err = {
+                "status_code": resp.status_code,
+                "url": url,
+                "params": params,
+                "response": _preview_payload(payload),
+            }
+
+            if resp.status_code in (429, 500, 502, 503, 504) and attempt < retries:
+                # exponential backoff with jitter
+                sleep_s = retry_sleep_s * (2 ** attempt) * (0.8 + 0.4 * random.random())
+                time.sleep(sleep_s)
+                continue
+
+            return None, last_err
+
+        except Exception as e:
+            last_err = {"status_code": None, "url": url, "params": params, "exception": repr(e)}
+            if attempt < retries:
+                sleep_s = retry_sleep_s * (2 ** attempt) * (0.8 + 0.4 * random.random())
+                time.sleep(sleep_s)
+                continue
+            return None, last_err
+
+    return None, last_err
+
+
+def gamma_get(cfg: Config, path: str, params: Optional[Dict[str, Any]] = None) -> Tuple[Optional[Any], Optional[Dict[str, Any]]]:
+    headers = {"Accept": "application/json", "User-Agent": cfg.user_agent}
+    return _request_json("GET", f"{cfg.gamma_base}{path}", params, headers, cfg.http_timeout, cfg.retries, cfg.retry_sleep_s)
+
+
+def clob_get(cfg: Config, path: str, params: Optional[Dict[str, Any]] = None) -> Tuple[Optional[Any], Optional[Dict[str, Any]]]:
+    headers = {"Accept": "application/json", "User-Agent": cfg.user_agent}
+    return _request_json("GET", f"{cfg.clob_base}{path}", params, headers, cfg.http_timeout, cfg.retries, cfg.retry_sleep_s)
+
+
+# -------------------------
+# Polymarket parsing helpers
+# -------------------------
+def parse_json_list_maybe(v: Any) -> Optional[List[Any]]:
+    """
+    Gamma sometimes returns JSON-encoded lists as strings; accept both.
+    """
+    if v is None:
+        return None
+    if isinstance(v, list):
+        return v
+    if isinstance(v, str):
+        s = v.strip()
+        if s.startswith("[") and s.endswith("]"):
+            try:
+                out = json.loads(s)
+                return out if isinstance(out, list) else None
+            except Exception:
+                return None
+    return None
+
+
 def get_yes_no_token_ids(detail: Dict[str, Any]) -> Tuple[Optional[str], Optional[str]]:
     """
-    From a Gamma market detail payload, locate YES/NO token IDs
-    using outcomes[] alignment with clobTokenIds[].
-
-    Returns: (yes_token_id, no_token_id)
+    From Gamma market detail, identify YES and NO clob token IDs.
+    Returns (yes_id, no_id) or (None, None) if missing.
     """
     outcomes = parse_json_list_maybe(detail.get("outcomes")) or []
     token_ids = parse_json_list_maybe(detail.get("clobTokenIds")) or []
 
-    if not isinstance(outcomes, list) or not isinstance(token_ids, list):
-        return None, None
     if len(outcomes) < 2 or len(token_ids) < 2:
         return None, None
 
     outs_lower = [str(x).strip().lower() for x in outcomes]
-
     yes_id = None
     no_id = None
 
     if "yes" in outs_lower:
         i = outs_lower.index("yes")
-        try:
-            yes_id = str(token_ids[i]).strip() if token_ids[i] is not None else None
-        except Exception:
-            yes_id = None
+        yes_id = str(token_ids[i]).strip() if token_ids[i] is not None else None
 
     if "no" in outs_lower:
         i = outs_lower.index("no")
-        try:
-            no_id = str(token_ids[i]).strip() if token_ids[i] is not None else None
-        except Exception:
-            no_id = None
+        no_id = str(token_ids[i]).strip() if token_ids[i] is not None else None
 
     return yes_id, no_id
 
-def clamp_start_ts(end_ts: int, created_ts: Optional[int]) -> int:
+
+def _normalize_epoch_seconds(t_raw: int) -> int:
     """
-    Choose the start timestamp for prices-history:
-    - we need history far enough back to cover the largest snapshot offset
-    - we add an additional BUFFER_SECONDS cushion
-    - we don't want to query before market creation time (if known)
+    CLOB sometimes returns ms timestamps; normalize to seconds.
     """
-    start_ts = end_ts - MAX_OFFSET_SECONDS - BUFFER_SECONDS
+    if t_raw > 10_000_000_000:  # very likely milliseconds
+        return int(t_raw // 1000)
+    return int(t_raw)
+
+
+def build_series(history: List[Dict[str, Any]]) -> Tuple[List[int], List[float]]:
+    """
+    Convert CLOB history points into sorted (ts_list, p_list).
+    Each point is expected to have:
+      - t (epoch seconds or ms)
+      - p (price)
+    """
+    pairs: List[Tuple[int, float]] = []
+    for pt in history:
+        try:
+            t = _normalize_epoch_seconds(int(pt.get("t")))
+            p = float(pt.get("p"))
+            pairs.append((t, p))
+        except Exception:
+            continue
+
+    if not pairs:
+        return [], []
+    pairs.sort(key=lambda x: x[0])
+    return [t for t, _ in pairs], [p for _, p in pairs]
+
+
+def pick_price_from_series(ts_list: List[int], p_list: List[float], target_ts: int) -> Tuple[Optional[float], Optional[int]]:
+    """
+    Return the last price with ts <= target_ts (right-continuous step series).
+    """
+    if not ts_list:
+        return None, None
+    idx = bisect_right(ts_list, int(target_ts)) - 1
+    if idx < 0:
+        return None, None
+    return p_list[idx], ts_list[idx]
+
+
+def any_price_present(prices: Dict[str, Optional[float]]) -> bool:
+    return any(v is not None for v in prices.values())
+
+
+def choose_query_end_ts(input_market: Dict[str, Any], gamma_detail: Dict[str, Any]) -> Optional[int]:
+    """
+    Choose a conservative end timestamp (UTC epoch seconds) for querying CLOB history.
+
+    We prefer the *latest* timestamp among known close/resolution/end fields to reduce the
+    risk of querying too early and missing late trading.
+
+    Returns None if no timestamps are available.
+    """
+    candidates: List[datetime] = []
+
+    # From input JSONL
+    candidates += [
+        parse_iso_dt(input_market.get("endDate")),
+        parse_iso_dt(input_market.get("closedTime")),
+        parse_iso_dt(input_market.get("resolvedTime")),
+        parse_iso_dt(input_market.get("resolutionTime")),
+    ]
+
+    # From Gamma detail (field names vary across datasets)
+    for k in ("endDate", "closedTime", "resolvedTime", "resolutionTime", "resolveTime", "end_time", "closeTime"):
+        candidates.append(parse_iso_dt(gamma_detail.get(k)))
+
+    dts = [d for d in candidates if d is not None]
+    if not dts:
+        return None
+    return int(max(dts).timestamp())
+
+
+def choose_created_ts(input_market: Dict[str, Any], gamma_detail: Dict[str, Any]) -> Optional[int]:
+    """
+    Choose an approximate created timestamp (UTC epoch seconds), if available.
+    """
+    candidates: List[datetime] = []
+    candidates += [parse_iso_dt(input_market.get("createdAt")), parse_iso_dt(input_market.get("createdDate"))]
+    for k in ("createdAt", "createdDate", "created_time"):
+        candidates.append(parse_iso_dt(gamma_detail.get(k)))
+    dts = [d for d in candidates if d is not None]
+    if not dts:
+        return None
+    return int(min(dts).timestamp())
+
+
+def clamp_start_ts(end_ts: int, created_ts: Optional[int], buffer_seconds: int) -> int:
+    """
+    Compute a start_ts that covers all snapshot offsets (max offset + buffer)
+    while not going before market creation time (when available).
+    """
+    start_ts = end_ts - MAX_OFFSET_SECONDS - buffer_seconds
     if created_ts is not None:
         start_ts = max(start_ts, created_ts)
     return max(0, start_ts)
 
-def _normalize_epoch_seconds(t_raw: int) -> int:
-    """
-    Defensive conversion:
-    - If timestamps are accidentally returned in milliseconds, convert to seconds.
-    """
-    if t_raw > 10_000_000_000:
-        return int(t_raw // 1000)
-    return int(t_raw)
 
 def fetch_prices_history_token(
+    cfg: Config,
     token_id: str,
-    start_ts: int,
-    end_ts: int
+    start_ts: Optional[int],
+    end_ts: Optional[int],
 ) -> Tuple[Optional[List[Dict[str, Any]]], Optional[Dict[str, Any]]]:
     """
-    Fetch price history for a token via CLOB /prices-history.
-
-    Returns (history_list, error_dict).
-
-    Behavior:
-    - If endpoint returns {"history": []}, that is considered valid -> returns ([], None)
-    - error_dict is only returned when all attempts fail at HTTP/payload level.
+    Fetch price history for a CLOB token.
 
     Strategy:
-    - Try range with fidelity=PRICE_FIDELITY_MIN
-    - If empty, try range with fidelity=MIN_FIDELITY_CLOSED_MIN
-    - Then same with interval=max
-    - Then try without specifying fidelity (some backends differ)
+      1) Try range query (startTs/endTs) at fidelity_min, then fallback fidelity_closed
+      2) Try interval=max at fidelity_min, then fallback fidelity_closed
+      3) Try range without fidelity
+      4) Try interval=max without fidelity
+
+    Returns:
+      - (history_list, None) on success (history may be empty list)
+      - (None, error_dict) on hard failure
     """
     attempts: List[Dict[str, Any]] = []
 
     def try_call(params: Dict[str, Any], tag: str) -> Tuple[Optional[List[Dict[str, Any]]], Optional[Dict[str, Any]]]:
-        payload, err = clob_get("/prices-history", params=params)
+        payload, err = clob_get(cfg, "/prices-history", params=params)
         rec: Dict[str, Any] = {"tag": tag, "params": params, "err": err}
         if isinstance(payload, dict) and isinstance(payload.get("history"), list):
             rec["history_len"] = len(payload["history"])
@@ -395,142 +451,84 @@ def fetch_prices_history_token(
             return payload["history"], None
         rec["payload_type"] = type(payload).__name__ if payload is not None else None
         attempts.append(rec)
-        return None, err or {"error": "unexpected_payload", "payload_preview": str(payload)[:500]}
+        return None, err or {"error": "unexpected_payload", "payload_preview": _preview_payload(payload, 500)}
 
-    fids: List[int] = [int(PRICE_FIDELITY_MIN)]
-    if PRICE_FIDELITY_MIN < MIN_FIDELITY_CLOSED_MIN:
-        fids.append(int(MIN_FIDELITY_CLOSED_MIN))
+    fids: List[int] = [int(cfg.price_fidelity_min)]
+    if cfg.price_fidelity_min < cfg.min_fidelity_closed_min:
+        fids.append(int(cfg.min_fidelity_closed_min))
 
     last_http_err: Optional[Dict[str, Any]] = None
 
-    # 1) range with fidelity
+    # Range queries (only if we have start/end)
+    if start_ts is not None and end_ts is not None:
+        for fid in fids:
+            hist, e = try_call(
+                {"market": token_id, "startTs": int(start_ts), "endTs": int(end_ts), "fidelity": int(fid)},
+                f"range_fid_{fid}",
+            )
+            if e is not None:
+                last_http_err = e
+                continue
+            if hist is not None and len(hist) > 0:
+                return hist, None
+
+    # interval=max
     for fid in fids:
-        hist, e = try_call(
-            {"market": token_id, "startTs": int(start_ts), "endTs": int(end_ts), "fidelity": int(fid)},
-            f"range_fid_{fid}",
-        )
+        hist, e = try_call({"market": token_id, "interval": "max", "fidelity": int(fid)}, f"max_fid_{fid}")
         if e is not None:
             last_http_err = e
             continue
         if hist is not None and len(hist) > 0:
             return hist, None
 
-    # 2) max interval with fidelity
-    for fid in fids:
-        hist, e = try_call(
-            {"market": token_id, "interval": "max", "fidelity": int(fid)},
-            f"max_fid_{fid}",
-        )
-        if e is not None:
-            last_http_err = e
-            continue
-        if hist is not None and len(hist) > 0:
-            return hist, None
+    # Range without fidelity (if possible)
+    if start_ts is not None and end_ts is not None:
+        hist3, e3 = try_call({"market": token_id, "startTs": int(start_ts), "endTs": int(end_ts)}, "range_no_fid")
+        if e3 is None and hist3 is not None and len(hist3) > 0:
+            return hist3, None
 
-    # 3) range without fidelity
-    hist3, e3 = try_call({"market": token_id, "startTs": int(start_ts), "endTs": int(end_ts)}, "range_no_fid")
-    if e3 is None and hist3 is not None and len(hist3) > 0:
-        return hist3, None
-
-    # 4) max without fidelity
+    # interval=max without fidelity
     hist4, e4 = try_call({"market": token_id, "interval": "max"}, "max_no_fid")
     if e4 is None and hist4 is not None and len(hist4) > 0:
         return hist4, None
 
-    # Prefer returning [] if any attempt produced a valid list (even empty)
+    # If any attempt succeeded (err=None) but returned empty history, treat as success with [].
     for a in attempts:
         if a.get("err") is None and isinstance(a.get("history_len"), int):
             return [], None
 
     return None, {"last_http_error": last_http_err, "attempts": attempts}
 
-def pick_price_at_or_before(history: List[Dict[str, Any]], target_ts: int) -> Tuple[Optional[float], Optional[int]]:
+
+# -------------------------
+# Worker
+# -------------------------
+def process_market(cfg: Config, m: Dict[str, Any], run_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
     """
-    Given a CLOB history list [{t, p}, ...], find the last price p
-    whose timestamp t <= target_ts.
+    Process a single market record.
 
     Returns:
-      (price, source_timestamp_used)
-    """
-    ts_list: List[int] = []
-    p_list: List[float] = []
-    for pt in history:
-        try:
-            t_raw = int(pt.get("t"))
-            t = _normalize_epoch_seconds(t_raw)
-            p = float(pt.get("p"))
-        except Exception:
-            continue
-        ts_list.append(t)
-        p_list.append(p)
-
-    if not ts_list:
-        return None, None
-
-    # Ensure sorted by time (CLOB usually returns sorted, but we defend anyway)
-    if any(ts_list[i] > ts_list[i + 1] for i in range(len(ts_list) - 1)):
-        pairs = sorted(zip(ts_list, p_list), key=lambda x: x[0])
-        ts_list = [x[0] for x in pairs]
-        p_list = [x[1] for x in pairs]
-
-    idx = bisect_right(ts_list, int(target_ts)) - 1
-    if idx < 0:
-        return None, None
-    return p_list[idx], ts_list[idx]
-
-def any_price_present(prices: Dict[str, Optional[float]]) -> bool:
-    """
-    True if at least one snapshot price is non-null.
-    """
-    return any(v is not None for v in prices.values())
-
-# =========================
-# Worker (one market)
-# =========================
-def process_market(m: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
-    """
-    Process a single market from the input list.
-
-    Returns:
-      (success_record, failure_record)
-
-    success_record:
-      Contains snapshot prices for YES and NO (with missing labels listed),
-      plus complement-violation diagnostics.
-
-    failure_record:
-      Only returned when we cannot get any usable snapshot price (or critical
-      API steps fail).
-
-    Notes:
-    - This function is safe to run in threads (no shared mutation).
+      (success_record, None) or (None, failure_record)
     """
     mid = str(m.get("id", "")).strip()
     slug = str(m.get("slug", "")).strip()
-    end_dt = parse_iso_dt(m.get("endDate"))
-    created_dt = parse_iso_dt(m.get("createdAt"))
 
-    if not mid or not slug or end_dt is None:
-        return None, {"market_id": mid or None, "slug": slug or None, "reason": "missing_id_slug_or_endDate"}
+    if not mid or not slug:
+        return None, {"run_id": run_id, "market_id": mid or None, "slug": slug or None, "reason": "missing_id_or_slug"}
 
-    end_ts = int(end_dt.timestamp())
-    created_ts = int(created_dt.timestamp()) if created_dt else None
-    start_ts = clamp_start_ts(end_ts, created_ts)
-
-    # --- Step 1: Fetch market detail to get token IDs
-    detail, derr = gamma_get(f"/markets/{mid}")
+    # 1) Gamma market detail (required for token ids)
+    detail, derr = gamma_get(cfg, f"/markets/{mid}")
     if derr or not isinstance(detail, dict):
-        return None, {"market_id": mid, "slug": slug, "reason": "gamma_market_detail_failed", "error": derr}
+        return None, {"run_id": run_id, "market_id": mid, "slug": slug, "reason": "gamma_market_detail_failed", "error": derr}
 
-    # --- Step 2: Ensure this is an order-book market (has CLOB tokens)
     enable_ob = detail.get("enableOrderBook")
     if enable_ob is not True:
-        return None, {"market_id": mid, "slug": slug, "reason": "not_orderbook_market", "enableOrderBook": enable_ob}
+        return None, {"run_id": run_id, "market_id": mid, "slug": slug, "reason": "not_orderbook_market", "enableOrderBook": enable_ob}
 
-    # --- Step 3: Pull YES/NO token IDs aligned by outcomes
     yes_token_id, no_token_id = get_yes_no_token_ids(detail)
     if not yes_token_id or not no_token_id:
         return None, {
+            "run_id": run_id,
             "market_id": mid,
             "slug": slug,
             "reason": "missing_yes_or_no_token_id",
@@ -538,10 +536,23 @@ def process_market(m: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Optiona
             "no_token_id": no_token_id,
         }
 
-    # --- Step 4: Fetch price histories for both tokens
-    yes_hist, yes_err = fetch_prices_history_token(yes_token_id, start_ts, end_ts)
+    # 2) Choose query window for CLOB fetch
+    query_end_ts = choose_query_end_ts(m, detail)
+    created_ts = choose_created_ts(m, detail)
+
+    # If we can't determine any end time, we fall back to interval=max only.
+    if query_end_ts is not None:
+        start_ts = clamp_start_ts(query_end_ts, created_ts, cfg.buffer_seconds)
+        end_ts = query_end_ts
+    else:
+        start_ts = None
+        end_ts = None
+
+    # 3) Fetch histories
+    yes_hist, yes_err = fetch_prices_history_token(cfg, yes_token_id, start_ts, end_ts)
     if yes_err or yes_hist is None:
         return None, {
+            "run_id": run_id,
             "market_id": mid,
             "slug": slug,
             "reason": "clob_prices_history_failed_yes",
@@ -551,9 +562,10 @@ def process_market(m: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Optiona
             "error": yes_err,
         }
 
-    no_hist, no_err = fetch_prices_history_token(no_token_id, start_ts, end_ts)
+    no_hist, no_err = fetch_prices_history_token(cfg, no_token_id, start_ts, end_ts)
     if no_err or no_hist is None:
         return None, {
+            "run_id": run_id,
             "market_id": mid,
             "slug": slug,
             "reason": "clob_prices_history_failed_no",
@@ -563,28 +575,70 @@ def process_market(m: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Optiona
             "error": no_err,
         }
 
-    # --- Step 5: Compute snapshot prices
+    # 4) Build series + compute OBSERVED window
+    yes_ts, yes_ps = build_series(yes_hist)
+    no_ts, no_ps = build_series(no_hist)
+
+    start_candidates: List[int] = []
+    end_candidates: List[int] = []
+
+    if yes_ts:
+        start_candidates.append(yes_ts[0])
+        end_candidates.append(yes_ts[-1])
+    if no_ts:
+        start_candidates.append(no_ts[0])
+        end_candidates.append(no_ts[-1])
+
+    if not end_candidates:
+        return None, {
+            "run_id": run_id,
+            "market_id": mid,
+            "slug": slug,
+            "reason": "empty_histories_after_parse",
+            "yes_token_id": yes_token_id,
+            "no_token_id": no_token_id,
+            "startTs": start_ts,
+            "endTs": end_ts,
+        }
+
+    observed_start_ts = min(start_candidates) if start_candidates else None
+    observed_end_ts = max(end_candidates)
+    observed_span_hours = None
+    if observed_start_ts is not None:
+        observed_span_hours = round((observed_end_ts - observed_start_ts) / 3600.0, 6)
+
+    # Anchor snapshots to observed end (last discovered price)
+    anchor_end_ts = observed_end_ts
+
+    # 5) Compute snapshots
     prices_yes: Dict[str, Optional[float]] = {}
     prices_no: Dict[str, Optional[float]] = {}
     missing_yes: List[str] = []
     missing_no: List[str] = []
 
-    for label, off in SNAPSHOTS:
-        target_ts = end_ts - off
+    snapshot_targets_ts: Dict[str, int] = {}
+    snapshot_source_ts_yes: Dict[str, Optional[int]] = {}
+    snapshot_source_ts_no: Dict[str, Optional[int]] = {}
 
-        py, _ = pick_price_at_or_before(yes_hist, target_ts)
+    for label, off in SNAPSHOTS:
+        target_ts = int(anchor_end_ts - off)
+        snapshot_targets_ts[label] = target_ts
+
+        py, y_src = pick_price_from_series(yes_ts, yes_ps, target_ts)
         prices_yes[label] = py
+        snapshot_source_ts_yes[label] = y_src
         if py is None:
             missing_yes.append(label)
 
-        pn, _ = pick_price_at_or_before(no_hist, target_ts)
+        pn, n_src = pick_price_from_series(no_ts, no_ps, target_ts)
         prices_no[label] = pn
+        snapshot_source_ts_no[label] = n_src
         if pn is None:
             missing_no.append(label)
 
-    # --- Step 6: Determine hard-fail vs success
     if not any_price_present(prices_yes) and not any_price_present(prices_no):
         return None, {
+            "run_id": run_id,
             "market_id": mid,
             "slug": slug,
             "reason": "no_snapshot_prices_found",
@@ -592,9 +646,10 @@ def process_market(m: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Optiona
             "no_token_id": no_token_id,
             "startTs": start_ts,
             "endTs": end_ts,
+            "observed_end_ts": observed_end_ts,
         }
 
-    # --- Step 7: Complement diagnostics (not a failure)
+    # Complement diagnostics
     complement_violations: List[Dict[str, Any]] = []
     for label, _off in SNAPSHOTS:
         y = prices_yes.get(label)
@@ -602,63 +657,167 @@ def process_market(m: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Optiona
         if y is None or n is None:
             continue
         s = y + n
-        if abs(s - 1.0) > COMPLEMENT_TOLERANCE:
+        if abs(s - 1.0) > cfg.complement_tolerance:
             complement_violations.append({"label": label, "yes": y, "no": n, "sum": s})
 
-    success = {
-        "slug": slug,
+    # Debug timestamp formatting
+    obs_start_dt = ts_to_dt(observed_start_ts)
+    obs_end_dt = ts_to_dt(observed_end_ts)
+
+    record: Dict[str, Any] = {
+        "run_id": run_id,
         "market_id": mid,
+        "slug": slug,
         "yes_token_id": yes_token_id,
         "no_token_id": no_token_id,
-        "endDate": end_dt.isoformat().replace("+00:00", "Z"),
+        "generated_utc": fmt_dt_utc(datetime.now(timezone.utc)),
+
+        # Query metadata (for reproducibility)
+        "gamma_detail_enableOrderBook": enable_ob,
+        "query_start_ts": start_ts,
+        "query_end_ts": end_ts,
+
+        # Observed window (authoritative for snapshots)
+        "observed_start_ts": observed_start_ts,
+        "observed_end_ts": observed_end_ts,
+        "observed_start_utc": fmt_dt_utc(obs_start_dt),
+        "observed_end_utc": fmt_dt_utc(obs_end_dt),
+        "observed_span_hours": observed_span_hours,
+
+        # Snapshot timing audit
+        "snapshot_anchor_end_ts": anchor_end_ts,
+        "snapshot_targets_ts": snapshot_targets_ts,
+        "snapshot_source_ts_yes": snapshot_source_ts_yes,
+        "snapshot_source_ts_no": snapshot_source_ts_no,
+
+        # Prices
         "prices_yes": prices_yes,
         "prices_no": prices_no,
         "missing_yes": missing_yes,
         "missing_no": missing_no,
-        "complement_tolerance": COMPLEMENT_TOLERANCE,
+
+        # Quality checks
+        "complement_tolerance": cfg.complement_tolerance,
         "complement_violations": complement_violations,
     }
 
-    return success, None
+    # Optional local-time debug fields (off by default)
+    if cfg.include_local_debug_fields:
+        zi = _get_zoneinfo(cfg.local_tz_name)
+        if zi is not None:
+            def _fmt_local(dt: Optional[datetime]) -> str:
+                if dt is None:
+                    return "N/A"
+                return dt.astimezone(zi).strftime("%Y-%m-%d %H:%M:%S%z")
 
-# =========================
-# Main
-# =========================
-def main() -> None:
-    """
-    Orchestrates the full run:
-      1) Load input markets
-      2) Optionally cap list for TEST mode
-      3) Concurrently process markets with a progress bar
-      4) Write outputs (prices, failures, summary)
-    """
-    started = time.time()
+            record["observed_start_local"] = _fmt_local(obs_start_dt)
+            record["observed_end_local"] = _fmt_local(obs_end_dt)
+            record["local_tz"] = cfg.local_tz_name
 
-    # --- Load input markets list
-    markets = load_jsonl(IN_RESOLVED_JSONL)
+    return record, None
+
+
+# -------------------------
+# CLI / Main
+# -------------------------
+def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Fetch Polymarket YES/NO historical snapshot prices (JSONL outputs + TXT summary).")
+
+    p.add_argument("--input", type=str, default=None, help="Input markets JSONL path.")
+    p.add_argument("--out-dir", type=str, default=None, help="Output directory for JSONL + summary.txt")
+    p.add_argument("--data-root", type=str, default=None, help="Project data root. If omitted, tries a Windows default then ./data")
+
+    p.add_argument("--gamma-base", type=str, default=os.getenv("POLY_GAMMA_URL", "https://gamma-api.polymarket.com"))
+    p.add_argument("--clob-base", type=str, default=os.getenv("POLY_CLOB_URL", "https://clob.polymarket.com"))
+
+    p.add_argument("--max-workers", type=int, default=10)
+    p.add_argument("--http-timeout", type=float, default=25.0)
+    p.add_argument("--retries", type=int, default=3)
+    p.add_argument("--retry-sleep", type=float, default=0.8)
+
+    p.add_argument("--price-fidelity-min", type=int, default=5, help="Default fidelity in minutes.")
+    p.add_argument("--min-fidelity-closed-min", type=int, default=60 * 12, help="Fallback fidelity in minutes (closed markets).")
+    p.add_argument("--buffer-seconds", type=int, default=2 * 3600, help="Extra buffer around snapshot window (seconds).")
+
+    p.add_argument("--complement-tolerance", type=float, default=0.05)
+
+    p.add_argument("--include-local-debug-fields", action="store_true", help="Include local time debug fields (not recommended for final datasets).")
+    p.add_argument("--local-tz", type=str, default="Europe/Stockholm")
+
+    p.add_argument("--test", action="store_true", help="Limit number of markets (quick dev runs).")
+    p.add_argument("--test-max-markets", type=int, default=15)
+
+    p.add_argument("--user-agent", type=str, default="polymarket-historical-prices/2.0")
+
+    return p.parse_args(argv)
+
+def _default_data_root(script_dir: Path) -> Path:
+    """
+    Default data-root behavior:
+      1) If the common Windows thesis directory exists, use it.
+      2) Else use ./data next to this script.
+    """
+    win_root = Path(r"C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data")
+    if win_root.exists():
+        return win_root
+    return script_dir / "data"
+
+def main(argv: Optional[List[str]] = None) -> None:
+    args = parse_args(argv)
+
+    script_dir = Path(__file__).resolve().parent
+
+    if args.data_root:
+        data_root = Path(args.data_root).expanduser().resolve()
+    else:
+        data_root = _default_data_root(script_dir)
+
+    data_root.mkdir(parents=True, exist_ok=True)
+
+    default_input = data_root / "markets" / "markets.jsonl"
+    default_out_dir = data_root / "prices"
+
+    input_path = Path(args.input).expanduser().resolve() if args.input else default_input
+    out_dir = Path(args.out_dir).expanduser().resolve() if args.out_dir else default_out_dir
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    out_prices_jsonl = out_dir / "historical_prices.jsonl"
+    out_failed_jsonl = out_dir / "failed_markets.jsonl"
+    out_summary_txt = out_dir / "summary.txt"
+
+    cfg = Config(
+        gamma_base=str(args.gamma_base).rstrip("/"),
+        clob_base=str(args.clob_base).rstrip("/"),
+        max_workers=int(args.max_workers),
+        http_timeout=float(args.http_timeout),
+        retries=int(args.retries),
+        retry_sleep_s=float(args.retry_sleep),
+        price_fidelity_min=int(args.price_fidelity_min),
+        min_fidelity_closed_min=int(args.min_fidelity_closed_min),
+        buffer_seconds=int(args.buffer_seconds),
+        complement_tolerance=float(args.complement_tolerance),
+        include_local_debug_fields=bool(args.include_local_debug_fields),
+        local_tz_name=str(args.local_tz),
+        test_mode=bool(args.test),
+        test_max_markets=int(args.test_max_markets),
+        user_agent=str(args.user_agent),
+    )
+
+    run_started = datetime.now(timezone.utc)
+    run_id = run_started.strftime("%Y%m%dT%H%M%SZ")
+
+    markets = load_jsonl(input_path)
     total_before = len(markets)
 
-    # --- TEST mode cap
-    if TEST:
-        markets = markets[: max(0, int(TEST_MAX_MARKETS))]
-        log(f"TEST=True: limiting markets from {total_before} -> {len(markets)} (first {len(markets)})")
+    if cfg.test_mode:
+        markets = markets[: max(0, cfg.test_max_markets)]
 
-    log(f"Loaded {len(markets)} markets from {IN_RESOLVED_JSONL}")
-
-    # --- Compute resolution window for summary
-    end_dts = [parse_iso_dt(m.get("endDate")) for m in markets]
-    end_dts2 = [d for d in end_dts if d is not None]
-    earliest = min(end_dts2) if end_dts2 else None
-    latest = max(end_dts2) if end_dts2 else None
-
-    log(f"Resolution window (endDate): {fmt_dt(earliest)} -> {fmt_dt(latest)}")
-    log(f"Output prices file: {OUT_PRICES_JSONL}")
-    log(f"Output failed file: {OUT_FAILED_JSONL}")
-    log(f"Output summary file: {OUT_SUMMARY_TXT}")
-    log(
-        f"TEST={TEST} TEST_MAX_MARKETS={TEST_MAX_MARKETS} | "
-        f"fidelity={PRICE_FIDELITY_MIN}m (fallback {MIN_FIDELITY_CLOSED_MIN}m) | workers={MAX_WORKERS}"
-    )
+    tqdm.write(f"[{fmt_dt_utc(run_started)}] Run {run_id} starting")
+    tqdm.write(f"- Input:  {input_path} ({total_before} rows; processing {len(markets)})")
+    tqdm.write(f"- Output: {out_dir}")
+    tqdm.write(f"- Workers: {cfg.max_workers} | timeout={cfg.http_timeout}s | retries={cfg.retries}")
+    tqdm.write(f"- Fidelity: {cfg.price_fidelity_min}m (fallback {cfg.min_fidelity_closed_min}m)")
+    tqdm.write(f"- Complement tolerance: {cfg.complement_tolerance}")
 
     successes: List[Dict[str, Any]] = []
     failures: List[Dict[str, Any]] = []
@@ -669,76 +828,100 @@ def main() -> None:
     complement_violation_markets = 0
     partial_missing_markets = 0
 
-    # --- Concurrent processing with tqdm progress bar
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
-        futures = [ex.submit(process_market, m) for m in markets]
+    observed_starts: List[int] = []
+    observed_ends: List[int] = []
 
-        with tqdm(total=len(futures), desc="Fetching snapshots", unit="market", dynamic_ncols=True) as pbar:
-            for fut in as_completed(futures):
-                ok, fail = fut.result()
-                pbar.update(1)
+    if cfg.max_workers <= 1:
+        it = tqdm(markets, desc="Fetching snapshots", unit="market", dynamic_ncols=True)
+        for m in it:
+            ok, fail = process_market(cfg, m, run_id)
+            if ok is not None:
+                successes.append(ok)
+            if fail is not None:
+                failures.append(fail)
+    else:
+        with ThreadPoolExecutor(max_workers=cfg.max_workers) as ex:
+            futures = [ex.submit(process_market, cfg, m, run_id) for m in markets]
+            with tqdm(total=len(futures), desc="Fetching snapshots", unit="market", dynamic_ncols=True) as pbar:
+                for fut in as_completed(futures):
+                    ok, fail = fut.result()
+                    pbar.update(1)
 
-                if ok is not None:
-                    successes.append(ok)
+                    if ok is not None:
+                        successes.append(ok)
 
-                    my = ok.get("missing_yes") or []
-                    mn = ok.get("missing_no") or []
-                    if my or mn:
-                        partial_missing_markets += 1
-                        for lab in my:
-                            missing_yes_counts[lab] += 1
-                        for lab in mn:
-                            missing_no_counts[lab] += 1
+                        if isinstance(ok.get("observed_start_ts"), int):
+                            observed_starts.append(int(ok["observed_start_ts"]))
+                        if isinstance(ok.get("observed_end_ts"), int):
+                            observed_ends.append(int(ok["observed_end_ts"]))
 
-                    cv = ok.get("complement_violations") or []
-                    if cv:
-                        complement_violation_markets += 1
+                        my = ok.get("missing_yes") or []
+                        mn = ok.get("missing_no") or []
+                        if my or mn:
+                            partial_missing_markets += 1
+                            for lab in my:
+                                missing_yes_counts[lab] += 1
+                            for lab in mn:
+                                missing_no_counts[lab] += 1
 
-                if fail is not None:
-                    failures.append(fail)
-                    fail_reason_counts[fail.get("reason", "unknown")] += 1
+                        cv = ok.get("complement_violations") or []
+                        if cv:
+                            complement_violation_markets += 1
 
-                # Update postfix for quick live stats
-                pbar.set_postfix({
-                    "ok": len(successes),
-                    "fail": len(failures),
-                    "partial": partial_missing_markets,
-                    "comp_viols": complement_violation_markets,
-                })
+                    if fail is not None:
+                        failures.append(fail)
+                        fail_reason_counts[fail.get("reason", "unknown")] += 1
 
-    # --- Write outputs
-    prices_jsonl = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in successes)
-    atomic_write_text(OUT_PRICES_JSONL, prices_jsonl)
+                    pbar.set_postfix(
+                        {
+                            "ok": len(successes),
+                            "fail": len(failures),
+                            "partial": partial_missing_markets,
+                            "comp_viols": complement_violation_markets,
+                        }
+                    )
 
-    failed_jsonl = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in failures)
-    atomic_write_text(OUT_FAILED_JSONL, failed_jsonl)
+    # Deterministic ordering for reproducibility
+    successes.sort(key=lambda r: (str(r.get("market_id", "")), str(r.get("slug", ""))))
+    failures.sort(key=lambda r: (str(r.get("market_id", "")), str(r.get("slug", "")), str(r.get("reason", ""))))
 
-    # --- Summary
-    finished = datetime.now(timezone.utc)
-    elapsed = round(time.time() - started, 3)
+    atomic_write_jsonl(out_prices_jsonl, successes)
+    atomic_write_jsonl(out_failed_jsonl, failures)
 
+    run_finished = datetime.now(timezone.utc)
+    elapsed_s = round((run_finished - run_started).total_seconds(), 3)
+
+    obs_earliest_dt = ts_to_dt(min(observed_starts)) if observed_starts else None
+    obs_latest_dt = ts_to_dt(max(observed_ends)) if observed_ends else None
+
+    # -------------------------
+    # TXT Summary (human-readable)
+    # -------------------------
     lines: List[str] = []
     lines.append("Polymarket Earnings — Historical Prices Fetch Summary")
     lines.append("=" * 56)
-    lines.append(f"Generated (UTC): {fmt_dt(finished)}")
+    lines.append(f"Run ID:            {run_id}")
+    lines.append(f"Generated (UTC):   {fmt_dt_utc(run_finished)}")
+    lines.append(f"Elapsed seconds:   {elapsed_s}")
     lines.append("")
     lines.append("Mode")
-    lines.append(f"- TEST: {TEST}")
-    if TEST:
-        lines.append(f"- TEST_MAX_MARKETS: {TEST_MAX_MARKETS}")
+    lines.append(f"- TEST:            {cfg.test_mode}")
+    if cfg.test_mode:
+        lines.append(f"- TEST_MAX_MARKETS:{cfg.test_max_markets}")
     lines.append("")
     lines.append("Inputs")
-    lines.append(f"- Markets JSONL: {IN_RESOLVED_JSONL}")
-    lines.append(f"- Markets processed: {len(markets)}")
+    lines.append(f"- Markets JSONL:   {input_path}")
+    lines.append(f"- Markets in file: {total_before}")
+    lines.append(f"- Markets processed:{len(markets)}")
     lines.append("")
-    lines.append("Resolution window (based on endDate) for processed set")
-    lines.append(f"- Earliest resolved: {fmt_dt(earliest)}")
-    lines.append(f"- Latest resolved:   {fmt_dt(latest)}")
+    lines.append("Resolution window (based on OBSERVED first/last price timestamps)")
+    lines.append(f"- Earliest first price (UTC): {fmt_dt_utc(obs_earliest_dt)}")
+    lines.append(f"- Latest last price (UTC):    {fmt_dt_utc(obs_latest_dt)}")
     lines.append("")
     lines.append("Outputs")
-    lines.append(f"- Historical prices JSONL: {OUT_PRICES_JSONL}")
-    lines.append(f"- Failed markets JSONL:    {OUT_FAILED_JSONL}")
-    lines.append(f"- Summary TXT:             {OUT_SUMMARY_TXT}")
+    lines.append(f"- Historical prices JSONL: {out_prices_jsonl}")
+    lines.append(f"- Failed markets JSONL:    {out_failed_jsonl}")
+    lines.append(f"- Summary TXT:             {out_summary_txt}")
     lines.append("")
     lines.append("Results")
     lines.append(f"- Successful markets written: {len(successes)}")
@@ -754,25 +937,36 @@ def main() -> None:
     lines.append("Quality stats (not failures)")
     lines.append(f"- Markets with partial missing snapshots: {partial_missing_markets}")
     lines.append(f"- Markets with YES+NO complement violations: {complement_violation_markets}")
+    lines.append(f"- YES+NO complement tolerance: {cfg.complement_tolerance}")
     lines.append("")
     lines.append("Missing snapshot counts (not failures)")
     lines.append("YES missing:")
     for lab, _ in SNAPSHOTS:
-        lines.append(f"- {lab}: {missing_yes_counts.get(lab, 0)}")
+        lines.append(f"- {lab}: {int(missing_yes_counts.get(lab, 0))}")
     lines.append("")
     lines.append("NO missing:")
     for lab, _ in SNAPSHOTS:
-        lines.append(f"- {lab}: {missing_no_counts.get(lab, 0)}")
+        lines.append(f"- {lab}: {int(missing_no_counts.get(lab, 0))}")
     lines.append("")
-    lines.append(f"YES+NO complement tolerance: {COMPLEMENT_TOLERANCE}")
-    lines.append(f"Elapsed seconds: {elapsed}")
+    lines.append("Config (selected)")
+    lines.append(f"- gamma_base:      {cfg.gamma_base}")
+    lines.append(f"- clob_base:       {cfg.clob_base}")
+    lines.append(f"- max_workers:     {cfg.max_workers}")
+    lines.append(f"- http_timeout:    {cfg.http_timeout}")
+    lines.append(f"- retries:         {cfg.retries}")
+    lines.append(f"- retry_sleep_s:   {cfg.retry_sleep_s}")
+    lines.append(f"- fidelity_min:    {cfg.price_fidelity_min} minutes")
+    lines.append(f"- fidelity_fallback:{cfg.min_fidelity_closed_min} minutes")
+    lines.append(f"- buffer_seconds:  {cfg.buffer_seconds}")
     lines.append("")
 
-    summary = "\n".join(lines)
-    atomic_write_text(OUT_SUMMARY_TXT, summary)
+    summary_txt = "\n".join(lines)
+    atomic_write_text(out_summary_txt, summary_txt)
 
-    log("DONE. Summary:")
-    print(summary, flush=True)
+    tqdm.write(f"[{fmt_dt_utc(run_finished)}] DONE")
+    tqdm.write(f"- Success: {len(successes)} | Fail: {len(failures)} | Elapsed: {elapsed_s}s")
+    tqdm.write(f"- Summary TXT: {out_summary_txt}")
+
 
 if __name__ == "__main__":
     main()

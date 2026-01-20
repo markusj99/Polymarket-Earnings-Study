@@ -1,0 +1,16 @@
+ticker,slug,question,endDate,resolvedOutcome,outcomePrices,volumeNum
+ABT,abt-quarterly-earnings-nongaap-eps-2025-10-15-1pt30,Will Abbott Laboratories (ABT) beat quarterly earnings?,2025-10-15T00:00:00Z,No,"Yes=0, No=1",26893.832044
+ASAN,asan-quarterly-earnings-nongaap-eps-12-02-2025-0pt06,Will Asana (ASAN) beat quarterly earnings?,2025-12-02T22:00:00Z,Yes,"Yes=1, No=0",14505.846772
+BK,bk-quarterly-earnings-gaap-eps-2025-10-16-1pt76,Will Bank of New York Mellon (BK) beat quarterly earnings?,2025-10-16T00:00:00Z,Yes,"Yes=1, No=0",4428.5395
+DASH,dash-quarterly-earnings-gaap-eps-11-05-2025-0pt68,Will DoorDash (DASH) beat quarterly earnings?,2025-11-05T22:00:00Z,No,"Yes=0, No=1",47815.505411
+DBX,dbx-quarterly-earnings-nongaap-eps-11-06-2025-0pt65,Will Dropbox (DBX) beat quarterly earnings?,2025-11-06T22:00:00Z,Yes,"Yes=1, No=0",25806.338777
+DOCU,docu-quarterly-earnings-nongaap-eps-12-04-2025-0pt91,Will DocuSign (DOCU) beat quarterly earnings?,2025-12-04T22:00:00Z,Yes,"Yes=1, No=0",12407.069542
+EWBC,ewbc-quarterly-earnings-gaap-eps-10-21-2025-2pt34,Will East West Bancorp (EWBC) beat quarterly earnings?,2025-10-21T21:00:00Z,Yes,"Yes=1, No=0",8739.858917
+HELE,hele-quarterly-earnings-nongaap-eps-2025-10-09-0pt52,Will Helen of Troy (HELE) beat quarterly earnings?,2025-10-09T00:00:00Z,Yes,"Yes=1, No=0",63372.762324
+JPM,jpm-quarterly-earnings-gaap-eps-2025-10-14-4pt72,Will JPMorgan Chase (JPM) beat quarterly earnings?,2025-10-14T00:00:00Z,Yes,"Yes=1, No=0",30839.269081
+MCO,mco-quarterly-earnings-nongaap-eps-10-22-2025-3pt52,Will Moody's (MCO) beat quarterly earnings?,2025-10-22T13:00:00Z,Yes,"Yes=1, No=0",11960.056033
+PM,pm-quarterly-earnings-nongaap-eps-10-21-2025-2pt1,Will Philip Morris International (PM) beat quarterly earnings?,2025-10-21T13:00:00Z,Yes,"Yes=1, No=0",7412.956971
+PZZA,pzza-quarterly-earnings-nongaap-eps-11-06-2025-0pt41,Will Papa John’s International (PZZA) beat quarterly earnings?,2025-11-06T14:00:00Z,No,"Yes=0, No=1",11276.418105
+UNTY,unty-quarterly-earnings-gaap-eps-2025-10-10-1pt29,Will Unity Bancorp (UNTY) beat quarterly earnings?,2025-10-10T00:00:00Z,Yes,"Yes=1, No=0",7434.126077
+VIK,vik-quarterly-earnings-nongaap-eps-11-19-2025-1pt19,Will Viking Holdings (VIK) beat quarterly earnings?,2025-11-19T14:00:00Z,Yes,"Yes=1, No=0",6420.881535
+VIRT,virt-quarterly-earnings-nongaap-eps-10-29-2025-0pt95,Will Virtu Financial (VIRT) beat quarterly earnings?,2025-10-29T13:00:00Z,Yes,"Yes=1, No=0",4915.740972

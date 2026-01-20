@@ -1,17 +1,20 @@
 Polymarket Earnings — Historical Prices Fetch Summary
 ========================================================
-Generated (UTC): 2026-01-18 17:22:42Z
+Run ID:            20260120T104358Z
+Generated (UTC):   2026-01-20 10:48:44Z
+Elapsed seconds:   286.168
 
 Mode
-- TEST: False
+- TEST:            False
 
 Inputs
-- Markets JSONL: C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\markets\markets.jsonl
-- Markets processed: 409
+- Markets JSONL:   C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\markets\markets.jsonl
+- Markets in file: 409
+- Markets processed:409
 
-Resolution window (based on endDate) for processed set
-- Earliest resolved: 2025-06-05 00:00:00Z
-- Latest resolved:   2026-01-21 14:00:00Z
+Resolution window (based on OBSERVED first/last price timestamps)
+- Earliest first price (UTC): 2025-06-03 21:50:06Z
+- Latest last price (UTC):    2026-01-16 16:05:22Z
 
 Outputs
 - Historical prices JSONL: C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\prices\historical_prices.jsonl
@@ -19,48 +22,55 @@ Outputs
 - Summary TXT:             C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\prices\summary.txt
 
 Results
-- Successful markets written: 402
-- Failed markets:             7
+- Successful markets written: 409
+- Failed markets:             0
 
 Failure reasons (hard failures only)
-- no_snapshot_prices_found: 7
+- (none)
 
 Quality stats (not failures)
-- Markets with partial missing snapshots: 400
-- Markets with YES+NO complement violations: 0
+- Markets with partial missing snapshots: 405
+- Markets with YES+NO complement violations: 35
+- YES+NO complement tolerance: 0.05
 
 Missing snapshot counts (not failures)
 YES missing:
-- 4w: 400
-- 3w: 394
-- 2w: 332
-- 1w: 173
-- 7d: 173
-- 6d: 101
-- 5d: 48
-- 4d: 27
-- 3d: 14
-- 2d: 6
-- 1d: 5
-- 24h: 5
+- 4w: 405
+- 3w: 390
+- 2w: 328
+- 1w: 161
+- 7d: 161
+- 6d: 82
+- 5d: 39
+- 4d: 24
+- 3d: 11
+- 2d: 2
+- 1d: 1
 - 12h: 1
 - 6h: 0
 
 NO missing:
-- 4w: 400
-- 3w: 394
-- 2w: 332
-- 1w: 173
-- 7d: 173
-- 6d: 101
-- 5d: 48
-- 4d: 27
-- 3d: 14
-- 2d: 6
-- 1d: 5
-- 24h: 5
+- 4w: 405
+- 3w: 390
+- 2w: 328
+- 1w: 161
+- 7d: 161
+- 6d: 82
+- 5d: 39
+- 4d: 24
+- 3d: 11
+- 2d: 2
+- 1d: 1
 - 12h: 1
 - 6h: 0
 
-YES+NO complement tolerance: 0.05
-Elapsed seconds: 216.686
+Config (selected)
+- gamma_base:      https://gamma-api.polymarket.com
+- clob_base:       https://clob.polymarket.com
+- max_workers:     10
+- http_timeout:    25.0
+- retries:         3
+- retry_sleep_s:   0.8
+- fidelity_min:    5 minutes
+- fidelity_fallback:720 minutes
+- buffer_seconds:  7200

@@ -1,0 +1,20 @@
+Descriptive statistics outputs written to:
+C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\statistics\descriptive_statistics
+
+No PDFs produced. Tables are CSV only.
+
+Snapshot order enforced:
+4w, 3w, 2w, 1w, 6d, 5d, 4d, 3d, 2d, 1d, 12h, 6h
+Dropped snapshots: 7d
+
+Key outputs:
+- 01_observations_per_snapshot (CSV + PNG plot, ordered)
+- 02_observed_span_hours (CSV + PNG hist)
+- 03_outcomes_distribution_validation (CSV + PNG plot) and markets table-only
+- 04_complement_violations_by_snapshot (CSV) + ONE plot: rate by snapshot (ordered)
+- 05_tags_distribution_excluding_earnings (CSV + PNG plot)
+- 06_volume distributions (CSV + PNG plots; corrected log histogram)
+- 07/08 differences vs Polymarket estimate (CSV + PNG hists)
+- 09_surprise (CSV + PNG hist)
+- 12_span_vs_volume scatter with slope line (PNG + coefficients CSV)
+- 13_distance_to_certainty for snapshots <= 1d (CSV + PNG plot)

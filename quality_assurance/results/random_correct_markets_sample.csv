@@ -1,0 +1,16 @@
+ticker,slug,question,anchor_date,polymarket_estimate,polymarket_resolved_outcome,eikon_eps_mean_estimate,eikon_actual_eps,ric,estimate_used,estimate_used_source
+AMPL,ampl-quarterly-earnings-nongaap-eps-11-05-2025-0pt01,Will Amplitude (AMPL) beat quarterly earnings?,2025-11-05,0.01,YES,0.0149,0.02,AMPL.O,0.01,slug_pt_number
+CBOE,cboe-quarterly-earnings-nongaap-eps-10-31-2025-2pt53,Will Cboe Global Markets (CBOE) beat quarterly earnings?,2025-10-31,2.5300000000000002,YES,2.52725,2.67,CBOE.N,2.5300000000000002,slug_pt_number
+CGBD,cgbd-quarterly-earnings-gaap-eps-11-04-2025-0pt39,Will Carlyle Secured Lending (CGBD) beat quarterly earnings?,2025-11-04,0.39,NO,0.395,0.38,CGBD.O,0.39,slug_pt_number
+DD,dd-quarterly-earnings-nongaap-eps-11-06-2025-1pt11,Will DuPont de Nemours (DD) beat quarterly earnings?,2025-11-06,1.11,NO,1.06043,1.09,DD,1.11,slug_pt_number
+FNF,fnf-quarterly-earnings-nongaap-eps-11-06-2025-1pt42,Will Fidelity National Financial (FNF) beat quarterly earnings?,2025-11-06,1.42,YES,1.4875,1.63,FNF,1.42,slug_pt_number
+GIS,gis-quarterly-earnings-nongaap-eps-12-17-2025-1pt02,Will General Mills (GIS) beat quarterly earnings?,2025-12-17,1.02,YES,1.02682,1.1,GIS,1.02,slug_pt_number
+INTC,intc-quarterly-earnings-nongaap-eps-10-23-2025-0,Will Intel (INTC) beat quarterly earnings?,2025-10-23,0.0,YES,0.0079,0.23,INTC.O,0.0,slug_trailing_int
+LZB,lzb-quarterly-earnings-nongaap-eps-11-18-2025-0pt54,Will La-Z-Boy (LZB) beat quarterly earnings?,2025-11-18,0.54,YES,0.60667,0.71,LZB,0.54,slug_pt_number
+MCD,mcd-quarterly-earnings-nongaap-eps-11-05-2025-3pt33,Will McDonald’s (MCD) beat quarterly earnings?,2025-11-05,3.33,NO,3.32647,3.22,MCD,3.33,slug_pt_number
+PAYX,payx-quarterly-earnings-nongaap-eps-12-18-2025-1pt23,Will Paychex (PAYX) beat quarterly earnings?,2025-12-18,1.23,YES,1.22867,1.26,PAYX.O,1.23,slug_pt_number
+PINS,pins-quarterly-earnings-nongaap-eps-11-04-2025-0pt42,Will Pinterest (PINS) beat quarterly earnings?,2025-11-04,0.42,NO,0.41717,0.38,PINS.N,0.42,slug_pt_number
+PNC,pnc-quarterly-earnings-gaap-eps-01-16-2026-4pt16,Will PNC Financial Services (PNC) beat quarterly earnings?,2026-01-16,4.16,YES,4.21725,4.88,PNC,4.16,slug_pt_number
+SCHW,schw-quarterly-earnings-nongaap-eps-2025-10-16-1pt21,Will Charles Schwab (SCHW) beat quarterly earnings?,2025-10-16,1.21,YES,1.247,1.31,SCHW.N,1.21,slug_pt_number
+SPCE,spce-quarterly-earnings-gaap-eps-11-13-2025-neg1pt5,Will Virgin Galactic Holdings (SPCE) beat quarterly earnings?,2025-11-13,-1.5,YES,-1.43875,-1.09,SPCE.N,-1.5,slug_pt_number
+UNFI,unfi-quarterly-earnings-nongaap-eps-12-02-2025-0pt4,Will United Natural Foods (UNFI) beat quarterly earnings?,2025-12-02,0.4,YES,0.41429,0.56,UNFI.N,0.4,slug_pt_number
