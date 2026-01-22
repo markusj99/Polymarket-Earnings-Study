@@ -1,0 +1,48 @@
+==================== MISSING SUMMARY ====================
+Generated at (UTC): 2026-01-22T13:14:52Z
+Companies:          386
+Per-market rows:    422
+=========================================================
+
+
+Top-level variables (company)
+-----------------------------
+  1. country_of_risk                            missing=     1 / 386    (  0.26%)
+  2. analysts_covering_latest                   missing=     0 / 386    (  0.00%)
+  3. analysts_covering_sample_mean              missing=     0 / 386    (  0.00%)
+  4. analysts_covering_sample_median            missing=     0 / 386    (  0.00%)
+  5. company_name                               missing=     0 / 386    (  0.00%)
+  6. country_source                             missing=     0 / 386    (  0.00%)
+  7. exchange_country                           missing=     0 / 386    (  0.00%)
+  8. gics_industry                              missing=     0 / 386    (  0.00%)
+  9. gics_sector                                missing=     0 / 386    (  0.00%)
+ 10. hq_country                                 missing=     0 / 386    (  0.00%)
+ 11. hq_country_code                            missing=     0 / 386    (  0.00%)
+ 12. market_cap_usd                             missing=     0 / 386    (  0.00%)
+ 13. primary_exchange                           missing=     0 / 386    (  0.00%)
+ 14. ric                                        missing=     0 / 386    (  0.00%)
+ 15. sample_markets_n                           missing=     0 / 386    (  0.00%)
+ 16. ticker                                     missing=     0 / 386    (  0.00%)
+ 17. trbc_industry                              missing=     0 / 386    (  0.00%)
+ 18. turnover_6m_sum_volume_mean                missing=     0 / 386    (  0.00%)
+ 19. turnover_6m_sum_volume_median              missing=     0 / 386    (  0.00%)
+ 20. volatility_6m_mean                         missing=     0 / 386    (  0.00%)
+ 21. volatility_6m_median                       missing=     0 / 386    (  0.00%)
+
+Per-market variables (markets[])
+--------------------------------
+  1. analysts_covering_asof_anchor              missing=     0 / 422    (  0.00%)
+  2. anchor_date                                missing=     0 / 422    (  0.00%)
+  3. bucket                                     missing=     0 / 422    (  0.00%)
+  4. expected_resolution                        missing=     0 / 422    (  0.00%)
+  5. label                                      missing=     0 / 422    (  0.00%)
+  6. market_id                                  missing=     0 / 422    (  0.00%)
+  7. polymarket_resolved_outcome                missing=     0 / 422    (  0.00%)
+  8. slug                                       missing=     0 / 422    (  0.00%)
+  9. status                                     missing=     0 / 422    (  0.00%)
+ 10. ticker                                     missing=     0 / 422    (  0.00%)
+ 11. turnover_6m_avg_daily_volume               missing=     0 / 422    (  0.00%)
+ 12. turnover_6m_sum_volume                     missing=     0 / 422    (  0.00%)
+ 13. turnover_6m_window_end                     missing=     0 / 422    (  0.00%)
+ 14. turnover_6m_window_start                   missing=     0 / 422    (  0.00%)
+ 15. volatility_6m                              missing=     0 / 422    (  0.00%)

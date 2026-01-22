@@ -1,0 +1,81 @@
+Polymarket Corporate Earnings — Stock Prices Fetch Summary (FAST MODE)
+Generated at (UTC): 2026-01-22T20:57:23.957116Z
+
+Input:  C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\corporate_info\corporate_info.jsonl
+Output: C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\stock_prices
+
+Corporate rows: 386
+Events parsed:  422
+RICs fetched:   386
+Output rows:    24709
+
+Trading-day window: pre=30, post=30
+Bucket mode: month
+Chunk size: 50
+Throttle after batch: 0.0s
+Earnings time included: False
+
+WINDOW ISSUES / EVENT FAILURES
+- RIC ACN event market_id=703120 anchor_date=2025-12-18: TRUNCATED (left=False, right=True, available_rows=52/61)
+- RIC ADBE.O event market_id=701961 anchor_date=2025-12-10: TRUNCATED (left=False, right=True, available_rows=58/61)
+- RIC ALLY.N event market_id=1126201 anchor_date=2026-01-21: TRUNCATED (left=False, right=True, available_rows=31/61)
+- RIC ASO.O event market_id=697473 anchor_date=2025-12-09: TRUNCATED (left=False, right=True, available_rows=59/61)
+- RIC AVGO.O event market_id=898889 anchor_date=2025-12-11: TRUNCATED (left=False, right=True, available_rows=57/61)
+- RIC AZO event market_id=701950 anchor_date=2025-12-09: TRUNCATED (left=False, right=True, available_rows=59/61)
+- RIC BAC event market_id=1099134 anchor_date=2026-01-14: TRUNCATED (left=False, right=True, available_rows=35/61)
+- RIC BK event market_id=1069149 anchor_date=2026-01-13: TRUNCATED (left=False, right=True, available_rows=36/61)
+- RIC BLK event market_id=1125598 anchor_date=2026-01-15: TRUNCATED (left=False, right=True, available_rows=34/61)
+- RIC BLSH.N event market_id=599915 anchor_date=2025-09-17: TRUNCATED (left=True, right=False, available_rows=55/61)
+- RIC BRZE.O event market_id=899878 anchor_date=2025-12-09: TRUNCATED (left=False, right=True, available_rows=59/61)
+- RIC C event market_id=1099148 anchor_date=2026-01-14: TRUNCATED (left=False, right=True, available_rows=35/61)
+- RIC CAG event market_id=899881 anchor_date=2025-12-19: TRUNCATED (left=False, right=True, available_rows=51/61)
+- RIC CASY.O event market_id=701955 anchor_date=2025-12-09: TRUNCATED (left=False, right=True, available_rows=59/61)
+- RIC CCL event market_id=703176 anchor_date=2025-12-19: TRUNCATED (left=False, right=True, available_rows=51/61)
+- RIC CFG event market_id=1126021 anchor_date=2026-01-21: TRUNCATED (left=False, right=True, available_rows=31/61)
+- RIC CHWY.N event market_id=701960 anchor_date=2025-12-10: TRUNCATED (left=False, right=True, available_rows=58/61)
+- RIC COST.O event market_id=899875 anchor_date=2025-12-11: TRUNCATED (left=False, right=True, available_rows=57/61)
+- RIC CPB.O event market_id=701985 anchor_date=2025-12-09: TRUNCATED (left=False, right=True, available_rows=59/61)
+- RIC CTAS.O event market_id=703173 anchor_date=2025-12-18: TRUNCATED (left=False, right=True, available_rows=52/61)
+- RIC DAL event market_id=1069150 anchor_date=2026-01-13: TRUNCATED (left=False, right=True, available_rows=36/61)
+- RIC DBI event market_id=701986 anchor_date=2025-12-09: TRUNCATED (left=False, right=True, available_rows=59/61)
+- RIC FDS event market_id=703171 anchor_date=2025-12-18: TRUNCATED (left=False, right=True, available_rows=52/61)
+- RIC FDX event market_id=703122 anchor_date=2025-12-18: TRUNCATED (left=False, right=True, available_rows=52/61)
+- RIC GIS event market_id=703111 anchor_date=2025-12-17: TRUNCATED (left=False, right=True, available_rows=53/61)
+- RIC GME event market_id=701993 anchor_date=2025-12-09: TRUNCATED (left=False, right=True, available_rows=59/61)
+- RIC GS event market_id=1099181 anchor_date=2026-01-15: TRUNCATED (left=False, right=True, available_rows=34/61)
+- RIC HAL event market_id=1126184 anchor_date=2026-01-21: TRUNCATED (left=False, right=True, available_rows=31/61)
+- RIC IBKR.O event market_id=1118155 anchor_date=2026-01-20: TRUNCATED (left=False, right=True, available_rows=32/61)
+- RIC JEF event market_id=973541 anchor_date=2026-01-07: TRUNCATED (left=False, right=True, available_rows=40/61)
+- RIC JNJ event market_id=1125915 anchor_date=2026-01-21: TRUNCATED (left=False, right=True, available_rows=31/61)
+- RIC JPM event market_id=1069148 anchor_date=2026-01-13: TRUNCATED (left=False, right=True, available_rows=36/61)
+- RIC KBH event market_id=899880 anchor_date=2025-12-18: TRUNCATED (left=False, right=True, available_rows=52/61)
+- RIC KEY event market_id=1118342 anchor_date=2026-01-20: TRUNCATED (left=False, right=True, available_rows=32/61)
+- RIC KMI event market_id=1198858 anchor_date=2026-01-21: TRUNCATED (left=False, right=True, available_rows=31/61)
+- RIC KMX event market_id=703172 anchor_date=2025-12-18: TRUNCATED (left=False, right=True, available_rows=52/61)
+- RIC LEN event market_id=899879 anchor_date=2025-12-16: TRUNCATED (left=False, right=True, available_rows=54/61)
+- RIC LULU.O event market_id=899876 anchor_date=2025-12-11: TRUNCATED (left=False, right=True, available_rows=57/61)
+- RIC LW event market_id=703175 anchor_date=2025-12-19: TRUNCATED (left=False, right=True, available_rows=51/61)
+- RIC MBWM.O event market_id=1118344 anchor_date=2026-01-20: TRUNCATED (left=False, right=True, available_rows=32/61)
+- RIC MMM event market_id=1118343 anchor_date=2026-01-20: TRUNCATED (left=False, right=True, available_rows=32/61)
+- RIC MS event market_id=1099149 anchor_date=2026-01-15: TRUNCATED (left=False, right=True, available_rows=34/61)
+- RIC MTB event market_id=1099457 anchor_date=2026-01-16: TRUNCATED (left=False, right=True, available_rows=33/61)
+- RIC MTN event market_id=701994 anchor_date=2025-12-10: TRUNCATED (left=False, right=True, available_rows=58/61)
+- RIC MU.O event market_id=703110 anchor_date=2025-12-17: TRUNCATED (left=False, right=True, available_rows=53/61)
+- RIC NFLX.O event market_id=1118262 anchor_date=2026-01-20: TRUNCATED (left=False, right=True, available_rows=32/61)
+- RIC NKE event market_id=703121 anchor_date=2025-12-18: TRUNCATED (left=False, right=True, available_rows=52/61)
+- RIC ORCL.N event market_id=701948 anchor_date=2025-12-08: TRUNCATED (left=False, right=True, available_rows=60/61)
+- RIC PAYX.O event market_id=703174 anchor_date=2025-12-18: TRUNCATED (left=False, right=True, available_rows=52/61)
+- RIC PLAY.O event market_id=701987 anchor_date=2025-12-09: TRUNCATED (left=False, right=True, available_rows=59/61)
+- RIC PNC event market_id=1099182 anchor_date=2026-01-16: TRUNCATED (left=False, right=True, available_rows=33/61)
+- RIC RH event market_id=899877 anchor_date=2025-12-11: TRUNCATED (left=False, right=True, available_rows=57/61)
+- RIC SCHW.N event market_id=1125627 anchor_date=2026-01-21: TRUNCATED (left=False, right=True, available_rows=31/61)
+- RIC STT event market_id=1099187 anchor_date=2026-01-16: TRUNCATED (left=False, right=True, available_rows=33/61)
+- RIC TFC event market_id=1125126 anchor_date=2026-01-21: TRUNCATED (left=False, right=True, available_rows=31/61)
+- RIC TSM event market_id=1114909 anchor_date=2026-01-15: TRUNCATED (left=False, right=True, available_rows=34/61)
+- RIC UAL.O event market_id=1118156 anchor_date=2026-01-20: TRUNCATED (left=False, right=True, available_rows=32/61)
+- RIC UNTY.O event market_id=1125566 anchor_date=2026-01-21: TRUNCATED (left=False, right=True, available_rows=31/61)
+- RIC USB event market_id=1118263 anchor_date=2026-01-20: TRUNCATED (left=False, right=True, available_rows=32/61)
+- RIC WDFC.O event market_id=973542 anchor_date=2026-01-08: TRUNCATED (left=False, right=True, available_rows=39/61)
+- RIC WFC event market_id=1099135 anchor_date=2026-01-14: TRUNCATED (left=False, right=True, available_rows=35/61)
+- RIC WTFC.O event market_id=1118157 anchor_date=2026-01-20: TRUNCATED (left=False, right=True, available_rows=32/61)
+

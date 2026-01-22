@@ -1,20 +1,29 @@
 Descriptive statistics outputs written to:
 C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\statistics\descriptive_statistics
 
-No PDFs produced. Tables are CSV only.
-
 Snapshot order enforced:
 4w, 3w, 2w, 1w, 6d, 5d, 4d, 3d, 2d, 1d, 12h, 6h
-Dropped snapshots: 7d
+
 
 Key outputs:
-- 01_observations_per_snapshot (CSV + PNG plot, ordered)
+- 01_observations_per_snapshot (CSV + PNG plot)
 - 02_observed_span_hours (CSV + PNG hist)
+- 02b_market_end_dates_counts (CSV) + 02b_market_end_dates_timeline (PNG)
 - 03_outcomes_distribution_validation (CSV + PNG plot) and markets table-only
-- 04_complement_violations_by_snapshot (CSV) + ONE plot: rate by snapshot (ordered)
-- 05_tags_distribution_excluding_earnings (CSV + PNG plot)
-- 06_volume distributions (CSV + PNG plots; corrected log histogram)
-- 07/08 differences vs Polymarket estimate (CSV + PNG hists)
+- 04_complement_violations (CSV + PNG rate plot)
+- 05_tags_distribution (CSV + PNG plot)
+- 06_volume distributions (CSV + PNG plots)
+- 07/08 estimate diffs (CSV + PNG hists)
 - 09_surprise (CSV + PNG hist)
-- 12_span_vs_volume scatter with slope line (PNG + coefficients CSV)
-- 13_distance_to_certainty for snapshots <= 1d (CSV + PNG plot)
+- 10_ticker_counts_all (CSV only)
+- 11_numeric_descriptive_panel (CSV)
+- 11b_all_variables_summary_stats (CSV)
+- 12_span_vs_volume scatter + coefficients (PNG + CSV)
+- 13_distance_to_certainty_by_snapshot_leq_1d (CSV only)
+
+Corporate outputs:
+- 14_firms_seen_more_than_once_summary (CSV)
+- 14_firm_repeat_counts_distribution (CSV + PNG bar plot; integer x-axis)
+- 17_main_exchange_distribution_raw (CSV)
+- 17_main_exchange_distribution_abbrev (CSV) + plot uses abbreviations
+- 21_analyst_coverage_distribution (CSV + PNG bar plot)

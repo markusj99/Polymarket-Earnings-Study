@@ -1,9 +1,10 @@
 Polymarket Earnings Resolved Markets — Summary
 ====================================================
-Generated (UTC): 2026-01-18 16:52:37Z
+Generated (UTC): 2026-01-22 11:57:49Z
 Mode: incremental
+write_csv: True
 Existing loaded: 0 (parse_errors=0)
-New markets added this run: 408
+New markets added this run: 424
 
 Outputs
 - Markets JSONL:     C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\markets\markets.jsonl
@@ -12,36 +13,36 @@ Outputs
 - Summary TXT:       C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\markets\summary.txt
 
 Resolution time range (based on endDate)
-- Earliest resolved: 2025-09-24 11:00:00Z
-- Latest resolved:   2026-01-21 14:00:00Z
+- Earliest resolved: 2025-06-05 00:00:00Z
+- Latest resolved:   2026-01-21 22:00:00Z
 
 Counts (overall output)
-- Total resolved markets saved: 408
-- Total Yes: 307
-- Total No:  101
+- Total resolved markets saved: 424
+- Total Yes: 322
+- Total No:  102
 
 This run (scan/fetch/build)
-- Scanned closed earnings-tag markets: 414
+- Scanned closed earnings-tag markets: 429
 - Skipped already-known markets:       0
-- Candidates after filter:             408
-- Details fetched OK:                  408
+- Candidates after filter:             424
+- Details fetched OK:                  424
 - Detail errors:                       0
-- New resolved markets built:          408 (Yes=307, No=101)
-- Discarded markets logged:            6
+- New resolved markets built:          424 (Yes=322, No=102)
+- Discarded markets logged:            5
 
 Discard reasons (this run)
-- no_ticker_in_question: 6
+- no_ticker_detected: 5
 
 volumeNum stats (overall output)
-- count:  408
+- count:  424
 - min:    1336.252219
 - max:    995129.929459
-- mean:   25196.17514445833
-- median: 15279.034262000001
+- mean:   25109.47621263915
+- median: 15082.034843000001
 
 Run metadata
 - Cancelled: False (stage=finalize)
-- Elapsed seconds: 194.381
+- Elapsed seconds: 231.058
 - Page limit: 200
 - Max workers: 15
 - END_DATE_MIN: None
