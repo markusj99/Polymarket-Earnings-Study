@@ -21,8 +21,8 @@ UPDATES (per your latest feedback)
 4) All bar-plot x tick labels are rotated straight down (90 degrees) to reduce overlap.
    (Outcome plot stays unrotated where it’s already clean.)
 
-NEW (this request)
-------------------
+NEW (previous request)
+----------------------
 5) Timeline plot: stacked dots by day for when markets ended (UTC date).
    - Uses observed end timestamps from prices if available; falls back to markets end fields.
    - Outputs:
@@ -32,6 +32,24 @@ NEW (this request)
    min, mean, max, p0.05, p0.95, stdev, IQR (+ n)
    - Outputs:
      - 11b_all_variables_summary_stats.csv
+
+NEW (this request)
+------------------
+7) Plot 02b updated: market end-date timeline colored by resolved side:
+   - YES = green, NO = red
+   - If both outcomes occur on the same day, YES points are always stacked above NO points.
+8) Added scatter plot: Polymarket volume (x) vs corporate market cap (y), log-log, with:
+   - red slope (fit) line
+   - tick labels formatted to show *actual* values (not scientific notation) even on log axes
+   - Outputs:
+     - 15b_volume_vs_market_cap_slope_coefficients.csv
+     - 15b_volume_vs_market_cap_scatter_loglog_with_slope.png
+9) Added calibration-style plots: binned implied YES prices vs average resolved outcome (YES=1),
+   with bins of width 0.2 and a 45-degree baseline line:
+   - one plot per snapshot
+   - Outputs:
+     - 03b_binned_outcomes_by_snapshot.csv
+     - 03b_binned_outcomes_calibration_<snapshot>.png (one per snapshot)
 
 OUTPUT
 ------
@@ -341,6 +359,54 @@ def frequency_table(series: pd.Series, name: str) -> pd.DataFrame:
 
 
 # -----------------------------
+# Resolved outcome helpers
+# -----------------------------
+def normalize_resolved_outcome(series: pd.Series) -> pd.Series:
+    """Normalize resolved outcome strings (best-effort)."""
+    s = series.copy().astype("object")
+    s = s.where(s.notna(), np.nan)
+    s = s.astype(str).str.strip().str.upper()
+    s = s.replace({"NAN": np.nan, "NONE": np.nan, "": np.nan})
+    return s
+
+
+def build_resolved_outcome_map(markets: pd.DataFrame, validation: pd.DataFrame) -> pd.DataFrame:
+    """
+    Build a minimal mapping of (market_id[, slug]) -> resolvedOutcome_norm, resolved_yes_int.
+
+    Priority:
+      1) markets.resolvedOutcome (markets.jsonl)
+      2) validation.polymarket_resolved_outcome (correct.jsonl) as fallback
+    """
+    out = pd.DataFrame()
+
+    if "resolvedOutcome" in markets.columns and "market_id" in markets.columns:
+        cols = ["market_id"] + (["slug"] if "slug" in markets.columns else []) + ["resolvedOutcome"]
+        tmp = markets[cols].copy()
+        tmp["resolvedOutcome_norm"] = normalize_resolved_outcome(tmp["resolvedOutcome"])
+        out = tmp.drop(columns=["resolvedOutcome"], errors="ignore")
+
+    elif "polymarket_resolved_outcome" in validation.columns and "market_id" in validation.columns:
+        cols = ["market_id"] + (["slug"] if "slug" in validation.columns else []) + ["polymarket_resolved_outcome"]
+        tmp = validation[cols].copy()
+        tmp["resolvedOutcome_norm"] = normalize_resolved_outcome(tmp["polymarket_resolved_outcome"])
+        out = tmp.drop(columns=["polymarket_resolved_outcome"], errors="ignore")
+
+    if out.empty:
+        return pd.DataFrame(columns=["market_id", "slug", "resolvedOutcome_norm", "resolved_yes_int"])
+
+    # Keep only YES/NO outcomes (others are not plotted in 02b and not used in binned calibration).
+    out = out[out["resolvedOutcome_norm"].isin(["YES", "NO"])].copy()
+    out["resolved_yes_int"] = (out["resolvedOutcome_norm"] == "YES").astype(int)
+
+    # Deduplicate
+    dedupe_cols = ["market_id"] + (["slug"] if "slug" in out.columns else [])
+    out = out.drop_duplicates(subset=dedupe_cols, keep="first")
+
+    return out
+
+
+# -----------------------------
 # End-date / timeline helpers
 # -----------------------------
 def _first_existing_column(df: pd.DataFrame, candidates: List[str]) -> Optional[str]:
@@ -455,42 +521,183 @@ def build_market_end_dates(markets: pd.DataFrame, prices: pd.DataFrame) -> pd.Da
 
 def plot_market_end_timeline(end_dates: pd.DataFrame, out_dir: Path, stem: str) -> None:
     """
+    Plot 02b:
+
     Timeline plot: one dot per market end date; multiple dots on same date are stacked vertically.
+
+    If a resolved outcome column is available (resolvedOutcome_norm with YES/NO):
+      - YES dots are green
+      - NO dots are red
+      - If both outcomes exist on the same day, YES dots are stacked *above* NO dots.
+
+    If resolved outcome is not available, falls back to a single-color stacked-dot plot.
     """
     fig = plt.figure(figsize=(12, 4.8))
     ax = fig.add_subplot(111)
 
-    if end_dates.empty or end_dates["end_date_utc"].isna().all():
+    if end_dates.empty or ("end_date_utc" not in end_dates.columns) or end_dates["end_date_utc"].isna().all():
         ax.text(0.5, 0.5, "No end-date data available to plot", ha="center", va="center")
         ax.set_title("Market end dates timeline (stacked dots)")
         save_plot_png(fig, out_dir, stem)
         return
 
-    # Count markets per date
-    counts = (
-        end_dates.dropna(subset=["end_date_utc"])
-        .groupby("end_date_utc", as_index=True)
+    has_outcome = "resolvedOutcome_norm" in end_dates.columns and end_dates["resolvedOutcome_norm"].notna().any()
+
+    if not has_outcome:
+        # Fallback: original (single-color) stacked dots
+        counts = (
+            end_dates.dropna(subset=["end_date_utc"])
+            .groupby("end_date_utc", as_index=True)
+            .size()
+            .sort_index()
+        )
+
+        xs: List[pd.Timestamp] = []
+        ys: List[int] = []
+
+        for d, c in counts.items():
+            dt = pd.to_datetime(str(d), utc=True)
+            for j in range(int(c)):
+                xs.append(dt)
+                ys.append(j + 1)
+
+        ax.scatter(xs, ys)
+        ax.set_title("Market end dates timeline (stacked dots per day, UTC)")
+        ax.set_xlabel("End date (UTC)")
+        ax.set_ylabel("Stack index (markets ended on that day)")
+        fig.autofmt_xdate(rotation=45, ha="right")
+        save_plot_png(fig, out_dir, stem)
+        return
+
+    # Outcome-colored timeline: build YES/NO counts per date, then expand into stacked points.
+    tmp = end_dates.dropna(subset=["end_date_utc", "resolvedOutcome_norm"]).copy()
+    tmp = tmp[tmp["resolvedOutcome_norm"].isin(["YES", "NO"])]
+
+    if tmp.empty:
+        ax.text(0.5, 0.5, "No YES/NO resolved outcomes available to plot", ha="center", va="center")
+        ax.set_title("Market end dates timeline by outcome (stacked dots, UTC)")
+        save_plot_png(fig, out_dir, stem)
+        return
+
+    by_date_outcome = (
+        tmp.groupby(["end_date_utc", "resolvedOutcome_norm"], as_index=False)
         .size()
-        .sort_index()
+        .rename(columns={"size": "n_markets"})
+        .sort_values(["end_date_utc", "resolvedOutcome_norm"])
     )
 
-    xs: List[pd.Timestamp] = []
-    ys: List[int] = []
+    # Pivot to get per-day YES/NO counts
+    piv = by_date_outcome.pivot_table(
+        index="end_date_utc",
+        columns="resolvedOutcome_norm",
+        values="n_markets",
+        aggfunc="sum",
+        fill_value=0,
+    ).sort_index()
 
-    for d, c in counts.items():
+    xs_no: List[pd.Timestamp] = []
+    ys_no: List[int] = []
+    xs_yes: List[pd.Timestamp] = []
+    ys_yes: List[int] = []
+
+    for d, row in piv.iterrows():
         dt = pd.to_datetime(str(d), utc=True)
-        for j in range(int(c)):
-            xs.append(dt)
-            ys.append(j + 1)
+        n_no = int(row["NO"]) if "NO" in row.index else int(row.get("NO", 0))
+        n_yes = int(row["YES"]) if "YES" in row.index else int(row.get("YES", 0))
 
-    ax.scatter(xs, ys)
-    ax.set_title("Market end dates timeline (stacked dots per day, UTC)")
+        # NO (red): stack downward (negative)
+        for j in range(n_no):
+            xs_no.append(dt)
+            ys_no.append(-(j + 1))
+
+        # YES (green): stack upward (positive)
+        for j in range(n_yes):
+            xs_yes.append(dt)
+            ys_yes.append(j + 1)
+
+    if xs_no:
+        ax.scatter(xs_no, ys_no, color="red", label="NO")
+    if xs_yes:
+        ax.scatter(xs_yes, ys_yes, color="green", label="YES")
+
+    ax.set_title("Market end dates timeline by resolved outcome (stacked dots per day, UTC)")
     ax.set_xlabel("End date (UTC)")
-    ax.set_ylabel("Stack index (markets ended on that day)")
+    ax.set_ylabel("Stack index (YES stacked above NO for the same day)")
+    ax.legend(loc="upper left", frameon=False)
+    ax.axhline(0, linewidth=1.0, color="black")
+    ax.set_ylabel("Stack index (YES above 0, NO below 0)")
+    ax.set_title("Market end dates timeline by resolved outcome (YES=+1, NO=-1; stacked per day, UTC)")
 
-    # Make date labels readable
+
     fig.autofmt_xdate(rotation=45, ha="right")
     save_plot_png(fig, out_dir, stem)
+
+
+# -----------------------------
+# Formatting helpers (for log-axis readability)
+# -----------------------------
+def _fmt_compact_number(x: float) -> str:
+    """
+    Compact number formatter for axis ticks.
+
+    Examples:
+      950 -> "950"
+      1_200 -> "1.2K"
+      2_500_000 -> "2.5M"
+    """
+    try:
+        x = float(x)
+    except Exception:
+        return ""
+
+    if not np.isfinite(x):
+        return ""
+
+    ax = abs(x)
+    if ax >= 1e12:
+        return f"{x/1e12:.0f}T"
+    if ax >= 1e9:
+        return f"{x/1e9:.0f}B"
+    if ax >= 1e6:
+        return f"{x/1e6:.0f}M"
+    if ax >= 1e3:
+        return f"{x/1e3:.1f}K"
+    if ax >= 10:
+        return f"{x:.0f}"
+    return f"{x:.2g}"
+
+
+def _fmt_compact_usd(x: float) -> str:
+    """Compact USD formatter for axis ticks."""
+    try:
+        x = float(x)
+    except Exception:
+        return ""
+    if not np.isfinite(x):
+        return ""
+    ax = abs(x)
+    if ax >= 1e12:
+        return f"${x/1e12:.0f}T"
+    if ax >= 1e9:
+        return f"${x/1e9:.0f}B"
+    if ax >= 1e6:
+        return f"${x/1e6:.0f}M"
+    if ax >= 1e3:
+        return f"${x/1e3:.0f}K"
+    return f"${x:.0f}"
+
+
+def fmt_volume_axis(x: float, pos: int) -> str:
+    # Matplotlib formatter signature: (x, pos) -> str
+    if x <= 0:
+        return ""
+    return _fmt_compact_number(x)
+
+
+def fmt_usd_axis(x: float, pos: int) -> str:
+    if x <= 0:
+        return ""
+    return _fmt_compact_usd(x)
 
 
 # -----------------------------
@@ -839,10 +1046,22 @@ def run_descriptive_statistics(
 
     # -----------------------------
     # 02b) Market end-date timeline (stacked dots) + counts table
+    #      UPDATED: colors by resolved side (YES green, NO red) when possible.
     # -----------------------------
     try:
         end_dates = build_market_end_dates(markets=markets, prices=prices)
-        # Counts table
+
+        # Attach resolved outcome (YES/NO) for coloring, if available.
+        outcome_map = build_resolved_outcome_map(markets=markets, validation=validation)
+        if not outcome_map.empty and not end_dates.empty:
+            join_cols = ["market_id"] + (["slug"] if ("slug" in end_dates.columns and "slug" in outcome_map.columns) else [])
+            end_dates = end_dates.merge(
+                outcome_map[join_cols + ["resolvedOutcome_norm"]],
+                on=join_cols,
+                how="left",
+            )
+
+        # Counts table (unchanged)
         if (not end_dates.empty) and end_dates["end_date_utc"].notna().any():
             counts_tbl = (
                 end_dates.dropna(subset=["end_date_utc"])
@@ -859,7 +1078,7 @@ def run_descriptive_statistics(
             ]
             (out_dir / "logs" / "MARKET_END_DATES_NOTE.txt").write_text("\n".join(note), encoding="utf-8")
 
-        # Plot
+        # Plot (UPDATED)
         plot_market_end_timeline(end_dates, out_dir, "02b_market_end_dates_timeline")
     except Exception as e:
         (out_dir / "logs" / "MARKET_END_DATES_ERROR.txt").write_text(
@@ -896,6 +1115,144 @@ def run_descriptive_statistics(
             out_dir=out_dir,
             stem="03_outcomes_distribution_validation",
             rotate=0,
+        )
+
+    # -----------------------------
+    # 03b) Binned outcomes by snapshot (calibration-style plots)
+    # -----------------------------
+    try:
+        # Join prices_long (snapshot YES prices) with resolved outcomes (YES/NO -> 1/0).
+        outcome_map = build_resolved_outcome_map(markets=markets, validation=validation)
+
+        if outcome_map.empty:
+            (out_dir / "logs" / "BINNED_OUTCOMES_NOTE.txt").write_text(
+                "Skipped binned outcome plots (03b) because no resolved outcome mapping (YES/NO) was found.",
+                encoding="utf-8",
+            )
+        else:
+            join_cols = ["market_id"] + (["slug"] if ("slug" in prices_long.columns and "slug" in outcome_map.columns) else [])
+
+            pl = prices_long.merge(
+                outcome_map[join_cols + ["resolved_yes_int"]],
+                on=join_cols,
+                how="inner",
+            )
+
+            # Use YES price as implied probability of YES.
+            pl = pl.dropna(subset=["yes_price", "resolved_yes_int"])
+            pl = pl[(pl["yes_price"] >= 0.0) & (pl["yes_price"] <= 1.0)]
+
+            if pl.empty:
+                (out_dir / "logs" / "BINNED_OUTCOMES_NOTE.txt").write_text(
+                    "Skipped binned outcome plots (03b) because there were no usable rows after joining "
+                    "prices_long with resolved outcomes and filtering to 0<=yes_price<=1.",
+                    encoding="utf-8",
+                )
+            else:
+                # Define 0.2-wide bins: [0.0,0.2), [0.2,0.4), ... [0.8,1.0]
+                # We use a slightly-extended last edge so a value of exactly 1.0 is included.
+                edges = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0000001]
+                labels = ["0.0-0.2", "0.2-0.4", "0.4-0.6", "0.6-0.8", "0.8-1.0"]
+
+                bin_meta = []
+                for i in range(len(edges) - 1):
+                    lo = float(edges[i])
+                    hi = float(edges[i + 1])
+                    # Display hi as 1.0 for last bin even though the edge is 1.0000001
+                    hi_disp = 1.0 if i == len(edges) - 2 else hi
+                    mid = (lo + hi_disp) / 2.0
+                    bin_meta.append({"bin_label": labels[i], "bin_lower": lo, "bin_upper": hi_disp, "bin_midpoint": mid})
+
+                bin_meta_df = pd.DataFrame(bin_meta)
+
+                # Build table
+                rows = []
+                snapshots = sort_snapshots(list(pl["snapshot"].astype(str).unique()))
+                for snap in snapshots:
+                    sub = pl[pl["snapshot"].astype(str) == str(snap)].copy()
+                    if sub.empty:
+                        continue
+
+                    sub["prob_bin"] = pd.cut(
+                        sub["yes_price"],
+                        bins=edges,
+                        labels=labels,
+                        right=False,  # [a, b)
+                        include_lowest=True,
+                    )
+
+                    agg = (
+                        sub.groupby("prob_bin", as_index=False)
+                        .agg(
+                            n_obs=("resolved_yes_int", "size"),
+                            avg_resolved_yes=("resolved_yes_int", "mean"),
+                            avg_yes_price=("yes_price", "mean"),
+                        )
+                    )
+
+                    # Ensure all bins exist (even if empty)
+                    agg = agg.set_index("prob_bin").reindex(labels).reset_index()
+                    agg = agg.rename(columns={"prob_bin": "bin_label"})
+                    agg["snapshot"] = str(snap)
+
+                    # Attach bin edges/midpoints
+                    agg = agg.merge(bin_meta_df, on="bin_label", how="left")
+
+                    rows.append(agg)
+
+                binned_tbl = pd.concat(rows, ignore_index=True) if rows else pd.DataFrame()
+
+                if not binned_tbl.empty:
+                    save_table_csv(binned_tbl, out_dir, "03b_binned_outcomes_by_snapshot")
+
+                    # One plot per snapshot
+                    for snap in snapshots:
+                        snap_tbl = binned_tbl[binned_tbl["snapshot"] == str(snap)].copy()
+                        if snap_tbl.empty:
+                            continue
+
+                        fig = plt.figure()
+                        ax = fig.add_subplot(111)
+
+                        # Baseline 45-degree line
+                        ax.plot([0.0, 1.0], [0.0, 1.0], linestyle="--", linewidth=1.0, color="black")
+
+                        x = snap_tbl["bin_midpoint"].values.astype(float)
+                        y = snap_tbl["avg_resolved_yes"].values.astype(float)
+
+                        ax.plot(x, y, marker="o")
+
+                        # Optional: annotate counts (only 5 bins, so labels are readable)
+                        for _, r in snap_tbl.iterrows():
+                            if pd.notna(r.get("n_obs")) and int(r.get("n_obs") or 0) > 0 and pd.notna(r.get("avg_resolved_yes")):
+                                ax.annotate(
+                                    str(int(r["n_obs"])),
+                                    (float(r["bin_midpoint"]), float(r["avg_resolved_yes"])),
+                                    textcoords="offset points",
+                                    xytext=(0, 6),
+                                    ha="center",
+                                    fontsize=8,
+                                )
+
+                        ax.set_xlim(0.0, 1.0)
+                        ax.set_ylim(0.0, 1.0)
+                        ax.set_xlabel("Implied YES price bin (midpoint)")
+                        ax.set_ylabel("Average resolved outcome (YES=1)")
+                        ax.set_title(
+                            "Binned outcomes vs implied YES prices (calibration)\n"
+                            f"Snapshot: {snap} | Bins: width 0.2 | Labels show n per bin"
+                        )
+
+                        save_plot_png(fig, out_dir, f"03b_binned_outcomes_calibration_{str(snap)}")
+                else:
+                    (out_dir / "logs" / "BINNED_OUTCOMES_NOTE.txt").write_text(
+                        "Skipped binned outcome plots (03b) because no binned table rows were produced.",
+                        encoding="utf-8",
+                    )
+    except Exception as e:
+        (out_dir / "logs" / "BINNED_OUTCOMES_ERROR.txt").write_text(
+            f"Failed to build binned outcome plots (03b).\nError: {repr(e)}",
+            encoding="utf-8",
         )
 
     # -----------------------------
@@ -1245,6 +1602,83 @@ def run_descriptive_statistics(
             ax.set_ylabel("Count")
             save_plot_png(fig, out_dir, "15_market_cap_hist_logx")
 
+        # 15b) Volume vs market cap scatter (log-log) + slope line (RED) + readable tick labels
+        if (not corp_in_dataset.empty) and ("market_cap" in corp_in_dataset.columns) and ("volumeNum" in markets.columns):
+            # Merge: market-level volumeNum with firm-level market_cap via ticker
+            mcap_merge = markets[["market_id", "ticker_norm", "volumeNum"]].copy()
+            mcap_merge = mcap_merge.rename(columns={"ticker_norm": "ticker"})
+            mcap_merge["ticker"] = normalize_ticker(mcap_merge["ticker"])
+            mcap_merge["volumeNum"] = safe_numeric(mcap_merge["volumeNum"])
+
+            corp_caps = corp_in_dataset[["ticker", "market_cap"]].copy()
+            corp_caps["ticker"] = normalize_ticker(corp_caps["ticker"])
+            corp_caps["market_cap"] = safe_numeric(corp_caps["market_cap"])
+
+            mv = mcap_merge.merge(corp_caps, on="ticker", how="inner")
+            mv = mv.dropna(subset=["volumeNum", "market_cap"])
+            mv = mv[(mv["volumeNum"] > 0) & (mv["market_cap"] > 0)]
+
+            if not mv.empty:
+                x = mv["volumeNum"].values.astype(float)
+                y = mv["market_cap"].values.astype(float)
+
+                # Fit in log-log space: log10(y) = a + b*log10(x)
+                lx = np.log10(x)
+                ly = np.log10(y)
+
+                if mv.shape[0] >= 2:
+                    b, a = np.polyfit(lx, ly, 1)
+
+                    # Line in original units:
+                    x_line = np.logspace(np.log10(x.min()), np.log10(x.max()), 200)
+                    y_line = 10 ** (a + b * np.log10(x_line))
+
+                    # R^2 (in log space)
+                    ly_hat = a + b * lx
+                    ss_res = float(np.sum((ly - ly_hat) ** 2))
+                    ss_tot = float(np.sum((ly - float(np.mean(ly))) ** 2))
+                    r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else np.nan
+                else:
+                    a, b, r2 = np.nan, np.nan, np.nan
+                    x_line = np.array([])
+                    y_line = np.array([])
+
+                fig = plt.figure()
+                ax = fig.add_subplot(111)
+                ax.scatter(x, y)
+
+                if x_line.size and y_line.size:
+                    ax.plot(x_line, y_line, color="red")
+
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+
+                # Format tick labels so actual values are visible despite log scaling
+                ax.xaxis.set_major_formatter(FuncFormatter(fmt_volume_axis))
+                ax.yaxis.set_major_formatter(FuncFormatter(fmt_usd_axis))
+
+                if mv.shape[0] >= 2 and np.isfinite(a) and np.isfinite(b):
+                    subtitle = f"Fit (log-log): log10(mcap) = {a:.3f} + {b:.3f}*log10(volume) | R²={r2:.3f}"
+                else:
+                    subtitle = "Fit (log-log): not enough data for slope line"
+
+                ax.set_title("Polymarket volume vs corporate market cap (log-log)\n" + subtitle)
+                ax.set_xlabel("volumeNum (log scale; ticks show actual values)")
+                ax.set_ylabel("market_cap (USD, log scale; ticks show actual values)")
+
+                save_plot_png(fig, out_dir, "15b_volume_vs_market_cap_scatter_loglog_with_slope")
+
+                save_table_csv(
+                    pd.DataFrame([{
+                        "a_intercept_log10_market_cap": a,
+                        "b_slope_log10_volume": b,
+                        "r2_log_space": r2,
+                        "n_obs": int(mv.shape[0]),
+                    }]),
+                    out_dir,
+                    "15b_volume_vs_market_cap_slope_coefficients",
+                )
+
         # 16) HQ country
         if (not corp_in_dataset.empty) and ("hq_country" in corp_in_dataset.columns):
             tbl = frequency_table(corp_in_dataset["hq_country"], "hq_country")
@@ -1449,8 +1883,9 @@ def run_descriptive_statistics(
         "Key outputs:",
         "- 01_observations_per_snapshot (CSV + PNG plot)",
         "- 02_observed_span_hours (CSV + PNG hist)",
-        "- 02b_market_end_dates_counts (CSV) + 02b_market_end_dates_timeline (PNG)",
+        "- 02b_market_end_dates_counts (CSV) + 02b_market_end_dates_timeline (PNG; colored by YES/NO if available)",
         "- 03_outcomes_distribution_validation (CSV + PNG plot) and markets table-only",
+        "- 03b_binned_outcomes_by_snapshot (CSV) + binned calibration plots per snapshot (PNG)",
         "- 04_complement_violations (CSV + PNG rate plot)",
         "- 05_tags_distribution (CSV + PNG plot)",
         "- 06_volume distributions (CSV + PNG plots)",
@@ -1465,6 +1900,8 @@ def run_descriptive_statistics(
         "Corporate outputs:",
         "- 14_firms_seen_more_than_once_summary (CSV)",
         "- 14_firm_repeat_counts_distribution (CSV + PNG bar plot; integer x-axis)",
+        "- 15_market_cap_* (CSV + PNG hist plots)",
+        "- 15b_volume_vs_market_cap_scatter_loglog_with_slope (PNG) + coefficients table (CSV)",
         "- 17_main_exchange_distribution_raw (CSV)",
         "- 17_main_exchange_distribution_abbrev (CSV) + plot uses abbreviations",
         "- 21_analyst_coverage_distribution (CSV + PNG bar plot)",

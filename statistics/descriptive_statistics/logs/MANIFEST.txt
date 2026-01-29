@@ -8,8 +8,9 @@ Snapshot order enforced:
 Key outputs:
 - 01_observations_per_snapshot (CSV + PNG plot)
 - 02_observed_span_hours (CSV + PNG hist)
-- 02b_market_end_dates_counts (CSV) + 02b_market_end_dates_timeline (PNG)
+- 02b_market_end_dates_counts (CSV) + 02b_market_end_dates_timeline (PNG; colored by YES/NO if available)
 - 03_outcomes_distribution_validation (CSV + PNG plot) and markets table-only
+- 03b_binned_outcomes_by_snapshot (CSV) + binned calibration plots per snapshot (PNG)
 - 04_complement_violations (CSV + PNG rate plot)
 - 05_tags_distribution (CSV + PNG plot)
 - 06_volume distributions (CSV + PNG plots)
@@ -24,6 +25,8 @@ Key outputs:
 Corporate outputs:
 - 14_firms_seen_more_than_once_summary (CSV)
 - 14_firm_repeat_counts_distribution (CSV + PNG bar plot; integer x-axis)
+- 15_market_cap_* (CSV + PNG hist plots)
+- 15b_volume_vs_market_cap_scatter_loglog_with_slope (PNG) + coefficients table (CSV)
 - 17_main_exchange_distribution_raw (CSV)
 - 17_main_exchange_distribution_abbrev (CSV) + plot uses abbreviations
 - 21_analyst_coverage_distribution (CSV + PNG bar plot)

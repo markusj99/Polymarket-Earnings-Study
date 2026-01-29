@@ -6,37 +6,23 @@ r"""
 Validate Polymarket "beat earnings / beat EPS estimate" market resolutions against Refinitiv Eikon
 (Earnings Surprise / Estimates data).
 
+Key fixes vs the previous "new script":
+- Robust batched symbology parsing (case-insensitive input column detection + row-order fallback).
+- Robust batched Eikon calls: if a batch fails due to one bad instrument, we automatically bisect the batch
+  and salvage the rest (for get_data + get_symbology).
+- Tightened validation heuristic to avoid "false-valid" instruments that later yield no EPS events.
+- Prefer .N before .O for US tickers when suffix-guessing.
+
 OUTPUTS (always written)
 ------------------------
 1) correct.jsonl
-   - Matched to an Eikon event + estimate and Polymarket resolution agrees with expected outcome.
-
 2) incorrectly_resolved.jsonl
-   - Matched to an Eikon event + estimate but Polymarket resolution disagrees with expected outcome.
-
 3) unmatched.jsonl
-   - Could not match to Eikon (missing ticker/anchor/ric/event/actual/estimate/etc). skip_reason explains why.
-
-CONSOLE OUTPUT
---------------
-- Shows a tqdm progress bar during processing.
-- Prints ONE summary block at the end (after all markets are processed).
-- Prints ERROR messages only when something catastrophic prevents the script from continuing.
-- Suppresses noisy third-party HTTP logs and the Eikon internal FutureWarning spam.
-
-FAIL-FAST ON EIKON "500 Network Error" (optional)
--------------------------------------------------
-If Eikon repeatedly returns error code 500 with message "Network Error", that typically means
-Workspace/Eikon cannot reach upstream services (logged out/offline, VPN/proxy/firewall, or outage).
-By default, this script aborts early in that scenario and writes partial outputs.
-
-Disable with: --no-fail-fast
+(+ CSV versions)
 
 NOTES
 -----
 - Requires Eikon Desktop / Refinitiv Workspace running + logged in, with Data API proxy available.
-- Entitlements vary: TR.EPSMean may be unavailable; the script falls back to Polymarket estimate
-  from question/slug when possible.
 """
 
 from __future__ import annotations
@@ -54,7 +40,12 @@ import warnings
 from dataclasses import dataclass, asdict
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
+
+try:
+    import pandas as pd  # type: ignore
+except Exception:
+    pd = None  # type: ignore
 
 try:
     import eikon as ek  # type: ignore
@@ -74,7 +65,8 @@ except Exception:
 DEFAULT_VALIDATION_DIR = Path(__file__).resolve().parent / "data" / "validation"
 DEFAULT_MARKETS_PATH = Path(__file__).resolve().parent / "data" / "markets" / "markets.jsonl"
 
-RIC_SUFFIX_GUESSES = [".O", ".N", ".A", ".L"]
+# Prefer NYSE (.N) before NASDAQ (.O) in suffix guessing.
+RIC_SUFFIX_GUESSES = [".N", ".O", ".A", ".L", ".K"]
 
 DEFAULT_EVENT_PRE_DAYS = 10
 DEFAULT_EVENT_POST_DAYS = 30
@@ -88,6 +80,11 @@ EIKON_RETRY_BASE_SLEEP = 0.7
 DEFAULT_EIKON_PORT_CANDIDATES = [9000, 9060]
 EIKON_STATUS_PATHS = ["/api/status", "/api/handshake"]
 
+# Batching knobs (tunable via CLI)
+DEFAULT_SYMBOLOGY_CHUNK_SIZE = 250     # symbols per ek.get_symbology call
+DEFAULT_VALIDATE_CHUNK_SIZE = 200      # instruments per ek.get_data validation call
+DEFAULT_EPS_CHUNK_SIZE = 25            # RICs per EPS history call
+
 
 # =========================
 # Logging (quiet)
@@ -97,22 +94,14 @@ LOG = logging.getLogger("eikon_eps_validator")
 
 
 class NoiseFilter(logging.Filter):
-    """
-    Drop known noisy messages so the tqdm bar stays clean.
-    NOTE: Python warnings are not handled here (use warnings.filterwarnings).
-    """
+    """Drop known noisy messages so the tqdm bar stays clean."""
 
     def filter(self, record: logging.LogRecord) -> bool:
         msg = record.getMessage()
-
-        # Common spam from HTTP stacks
         if "HTTP Request:" in msg:
             return False
-
-        # Repeated Eikon "Network Error" spam; we emit a single fatal error ourselves if needed.
         if ("Error code 500" in msg and "Network Error" in msg) or ('"message":"Network Error"' in msg):
             return False
-
         return True
 
 
@@ -131,10 +120,6 @@ class TqdmLoggingHandler(logging.Handler):
 
 
 def _suppress_noisy_third_party_loggers() -> None:
-    """
-    Raise verbosity thresholds of known chatty stacks.
-    This prevents things like "HTTP Request: POST http://127.0.0.1:9000/..." from printing.
-    """
     for name in [
         "urllib3",
         "requests",
@@ -150,11 +135,6 @@ def _suppress_noisy_third_party_loggers() -> None:
 
 
 def setup_logging() -> None:
-    """
-    Catastrophic-only logging:
-    - root level ERROR
-    - handler has NoiseFilter to drop spam
-    """
     root = logging.getLogger()
     root.handlers.clear()
     root.setLevel(logging.ERROR)
@@ -168,24 +148,44 @@ def setup_logging() -> None:
 
 
 def setup_warnings_suppression() -> None:
-    """
-    Suppress the specific eikon/pandas FutureWarning that breaks tqdm output, e.g.:
-      eikon/data_grid.py: FutureWarning: errors='ignore' is deprecated ...
-    """
     warnings.filterwarnings(
         "ignore",
         category=FutureWarning,
         module=r"eikon\.data_grid",
     )
 
+def is_missing_value(x: Any) -> bool:
+    if x is None:
+        return True
+    # pandas NA / NaN
+    try:
+        import pandas as _pd  # type: ignore
+        if _pd.isna(x):
+            return True
+    except Exception:
+        pass
+
+    s = str(x).strip()
+    if not s:
+        return True
+    return s.lower() in {"nan", "<na>", "none", "null"}
+
+
 
 # =========================
-# Exceptions
+# Exceptions / Overrides
 # =========================
 
 
 class FatalEikonNetworkError(RuntimeError):
     """Raised when Eikon repeatedly returns 500 'Network Error' and fail-fast is enabled."""
+
+# Eikon RICs can be case-sensitive. Berkshire Hathaway Class A is BRKa in Eikon.
+TICKER_TO_RIC_OVERRIDES: Dict[str, str] = {
+    "BRK.A": "BRKa",
+    # Optional (if you ever see it): "BRK.B": "BRKb",
+}
+
 
 
 # =========================
@@ -200,6 +200,9 @@ class EarningsEvent:
     period_end_date: Optional[date]
     actual_eps: Optional[float]
     mean_estimate: Optional[float]
+    high_estimate: Optional[float]
+    low_estimate: Optional[float]
+    stddev_estimate: Optional[float]
 
 
 @dataclass
@@ -225,6 +228,9 @@ class ResultRecord:
 
     eikon_actual_eps: Optional[float]
     eikon_eps_mean_estimate: Optional[float]
+    eikon_eps_high_estimate: Optional[float]
+    eikon_eps_low_estimate: Optional[float]
+    eikon_eps_stddev_estimate: Optional[float]
 
     estimate_used: Optional[float]
     estimate_used_source: Optional[str]
@@ -236,6 +242,12 @@ class ResultRecord:
 
     status: str  # MATCHED_CORRECT | MATCHED_INCORRECT | UNMATCHED
     skip_reason: Optional[str]
+
+
+@dataclass
+class PendingMarket:
+    base: ResultRecord
+    anchor_dt: date
 
 
 # =========================
@@ -348,6 +360,8 @@ def parse_anchor_date(
                 return d, f"json_scan:{k}"
 
     return None, None
+
+
 
 
 def extract_estimate_from_question(question: Optional[str]) -> Tuple[Optional[float], Optional[str]]:
@@ -497,9 +511,6 @@ def _http_get_text(url: str, timeout_s: float = 1.5) -> Optional[str]:
 
 
 def _read_port_inuse_file() -> Optional[int]:
-    """
-    Attempt to read the Eikon API Proxy port from common Windows locations.
-    """
     appdata = os.getenv("APPDATA")
     if not appdata:
         return None
@@ -522,9 +533,6 @@ def _read_port_inuse_file() -> Optional[int]:
 
 
 def detect_eikon_proxy_port(extra_ports: Optional[List[int]] = None) -> Optional[int]:
-    """
-    Detect a working localhost port by probing /api/status and /api/handshake.
-    """
     ports: List[int] = []
     file_port = _read_port_inuse_file()
     if file_port:
@@ -533,7 +541,6 @@ def detect_eikon_proxy_port(extra_ports: Optional[List[int]] = None) -> Optional
     if extra_ports:
         ports.extend([p for p in extra_ports if isinstance(p, int) and 1 <= p <= 65535])
 
-    # Deduplicate while preserving order
     seen = set()
     uniq_ports: List[int] = []
     for p in ports:
@@ -564,16 +571,15 @@ def require_tqdm() -> None:
         raise RuntimeError("tqdm package not available. Install via: pip install tqdm")
 
 
-def init_eikon(app_key: str, eikon_port: Optional[int], require_proxy: bool) -> None:
-    """
-    Initialize Eikon SDK.
+def require_pandas() -> None:
+    if pd is None:
+        raise RuntimeError("pandas not available. Install via: pip install pandas")
 
-    We intentionally do not print INFO logs here. Any catastrophic issue raises.
-    """
+
+def init_eikon(app_key: str, eikon_port: Optional[int], require_proxy: bool) -> None:
     require_eikon()
     ek.set_app_key(app_key)
 
-    # Attempt to disable internal SDK logging if available (helps keep output clean).
     try:
         set_level = getattr(ek, "set_log_level", None)
         if callable(set_level):
@@ -618,18 +624,12 @@ def eikon_retry_get_data(
     retries: int,
     fail_fast: bool,
 ) -> Tuple[Optional[Any], Optional[Any]]:
-    """
-    Wrapper around ek.get_data with retries/backoff.
-
-    - Silent on intermediate failures to keep output clean.
-    - If all retries fail with 500 "Network Error" and fail_fast=True, raises FatalEikonNetworkError.
-    """
     last_exc: Optional[Exception] = None
     network_error_seen = False
 
     for attempt in range(retries):
         try:
-            df, err = ek.get_data(instruments, fields, parameters=parameters)
+            df, err = ek.get_data(instruments, fields, parameters=parameters)  # type: ignore
             return df, err
         except Exception as exc:
             last_exc = exc
@@ -646,6 +646,69 @@ def eikon_retry_get_data(
     return None, last_exc
 
 
+def _merge_err(a: Any, b: Any) -> Any:
+    if a is None:
+        return b
+    if b is None:
+        return a
+    if isinstance(a, list) and isinstance(b, list):
+        return a + b
+    if isinstance(a, dict) and isinstance(b, dict):
+        out = dict(a)
+        for k, v in b.items():
+            if k not in out:
+                out[k] = v
+            else:
+                out[k] = [out[k], v]
+        return out
+    return [a, b]
+
+
+def safe_get_data(
+    instruments: List[str],
+    fields: List[str],
+    parameters: Dict[str, Any],
+    *,
+    retries: int,
+    fail_fast: bool,
+) -> Tuple[Optional[Any], Optional[Any]]:
+    """
+    Robust ek.get_data:
+    - Try the batch.
+    - If the batch fails (df is None) and len(instruments)>1, bisect and salvage.
+    """
+    if not instruments:
+        return None, None
+
+    df, err = eikon_retry_get_data(instruments, fields, parameters, retries=retries, fail_fast=fail_fast)
+    if df is not None:
+        return df, err
+
+    if len(instruments) <= 1:
+        return None, err
+
+    mid = len(instruments) // 2
+    df1, err1 = safe_get_data(instruments[:mid], fields, parameters, retries=retries, fail_fast=fail_fast)
+    df2, err2 = safe_get_data(instruments[mid:], fields, parameters, retries=retries, fail_fast=fail_fast)
+
+    if df1 is None and df2 is None:
+        return None, _merge_err(err1, err2)
+
+    if df1 is None:
+        return df2, _merge_err(err1, err2)
+    if df2 is None:
+        return df1, _merge_err(err1, err2)
+
+    require_pandas()
+    try:
+        return pd.concat([df1, df2], ignore_index=True, sort=False), _merge_err(err1, err2)  # type: ignore
+    except Exception:
+        try:
+            return df1._append(df2, ignore_index=True), _merge_err(err1, err2)
+        except Exception:
+            return df1, _merge_err(err1, err2)
+
+
 def find_col(df, needles: List[str]) -> Optional[str]:
     if df is None:
         return None
@@ -659,220 +722,569 @@ def find_col(df, needles: List[str]) -> Optional[str]:
     return None
 
 
-_TICKER_TO_RIC_CACHE: Dict[str, Optional[str]] = {}
-_INSTRUMENT_VALID_CACHE: Dict[str, bool] = {}
+def chunked(xs: List[str], n: int) -> Iterable[List[str]]:
+    n = max(1, int(n))
+    for i in range(0, len(xs), n):
+        yield xs[i: i + n]
 
 
-def _is_valid_instrument(inst: str, *, fail_fast: bool) -> bool:
-    try:
-        df, _err = eikon_retry_get_data(
-            [inst],
-            ["TR.CommonName"],
-            {},
-            retries=EIKON_RETRIES,
-            fail_fast=fail_fast,
-        )
-        if df is None or getattr(df, "empty", True):
-            return False
-        name_col = next((c for c in df.columns if str(c).lower() != "instrument"), None)
-        if not name_col:
-            return False
-        val = df.iloc[0][name_col]
-        return bool(str(val).strip()) and str(val).strip().lower() != "nan"
-    except FatalEikonNetworkError:
-        raise
-    except Exception:
-        return False
+# =========================
+# Robust symbology (batched + bisect on failure)
+# =========================
 
 
-def _cached_is_valid(inst: str, *, fail_fast: bool) -> bool:
-    if inst in _INSTRUMENT_VALID_CACHE:
-        return _INSTRUMENT_VALID_CACHE[inst]
-    ok = _is_valid_instrument(inst, fail_fast=fail_fast)
-    _INSTRUMENT_VALID_CACHE[inst] = ok
-    return ok
-
-
-def ticker_to_ric_best_effort(ticker: str, *, fail_fast: bool) -> Optional[str]:
+def _safe_get_symbology_df(symbols: List[str], *, best_match: bool) -> Optional[Any]:
     """
-    Robust mapping ticker -> Refinitiv RIC/instrument.
+    Robust ek.get_symbology:
+    - Try the batch.
+    - If it raises, bisect and salvage.
     """
-    
-    t = (ticker or "").strip().upper()
-    if not t:
+    if not symbols:
         return None
 
-    # Cache hit
-    if t in _TICKER_TO_RIC_CACHE:
-        return _TICKER_TO_RIC_CACHE[t]
+    try:
+        return ek.get_symbology(  # type: ignore
+            symbols,
+            from_symbol_type="ticker",
+            to_symbol_type="RIC",
+            best_match=best_match,
+        )
+    except Exception:
+        if len(symbols) <= 1:
+            return None
+        mid = len(symbols) // 2
+        df1 = _safe_get_symbology_df(symbols[:mid], best_match=best_match)
+        df2 = _safe_get_symbology_df(symbols[mid:], best_match=best_match)
+        if df1 is None:
+            return df2
+        if df2 is None:
+            return df1
+        require_pandas()
+        try:
+            return pd.concat([df1, df2], ignore_index=True, sort=False)  # type: ignore
+        except Exception:
+            try:
+                return df1._append(df2, ignore_index=True)
+            except Exception:
+                return df1
 
-    # 1) If it already looks like a RIC, validate and return.
-    #    (Note: this can be too permissive for "BRK.A" because it's a ticker format,
-    #     but validation via _cached_is_valid prevents false positives.)
-    if "." in t or t.endswith("=R"):
-        if _cached_is_valid(t, fail_fast=fail_fast):
-            _TICKER_TO_RIC_CACHE[t] = t
-            return t
 
-    # Build a list of candidate "symbology input" strings (things we feed to ek.get_symbology).
-    # Keep order stable; we dedupe later.
-    candidates: List[str] = [t]
+def _detect_symbology_cols(df) -> Tuple[Optional[str], Optional[str]]:
+    """
+    Return (input_col, ric_col) for a symbology dataframe, using case-insensitive matching.
+    """
+    if df is None or getattr(df, "empty", True):
+        return None, None
 
-    # If there is a dot in the ticker, try alternative separators that symbology sometimes matches.
-    # Example: BRK.A -> BRK-A, BRKA
+    cols = list(df.columns)
+    cols_lc = {str(c).lower(): c for c in cols}
+
+    # RIC column
+    ric_col = None
+    for key in ["ric", "to ric", "to_ric", "to symbol", "tosymbol", "to"]:
+        if key in cols_lc:
+            ric_col = cols_lc[key]
+            break
+    if ric_col is None:
+        # common case: exactly "RIC"
+        for c in cols:
+            if str(c).strip().lower() == "ric":
+                ric_col = c
+                break
+
+    # Input column
+    in_col = None
+    for key in ["ticker", "symbol", "from", "input", "fromsymbol", "from symbol", "instrument", "original", "source"]:
+        if key in cols_lc:
+            in_col = cols_lc[key]
+            break
+
+    return in_col, ric_col
+
+
+def batch_get_symbology_best_match(
+    symbols: List[str],
+    *,
+    chunk_size: int,
+) -> Dict[str, Optional[str]]:
+    """
+    Batched ek.get_symbology(..., best_match=True).
+
+    Returns: input_symbol -> ric (or None)
+
+    Critical fixes:
+    - Treat pandas NA / NaN / "<NA>" as missing (do NOT stringify into "<NA>").
+    - Case-insensitive output parsing.
+    - If input column is missing, fall back to row-order mapping ONLY when lengths match.
+    - Ensure every input symbol is present in the output dict.
+    """
+    out: Dict[str, Optional[str]] = {}
+    if not symbols:
+        return out
+
+    def _is_missing_value(x: Any) -> bool:
+        if x is None:
+            return True
+        # pandas NA / NaN
+        try:
+            import pandas as _pd  # type: ignore
+            if _pd.isna(x):
+                return True
+        except Exception:
+            pass
+        s = str(x).strip()
+        if not s:
+            return True
+        return s.lower() in {"nan", "<na>", "none", "null"}
+
+    # De-dupe while preserving order (normalize to UPPER because caller treats symbols case-insensitively)
+    seen: set[str] = set()
+    uniq: List[str] = []
+    for s in symbols:
+        s2 = (s or "").strip().upper()
+        if not s2:
+            continue
+        if s2 not in seen:
+            uniq.append(s2)
+            seen.add(s2)
+
+    for chunk in chunked(uniq, chunk_size):
+        df = _safe_get_symbology_df(chunk, best_match=True)
+
+        if df is None or getattr(df, "empty", True):
+            for s in chunk:
+                out.setdefault(s, None)
+            continue
+
+        cols = list(df.columns)
+        cols_lc = {str(c).strip().lower(): c for c in cols}
+
+        # Find RIC column (case-insensitive)
+        ric_col = None
+        for key in ["ric", "to ric", "to_ric", "to symbol", "tosymbol", "to"]:
+            if key in cols_lc:
+                ric_col = cols_lc[key]
+                break
+        if ric_col is None:
+            for c in cols:
+                if str(c).strip().lower() == "ric":
+                    ric_col = c
+                    break
+        if ric_col is None:
+            # Can't parse reliably
+            for s in chunk:
+                out.setdefault(s, None)
+            continue
+
+        # Find input column (case-insensitive)
+        in_col = None
+        for key in ["ticker", "symbol", "from", "input", "fromsymbol", "from symbol", "instrument", "original", "source"]:
+            if key in cols_lc:
+                in_col = cols_lc[key]
+                break
+
+        # Case 1: explicit input column exists
+        if in_col is not None:
+            try:
+                for _, row in df.iterrows():
+                    k_raw = row.get(in_col, None)
+                    if _is_missing_value(k_raw):
+                        continue
+                    k = str(k_raw).strip().upper()
+
+                    v_raw = row.get(ric_col, None)
+                    if _is_missing_value(v_raw):
+                        out.setdefault(k, None)
+                        continue
+
+                    v = str(v_raw).strip()
+                    out[k] = v if v else None
+            except Exception:
+                # If parsing fails, treat entire chunk as unknown
+                for s in chunk:
+                    out.setdefault(s, None)
+
+            # Ensure all inputs exist in mapping
+            for s in chunk:
+                out.setdefault(s, None)
+            continue
+
+        # Case 2: No input column. Use row-order mapping ONLY if lengths match.
+        try:
+            if len(df) == len(chunk):
+                for i, s in enumerate(chunk):
+                    v_raw = df.iloc[i][ric_col]
+                    if _is_missing_value(v_raw):
+                        out[s] = None
+                    else:
+                        v = str(v_raw).strip()
+                        out[s] = v if v else None
+            else:
+                for s in chunk:
+                    out.setdefault(s, None)
+        except Exception:
+            for s in chunk:
+                out.setdefault(s, None)
+
+    return out
+
+
+# =========================
+# Ticker -> RIC resolution (batched)
+# =========================
+
+_TICKER_TO_RIC_CACHE: Dict[str, Optional[str]] = {}
+_INSTRUMENT_VALID_CACHE: Dict[str, bool] = {}
+_EVENTS_CACHE: Dict[str, List[EarningsEvent]] = {}
+
+
+def _mark_valid_cache(requested: List[str], valid: set[str]) -> None:
+    req_set = set(requested)
+    for inst in req_set:
+        _INSTRUMENT_VALID_CACHE[inst] = (inst in valid)
+
+
+def batch_validate_instruments(
+    instruments: List[str],
+    *,
+    fail_fast: bool,
+    chunk_size: int,
+) -> set[str]:
+    """
+    Validate instruments/RICs in batches.
+
+    Fixes vs old batching:
+    - Uses safe_get_data() so one failing instrument doesn't kill the whole chunk.
+    - Uses a stricter heuristic to avoid "false valid" rows:
+        valid if at least one of TR.CommonName or TR.ExchangeName is non-empty.
+      (This prevents accepting many bogus suffix guesses that later return no EPS events.)
+    """
+    valid: set[str] = set()
+    if not instruments:
+        return valid
+
+    seen: set[str] = set()
+    uniq: List[str] = []
+    for x in instruments:
+        x2 = (x or "").strip()
+        if not x2:
+            continue
+        if x2 not in seen:
+            uniq.append(x2)
+            seen.add(x2)
+
+    validate_fields = ["TR.CommonName", "TR.ExchangeName"]
+
+    for ch in chunked(uniq, chunk_size):
+        df, _err = safe_get_data(ch, validate_fields, {}, retries=EIKON_RETRIES, fail_fast=fail_fast)
+        if df is None or getattr(df, "empty", True):
+            _mark_valid_cache(ch, set())
+            continue
+
+        cols = list(df.columns)
+        inst_col = "Instrument" if "Instrument" in cols else (cols[0] if cols else None)
+        if inst_col is None:
+            _mark_valid_cache(ch, set())
+            continue
+
+        # locate the returned field columns (best effort)
+        common_col = "TR.CommonName" if "TR.CommonName" in cols else find_col(df, ["common name"])
+        exch_col = "TR.ExchangeName" if "TR.ExchangeName" in cols else find_col(df, ["exchange name"])
+
+        found: set[str] = set()
+        try:
+            for _, row in df.iterrows():
+                inst = row.get(inst_col)
+                if inst is None:
+                    continue
+                s_inst = str(inst).strip()
+                if not s_inst or s_inst.lower() == "nan":
+                    continue
+
+                common = str(row.get(common_col, "")).strip() if common_col else ""
+                exch = str(row.get(exch_col, "")).strip() if exch_col else ""
+
+                if (common and common.lower() != "nan") or (exch and exch.lower() != "nan"):
+                    found.add(s_inst)
+        except Exception:
+            found = set()
+
+        _mark_valid_cache(ch, found)
+        valid.update(found)
+
+    return valid
+
+
+def _symbology_inputs_for_ticker(t: str) -> List[str]:
+    t = (t or "").strip().upper()
+    if not t:
+        return []
+
+    cands: List[str] = [t]
+
     if "." in t:
-        candidates.append(t.replace(".", "-"))
-        candidates.append(t.replace(".", ""))
+        cands.append(t.replace(".", "-"))
+        cands.append(t.replace(".", ""))
 
-    # If there is a hyphen, also try dot and concatenation.
-    # Example: BRK-A -> BRK.A, BRKA
     if "-" in t:
-        candidates.append(t.replace("-", "."))
-        candidates.append(t.replace("-", ""))
+        cands.append(t.replace("-", "."))
+        cands.append(t.replace("-", ""))
 
-    # 2) Special handling for share-class tickers in the form "XXXX.A" or "XXXX.B"
-    #    Refinitiv often uses a lowercase class letter in the RIC root: "XXXXa.N" / "XXXXb.N"
-    #    (Berkshire is the canonical example: BRK.A -> BRKa.N).
     m = re.fullmatch(r"([A-Z0-9]+)\.([A-Z])", t)
     if m:
         root = m.group(1)
         cls = m.group(2)
+        cands.append(f"{root}{cls}")          # BRKA
+        cands.append(f"{root}-{cls}")         # BRK-A
+        cands.append(f"{root}{cls.lower()}")  # BRKa
 
-        # Lowercase class letter root (XXXXa, XXXXb, ...)
-        root_lc = f"{root}{cls.lower()}"
-        # Also include a concatenated uppercase root (XXXXA) and dashed version (XXXX-A)
-        # because different symbology backends may match differently.
-        root_uc = f"{root}{cls}"
-        root_dash = f"{root}-{cls}"
-
-        # Add as symbology candidates
-        candidates.extend([root_lc, root_uc, root_dash])
-
-        # Additionally, we can try direct validated RIC guesses from these roots.
-        # This is often faster than symbology and fixes BRK.A quickly.
-        for suf in RIC_SUFFIX_GUESSES:
-            guess = f"{root_lc}{suf}"
-            if _cached_is_valid(guess, fail_fast=fail_fast):
-                _TICKER_TO_RIC_CACHE[t] = guess
-                return guess
-
-    # De-duplicate candidates preserving order
     seen: set[str] = set()
-    uniq_candidates: List[str] = []
-    for c in candidates:
-        c2 = c.strip().upper()
-        if not c2:
-            continue
-        if c2 not in seen:
-            uniq_candidates.append(c2)
-            seen.add(c2)
+    out: List[str] = []
+    for x in cands:
+        x2 = x.strip().upper()
+        if x2 and x2 not in seen:
+            out.append(x2)
+            seen.add(x2)
+    return out
 
-    # 3) Symbology best match
-    for sym in uniq_candidates:
-        try:
-            df = ek.get_symbology(
-                [sym],
-                from_symbol_type="ticker",
-                to_symbol_type="RIC",
-                best_match=True,
-            )
-            if df is not None and not df.empty and "RIC" in df.columns:
-                ric = str(df.iloc[0]["RIC"]).strip()
-                if ric and _cached_is_valid(ric, fail_fast=fail_fast):
-                    _TICKER_TO_RIC_CACHE[t] = ric
-                    return ric
-        except FatalEikonNetworkError:
-            # Bubble up if fail_fast triggered deeper in validation.
-            raise
-        except Exception:
-            # Ignore and continue to next candidate.
-            pass
 
-    # 4) Symbology all matches + preference ordering
-    for sym in uniq_candidates:
-        try:
-            df = ek.get_symbology(
-                [sym],
-                from_symbol_type="ticker",
-                to_symbol_type="RIC",
-                best_match=False,
-            )
-            if df is None or df.empty or "RIC" not in df.columns:
-                continue
+def _ric_guess_candidates_for_ticker(t: str) -> List[str]:
+    t_raw = (t or "").strip()
+    t_up = t_raw.upper()
+    if not t_up:
+        return []
 
-            rics = [
-                str(x).strip()
-                for x in df["RIC"].tolist()
-                if isinstance(x, str) and x.strip()
-            ]
+    roots: List[str] = [t_up]
 
-            # Prefer common suffixes first (NASDAQ/NYSE/AMEX/LSE).
-            for suf in RIC_SUFFIX_GUESSES:
-                for r in rics:
-                    if r.endswith(suf) and _cached_is_valid(r, fail_fast=fail_fast):
-                        _TICKER_TO_RIC_CACHE[t] = r
-                        return r
+    if "." in t_up:
+        roots.extend([t_up.replace(".", ""), t_up.replace(".", "-")])
 
-            # Otherwise, first valid result
-            for r in rics:
-                if _cached_is_valid(r, fail_fast=fail_fast):
-                    _TICKER_TO_RIC_CACHE[t] = r
-                    return r
+    if "-" in t_up:
+        roots.extend([t_up.replace("-", ""), t_up.replace("-", ".")])
 
-        except FatalEikonNetworkError:
-            raise
-        except Exception:
-            pass
+    m = re.fullmatch(r"([A-Z0-9]+)\.([A-Z])", t_up)
+    if m:
+        root = m.group(1)
+        cls = m.group(2)
+        roots.insert(1, f"{root}{cls.lower()}")  # e.g. BRKa
 
-    # 5) Suffix guesses (helps when symbology fails, e.g., "MLKN" -> "MLKN.O")
-    #    We try for the original ticker *and* common normalization variants.
-    guess_roots: List[str] = [t]
-    if "." in t:
-        guess_roots.extend([t.replace(".", ""), t.replace(".", "-")])
-    if "-" in t:
-        guess_roots.extend([t.replace("-", ""), t.replace("-", ".")])
-
-    # De-dupe guess roots preserving order
-    seen2: set[str] = set()
+    seen: set[str] = set()
     uniq_roots: List[str] = []
-    for r in guess_roots:
+    for r in roots:
         r2 = r.strip()
-        if not r2:
-            continue
-        if r2 not in seen2:
+        if r2 and r2 not in seen:
             uniq_roots.append(r2)
-            seen2.add(r2)
+            seen.add(r2)
 
+    out: List[str] = []
     for root in uniq_roots:
         for suf in RIC_SUFFIX_GUESSES:
-            guess = f"{root}{suf}"
-            if _cached_is_valid(guess, fail_fast=fail_fast):
-                _TICKER_TO_RIC_CACHE[t] = guess
-                return guess
+            out.append(f"{root}{suf}")
 
-    # 6) Final fallback: try the ticker itself as an instrument (some work without suffix)
-    if _cached_is_valid(t, fail_fast=fail_fast):
-        _TICKER_TO_RIC_CACHE[t] = t
-        return t
+    return out
 
-    _TICKER_TO_RIC_CACHE[t] = None
-    return None
+def resolve_tickers_to_rics_batched(
+    tickers: List[str],
+    *,
+    fail_fast: bool,
+    symbology_chunk_size: int,
+    validate_chunk_size: int,
+    show_progress: bool,
+) -> Dict[str, Optional[str]]:
+    """
+    Resolve many tickers to RICs using batching.
+
+    Fixes:
+    - Never treat pandas NA / NaN / "<NA>" as a valid resolved RIC.
+    - Normalize keys consistently to UPPER.
+    - Validate only non-missing returned RIC strings.
+    - Ensure suffix-guess fallback runs when symbology returns missing.
+    """
+    def _is_missing_value(x: Any) -> bool:
+        if x is None:
+            return True
+        try:
+            import pandas as _pd  # type: ignore
+            if _pd.isna(x):
+                return True
+        except Exception:
+            pass
+        s = str(x).strip()
+        if not s:
+            return True
+        return s.lower() in {"nan", "<na>", "none", "null"}
+
+    # Normalize + de-dupe tickers preserving order
+    seen: set[str] = set()
+    uniq: List[str] = []
+    for t in tickers:
+        t2 = (t or "").strip().upper()
+        if not t2:
+            continue
+        if t2 not in seen:
+            uniq.append(t2)
+            seen.add(t2)
+
+    out: Dict[str, Optional[str]] = {t: None for t in uniq}
+
+    # Cache hits first
+    remaining: List[str] = []
+    for t in uniq:
+        if t in _TICKER_TO_RIC_CACHE:
+            v = _TICKER_TO_RIC_CACHE[t]
+            out[t] = None if _is_missing_value(v) else str(v).strip()
+        else:
+            remaining.append(t)
+
+    if not remaining:
+        return out
+
+    # ---- Step 1: direct RIC-like tickers ----
+    direct_rics: List[str] = [t for t in remaining if ("." in t or t.endswith("=R"))]
+    if direct_rics:
+        valid_direct = batch_validate_instruments(
+            direct_rics, fail_fast=fail_fast, chunk_size=validate_chunk_size
+        )
+        for t in direct_rics:
+            if t in valid_direct:
+                out[t] = t
+                _TICKER_TO_RIC_CACHE[t] = t
+
+    unresolved: List[str] = [t for t in remaining if out.get(t) is None]
+
+    # ---- Step 2: batched symbology best match ----
+    sym_inputs: List[str] = []
+    sym_inputs_by_ticker: Dict[str, List[str]] = {}
+    for t in unresolved:
+        cands = _symbology_inputs_for_ticker(t)
+        # Ensure sym inputs are uppercase to match batch_get_symbology_best_match normalization
+        cands_u = [c.strip().upper() for c in cands if c and c.strip()]
+        sym_inputs_by_ticker[t] = cands_u
+        sym_inputs.extend(cands_u)
+
+    sym_map: Dict[str, Optional[str]] = {}
+    if sym_inputs:
+        if show_progress and tqdm is not None:
+            sym_chunks = list(chunked(sym_inputs, symbology_chunk_size))
+            for ch in tqdm(sym_chunks, desc="Eikon symbology (best_match)", unit="chunk"):
+                part = batch_get_symbology_best_match(ch, chunk_size=symbology_chunk_size)
+                sym_map.update(part)
+        else:
+            sym_map = batch_get_symbology_best_match(sym_inputs, chunk_size=symbology_chunk_size)
+
+    # Validate all returned RICs at once (skip missing/NA)
+    returned_rics: List[str] = []
+    for v in sym_map.values():
+        if _is_missing_value(v):
+            continue
+        r = str(v).strip()
+        if r:
+            returned_rics.append(r)
+
+    valid_returned: set[str] = set()
+    if returned_rics:
+        valid_returned = batch_validate_instruments(
+            returned_rics, fail_fast=fail_fast, chunk_size=validate_chunk_size
+        )
+
+    # Assign per ticker using the ticker's input preference ordering
+    for t in unresolved:
+        for sym in sym_inputs_by_ticker.get(t, []):
+            ric_raw = sym_map.get(sym)
+            if _is_missing_value(ric_raw):
+                continue
+            ric = str(ric_raw).strip()
+            if ric and (ric in valid_returned):
+                out[t] = ric
+                _TICKER_TO_RIC_CACHE[t] = ric
+                break
+
+    unresolved2: List[str] = [t for t in unresolved if out.get(t) is None]
+
+    # ---- Step 3: suffix guesses in batch (DOCU.O, SNOW.K, etc.) ----
+    if unresolved2:
+        guess_map: Dict[str, List[str]] = {t: _ric_guess_candidates_for_ticker(t) for t in unresolved2}
+        all_guesses: List[str] = []
+        for guesses in guess_map.values():
+            all_guesses.extend([g for g in guesses if g and g.strip()])
+
+        valid_guesses = batch_validate_instruments(
+            all_guesses, fail_fast=fail_fast, chunk_size=validate_chunk_size
+        )
+
+        for t in unresolved2:
+            for g in guess_map.get(t, []):
+                if g in valid_guesses:
+                    out[t] = g
+                    _TICKER_TO_RIC_CACHE[t] = g
+                    break
+
+    unresolved3: List[str] = [t for t in unresolved2 if out.get(t) is None]
+
+    # ---- Step 4: final fallback: validate ticker itself (no suffix) ----
+    if unresolved3:
+        valid_fallback = batch_validate_instruments(
+            unresolved3, fail_fast=fail_fast, chunk_size=validate_chunk_size
+        )
+        for t in unresolved3:
+            if t in valid_fallback:
+                out[t] = t
+                _TICKER_TO_RIC_CACHE[t] = t
+            else:
+                out[t] = None
+                _TICKER_TO_RIC_CACHE[t] = None
+
+    # ---- Step 5: hard overrides for known vendor quirks / case-sensitive RICs ----
+    for t, ric_override in TICKER_TO_RIC_OVERRIDES.items():
+        t2 = (t or "").strip().upper()
+        if not t2:
+            continue
+        if t2 in out:
+            out[t2] = ric_override               # keep exact case of the RIC value
+            _TICKER_TO_RIC_CACHE[t2] = ric_override
+
+    return out
 
 
 # =========================
-# Earnings data retrieval
+# Earnings data retrieval (BATCHED + robust split)
 # =========================
 
-_EVENTS_CACHE: Dict[str, List[EarningsEvent]] = {}
+
+def _parse_float(x: Any) -> Optional[float]:
+    try:
+        if x is None:
+            return None
+        s = str(x).strip()
+        if not s or s.lower() == "nan":
+            return None
+        return float(x)
+    except Exception:
+        return None
 
 
-def fetch_eps_events(ric: str, *, fail_fast: bool, lookback_years: int = 12) -> List[EarningsEvent]:
-    """
-    Fetch quarterly EPS actual events (and mean estimates if available) for an instrument.
-    Cached per RIC for speed.
-    """
-    if ric in _EVENTS_CACHE:
-        return _EVENTS_CACHE[ric]
+def fetch_eps_events_batched(
+    rics: List[str],
+    *,
+    fail_fast: bool,
+    lookback_years: int,
+    eps_chunk_size: int,
+    show_progress: bool,
+) -> Dict[str, List[EarningsEvent]]:
+    to_fetch: List[str] = []
+    for r in rics:
+        r2 = (r or "").strip()
+        if not r2:
+            continue
+        if r2 in _EVENTS_CACHE:
+            continue
+        to_fetch.append(r2)
+
+    for r in to_fetch:
+        _EVENTS_CACHE.setdefault(r, [])
+
+    if not to_fetch:
+        return {r: _EVENTS_CACHE.get(r, []) for r in rics}
 
     today = datetime.now(timezone.utc).date()
     start = today - timedelta(days=lookback_years * 365)
@@ -884,56 +1296,77 @@ def fetch_eps_events(ric: str, *, fail_fast: bool, lookback_years: int = 12) -> 
         "TR.EPSActValue.fperiod",
         "TR.EPSActValue.PeriodEndDate",
         "TR.EPSMean",
+        "TR.EPSHigh",
+        "TR.EPSLow",
+        "TR.EPSStdDev",
     ]
     params = {"SDate": start.isoformat(), "EDate": end.isoformat(), "Period": "FQ0", "Frq": "FQ"}
 
-    df, _err = eikon_retry_get_data([ric], fields, params, retries=EIKON_RETRIES, fail_fast=fail_fast)
+    chunks = list(chunked(to_fetch, eps_chunk_size))
+    chunk_iter: Iterable[List[str]] = chunks
+    if show_progress and tqdm is not None:
+        chunk_iter = tqdm(chunks, desc="Eikon EPS history", unit="chunk")
 
-    events: List[EarningsEvent] = []
-    if df is None or getattr(df, "empty", True):
-        _EVENTS_CACHE[ric] = []
-        return []
-
-    col_actual = find_col(df, ["earnings per share - actual", "eps - actual", "eps actual", "tr.epsactvalue"])
-    col_date = find_col(df, ["tr.epsactvalue.date", " date"])
-    col_fperiod = find_col(df, ["financial period absolute", "fperiod", "tr.epsactvalue.fperiod"])
-    col_ped = find_col(df, ["period end date", "tr.epsactvalue.periodenddate"])
-    col_mean = find_col(df, ["earnings per share - mean", "eps - mean", "eps mean", "tr.epsmean"])
-
-    for _, row in df.iterrows():
-        try:
-            d_raw = row[col_date] if col_date else None
-            d_dt = parse_any_datetime_to_date(d_raw)
-            if not d_dt:
-                continue
-
-            a = None
-            if col_actual:
-                try:
-                    a = float(row[col_actual])
-                except Exception:
-                    a = None
-
-            fp = _safe_str(row[col_fperiod]) if col_fperiod else None
-
-            ped = None
-            if col_ped:
-                ped = parse_any_datetime_to_date(row[col_ped])
-
-            mean = None
-            if col_mean:
-                try:
-                    mean = float(row[col_mean])
-                except Exception:
-                    mean = None
-
-            events.append(EarningsEvent(d_dt, fp, ped, a, mean))
-        except Exception:
+    for ric_chunk in chunk_iter:
+        # IMPORTANT FIX: safe_get_data() bisects failures so one bad ric doesn't nuke the entire batch.
+        df, _err = safe_get_data(
+            ric_chunk,
+            fields,
+            params,
+            retries=EIKON_RETRIES,
+            fail_fast=fail_fast,
+        )
+        if df is None or getattr(df, "empty", True):
             continue
 
-    events.sort(key=lambda e: e.announce_date)
-    _EVENTS_CACHE[ric] = events
-    return events
+        cols = list(df.columns)
+        inst_col = "Instrument" if "Instrument" in cols else (cols[0] if cols else None)
+        if inst_col is None:
+            continue
+
+        col_actual = find_col(df, ["earnings per share - actual", "eps - actual", "eps actual", "tr.epsactvalue"])
+        col_date = find_col(df, ["tr.epsactvalue.date", " date"])
+        col_fperiod = find_col(df, ["financial period absolute", "fperiod", "tr.epsactvalue.fperiod"])
+        col_ped = find_col(df, ["period end date", "tr.epsactvalue.periodenddate"])
+
+        col_mean = find_col(df, ["earnings per share - mean", "eps - mean", "eps mean", "tr.epsmean"])
+        col_high = find_col(df, ["earnings per share - high", "eps - high", "eps high", "tr.epshigh"])
+        col_low = find_col(df, ["earnings per share - low", "eps - low", "eps low", "tr.epslow"])
+        col_std = find_col(df, ["standard deviation", "std dev", "stdev", "tr.epsstddev"])
+
+        tmp: Dict[str, List[EarningsEvent]] = {}
+        for _, row in df.iterrows():
+            try:
+                inst = row.get(inst_col)
+                if inst is None:
+                    continue
+                ric = str(inst).strip()
+                if not ric or ric.lower() == "nan":
+                    continue
+
+                d_raw = row.get(col_date) if col_date else None
+                d_dt = parse_any_datetime_to_date(d_raw)
+                if not d_dt:
+                    continue
+
+                actual = _parse_float(row.get(col_actual)) if col_actual else None
+                fperiod = _safe_str(row.get(col_fperiod)) if col_fperiod else None
+                ped = parse_any_datetime_to_date(row.get(col_ped)) if col_ped else None
+
+                mean = _parse_float(row.get(col_mean)) if col_mean else None
+                high = _parse_float(row.get(col_high)) if col_high else None
+                low = _parse_float(row.get(col_low)) if col_low else None
+                std = _parse_float(row.get(col_std)) if col_std else None
+
+                tmp.setdefault(ric, []).append(EarningsEvent(d_dt, fperiod, ped, actual, mean, high, low, std))
+            except Exception:
+                continue
+
+        for ric, evs in tmp.items():
+            evs.sort(key=lambda e: e.announce_date)
+            _EVENTS_CACHE[ric] = evs
+
+    return {r: _EVENTS_CACHE.get(r, []) for r in rics}
 
 
 def match_event_by_anchor_date(
@@ -1006,11 +1439,8 @@ def write_jsonl(path: Path, records: List[ResultRecord]) -> None:
         for r in records:
             f.write(json.dumps(asdict(r), ensure_ascii=False) + "\n")
 
+
 def write_csv(path: Path, records: List[ResultRecord]) -> None:
-    """
-    Write records to CSV (same fields as ResultRecord).
-    Lists/None are handled as simple strings.
-    """
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(ResultRecord.__annotations__.keys()))
@@ -1019,13 +1449,7 @@ def write_csv(path: Path, records: List[ResultRecord]) -> None:
             w.writerow(asdict(r))
 
 
-
 def count_lines_for_progress(path: Path, max_markets: Optional[int]) -> int:
-    """
-    tqdm total:
-      - if --max-markets is set, use that
-      - otherwise count physical file lines (fast enough for typical JSONL files)
-    """
     if max_markets is not None:
         return max_markets
     n = 0
@@ -1036,7 +1460,305 @@ def count_lines_for_progress(path: Path, max_markets: Optional[int]) -> int:
 
 
 # =========================
-# Main
+# Runner (importable)
+# =========================
+
+
+def run_optional_check_consistency(
+    *,
+    markets_path: Path,
+    validation_dir: Path,
+    app_key: str,
+    eikon_port: Optional[int],
+    require_proxy: bool,
+    fail_fast: bool,
+    max_markets: Optional[int],
+    event_pre_days: int,
+    event_post_days: int,
+    max_event_distance_days: int,
+    symbology_chunk_size: int,
+    validate_chunk_size: int,
+    eps_chunk_size: int,
+    show_progress: bool,
+) -> Dict[str, Any]:
+    out_correct = validation_dir / "correct.jsonl"
+    out_incorrect = validation_dir / "incorrectly_resolved.jsonl"
+    out_unmatched = validation_dir / "unmatched.jsonl"
+    out_correct_csv = validation_dir / "correct.csv"
+    out_incorrect_csv = validation_dir / "incorrectly_resolved.csv"
+    out_unmatched_csv = validation_dir / "unmatched.csv"
+
+    correct_records: List[ResultRecord] = []
+    incorrect_records: List[ResultRecord] = []
+    unmatched_records: List[ResultRecord] = []
+
+    lines_scanned = 0
+    markets_parsed = 0
+    considered = 0
+    ignored_non_candidate = 0
+    matched = 0
+    correct_n = 0
+    incorrect_n = 0
+    unmatched_n = 0
+
+    pending: List[PendingMarket] = []
+    tickers_needed: set[str] = set()
+
+    if not markets_path.exists():
+        raise FileNotFoundError(f"Markets file not found: {markets_path}")
+
+    init_eikon(app_key, eikon_port=eikon_port, require_proxy=require_proxy)
+
+    total_for_bar = count_lines_for_progress(markets_path, max_markets)
+
+    # PASS A: parse + pre-filter
+    parse_bar_ctx = tqdm(total=total_for_bar, desc="Parsing markets", unit="line") if (show_progress and tqdm is not None) else None
+    try:
+        with markets_path.open("r", encoding="utf-8", errors="ignore") as f:
+            for line_no, line in enumerate(f, start=1):
+                if max_markets is not None and line_no > max_markets:
+                    break
+
+                lines_scanned += 1
+                if parse_bar_ctx is not None:
+                    parse_bar_ctx.update(1)
+
+                line = line.strip()
+                if not line:
+                    continue
+
+                try:
+                    raw = json.loads(line)
+                except Exception:
+                    continue
+
+                markets_parsed += 1
+
+                slug = _safe_str(raw.get("slug"))
+                question = _safe_str(raw.get("question")) or _safe_str(raw.get("title"))
+                market_id = extract_market_id(raw)
+                resolved_outcome = extract_resolved_outcome(raw)
+                ticker = extract_ticker(raw, question)
+
+                if not is_candidate_earnings_market(question, slug):
+                    ignored_non_candidate += 1
+                    continue
+
+                considered += 1
+
+                anchor_dt, _anchor_src = parse_anchor_date(slug, question, raw)
+
+                q_est, q_src = extract_estimate_from_question(question)
+                s_est, s_src = extract_estimate_from_slug(slug)
+                polymarket_est = q_est if q_est is not None else s_est
+                polymarket_est_src = q_src if q_est is not None else s_src
+
+                yes_semantics, tie_counts_as = infer_yes_semantics(question, slug)
+
+                base = ResultRecord(
+                    line_no=line_no,
+                    market_id=market_id,
+                    slug=slug,
+                    question=question,
+                    ticker=ticker,
+                    ric=None,
+                    polymarket_resolved_outcome=resolved_outcome,
+                    anchor_date=_to_date_iso(anchor_dt),
+                    polymarket_estimate=polymarket_est,
+                    polymarket_estimate_source=polymarket_est_src,
+                    yes_semantics=yes_semantics,
+                    inline_counts_as=tie_counts_as,
+                    matched_announce_date=None,
+                    matched_fperiod=None,
+                    matched_period_end_date=None,
+                    eikon_actual_eps=None,
+                    eikon_eps_mean_estimate=None,
+                    eikon_eps_high_estimate=None,
+                    eikon_eps_low_estimate=None,
+                    eikon_eps_stddev_estimate=None,
+                    estimate_used=None,
+                    estimate_used_source=None,
+                    surprise=None,
+                    label=None,
+                    expected_resolution=None,
+                    match_method=None,
+                    status="UNMATCHED",
+                    skip_reason=None,
+                )
+
+                if not resolved_outcome:
+                    base.skip_reason = "unresolved_or_missing_outcome"
+                    unmatched_records.append(base)
+                    unmatched_n += 1
+                    continue
+                if not ticker:
+                    base.skip_reason = "no_ticker"
+                    unmatched_records.append(base)
+                    unmatched_n += 1
+                    continue
+                if not anchor_dt:
+                    base.skip_reason = "no_anchor_date"
+                    unmatched_records.append(base)
+                    unmatched_n += 1
+                    continue
+
+                pending.append(PendingMarket(base=base, anchor_dt=anchor_dt))
+                tickers_needed.add(ticker.upper())
+    finally:
+        if parse_bar_ctx is not None:
+            parse_bar_ctx.close()
+
+    # PASS B: batch resolve tickers -> RICs
+    ticker_to_ric = resolve_tickers_to_rics_batched(
+        sorted(tickers_needed),
+        fail_fast=fail_fast,
+        symbology_chunk_size=symbology_chunk_size,
+        validate_chunk_size=validate_chunk_size,
+        show_progress=show_progress,
+    )
+
+    pending2: List[PendingMarket] = []
+    for pm in pending:
+        t = (pm.base.ticker or "").upper()
+        ric = ticker_to_ric.get(t)
+        if not ric:
+            pm.base.skip_reason = "no_ric"
+            unmatched_records.append(pm.base)
+            unmatched_n += 1
+            continue
+        pm.base.ric = ric
+        pending2.append(pm)
+
+    # PASS C: batch fetch EPS events for RICs (robust: bisects failing batches)
+    rics_needed = sorted({pm.base.ric for pm in pending2 if pm.base.ric})
+    fetch_eps_events_batched(
+        rics_needed,
+        fail_fast=fail_fast,
+        lookback_years=12,
+        eps_chunk_size=eps_chunk_size,
+        show_progress=show_progress,
+    )
+
+    # PASS D: finalize record classification
+    iter_pm: Iterable[PendingMarket] = tqdm(pending2, desc="Classifying", unit="mkt") if (show_progress and tqdm is not None) else pending2
+
+    for pm in iter_pm:
+        base = pm.base
+        anchor_dt = pm.anchor_dt
+        ric = base.ric or ""
+
+        events = _EVENTS_CACHE.get(ric, [])
+        if not events:
+            base.skip_reason = "no_events_returned"
+            unmatched_records.append(base)
+            unmatched_n += 1
+            continue
+
+        ev, method = match_event_by_anchor_date(
+            events,
+            anchor_dt,
+            pre_days=event_pre_days,
+            post_days=event_post_days,
+            max_distance_days=max_event_distance_days,
+        )
+        if not ev:
+            base.skip_reason = "no_event_match"
+            unmatched_records.append(base)
+            unmatched_n += 1
+            continue
+
+        base.matched_announce_date = _to_date_iso(ev.announce_date)
+        base.matched_fperiod = ev.fperiod
+        base.matched_period_end_date = _to_date_iso(ev.period_end_date)
+        base.eikon_actual_eps = ev.actual_eps
+        base.eikon_eps_mean_estimate = ev.mean_estimate
+        base.eikon_eps_high_estimate = ev.high_estimate
+        base.eikon_eps_low_estimate = ev.low_estimate
+        base.eikon_eps_stddev_estimate = ev.stddev_estimate
+        base.match_method = method
+
+        if ev.actual_eps is None:
+            base.skip_reason = "no_actual_eps"
+            unmatched_records.append(base)
+            unmatched_n += 1
+            continue
+
+        polymarket_est = base.polymarket_estimate
+        polymarket_est_src = base.polymarket_estimate_source
+
+        estimate_used: Optional[float] = None
+        estimate_used_source: Optional[str] = None
+
+        if polymarket_est is not None:
+            estimate_used = float(polymarket_est)
+            estimate_used_source = polymarket_est_src
+        elif ev.mean_estimate is not None:
+            estimate_used = float(ev.mean_estimate)
+            estimate_used_source = "eikon_mean"
+
+        if estimate_used is None:
+            base.skip_reason = "no_estimate"
+            unmatched_records.append(base)
+            unmatched_n += 1
+            continue
+
+        matched += 1
+
+        base.estimate_used = estimate_used
+        base.estimate_used_source = estimate_used_source
+
+        lab = decide_label(float(ev.actual_eps), estimate_used)
+        base.label = lab
+        base.surprise = float(ev.actual_eps) - estimate_used
+        base.expected_resolution = expected_resolution_from_label(
+            lab,
+            (base.yes_semantics or "YES_MEANS_BEAT"),
+            (base.inline_counts_as or "NO"),
+        )
+
+        if base.expected_resolution == base.polymarket_resolved_outcome:
+            base.status = "MATCHED_CORRECT"
+            correct_records.append(base)
+            correct_n += 1
+        else:
+            base.status = "MATCHED_INCORRECT"
+            incorrect_records.append(base)
+            incorrect_n += 1
+
+    # Write outputs
+    write_jsonl(out_correct, correct_records)
+    write_jsonl(out_incorrect, incorrect_records)
+    write_jsonl(out_unmatched, unmatched_records)
+
+    write_csv(out_correct_csv, correct_records)
+    write_csv(out_incorrect_csv, incorrect_records)
+    write_csv(out_unmatched_csv, unmatched_records)
+
+    return {
+        "lines_scanned": lines_scanned,
+        "markets_parsed": markets_parsed,
+        "ignored_non_candidate": ignored_non_candidate,
+        "considered": considered,
+        "matched": matched,
+        "correct": correct_n,
+        "incorrect": incorrect_n,
+        "unmatched": unmatched_n,
+        "out_correct": str(out_correct),
+        "out_incorrect": str(out_incorrect),
+        "out_unmatched": str(out_unmatched),
+        "out_correct_csv": str(out_correct_csv),
+        "out_incorrect_csv": str(out_incorrect_csv),
+        "out_unmatched_csv": str(out_unmatched_csv),
+        "batching": {
+            "symbology_chunk_size": int(symbology_chunk_size),
+            "validate_chunk_size": int(validate_chunk_size),
+            "eps_chunk_size": int(eps_chunk_size),
+        },
+    }
+
+
+# =========================
+# CLI
 # =========================
 
 
@@ -1065,6 +1787,15 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     p.add_argument("--event-pre-days", type=int, default=DEFAULT_EVENT_PRE_DAYS)
     p.add_argument("--event-post-days", type=int, default=DEFAULT_EVENT_POST_DAYS)
     p.add_argument("--max-event-distance-days", type=int, default=DEFAULT_MAX_EVENT_DISTANCE_DAYS)
+
+    p.add_argument("--symbology-chunk-size", type=int, default=DEFAULT_SYMBOLOGY_CHUNK_SIZE,
+                   help="Symbols per ek.get_symbology batch (default: %(default)s)")
+    p.add_argument("--validate-chunk-size", type=int, default=DEFAULT_VALIDATE_CHUNK_SIZE,
+                   help="Instruments per ek.get_data validation batch (default: %(default)s)")
+    p.add_argument("--eps-chunk-size", type=int, default=DEFAULT_EPS_CHUNK_SIZE,
+                   help="RICs per EPS history ek.get_data batch (default: %(default)s)")
+    p.add_argument("--no-progress", action="store_true", help="Disable tqdm progress bars.")
+
     return p.parse_args(argv)
 
 
@@ -1079,34 +1810,6 @@ def main(argv: Optional[List[str]] = None) -> int:
     markets_path = Path(args.markets)
     validation_dir = Path(args.validation_dir)
 
-    out_correct = validation_dir / "correct.jsonl"
-    out_incorrect = validation_dir / "incorrectly_resolved.jsonl"
-    out_unmatched = validation_dir / "unmatched.jsonl"
-    out_correct_csv = validation_dir / "correct.csv"
-    out_incorrect_csv = validation_dir / "incorrectly_resolved.csv"
-    out_unmatched_csv = validation_dir / "unmatched.csv"
-
-
-    # Buckets (always written)
-    correct_records: List[ResultRecord] = []
-    incorrect_records: List[ResultRecord] = []
-    unmatched_records: List[ResultRecord] = []
-
-    # Summary counters
-    lines_scanned = 0          # physical lines scanned (up to max_markets)
-    markets_parsed = 0         # JSON objects successfully parsed
-    considered = 0             # earnings-like markets
-    ignored_non_candidate = 0  # parsed JSON objects ignored by candidate filter
-    matched = 0                # matched to event+actual+estimate
-    correct_n = 0
-    incorrect_n = 0
-    unmatched_n = 0            # considered but failed matching somewhere
-
-    if not markets_path.exists():
-        LOG.error("Markets file not found: %s", markets_path)
-        return 2
-
-    # Resolve app key
     if args.app_key is None:
         LOG.error("Missing --app-key. Provide it or use '--app-key' (no value) to read from env EIKON_APP_KEY.")
         return 2
@@ -1118,234 +1821,63 @@ def main(argv: Optional[List[str]] = None) -> int:
     else:
         app_key = args.app_key
 
-    # Init Eikon (catastrophic if fails)
     try:
-        init_eikon(app_key, eikon_port=args.eikon_port, require_proxy=(not args.skip_proxy_check))
-    except Exception as exc:
-        LOG.error("Eikon initialization failed: %s", exc)
-        return 2
-
-    total_for_bar = count_lines_for_progress(markets_path, args.max_markets)
-
-    try:
-        with tqdm(total=total_for_bar, desc="Validating markets", unit="line") as pbar:
-            with markets_path.open("r", encoding="utf-8", errors="ignore") as f:
-                for line_no, line in enumerate(f, start=1):
-                    if args.max_markets is not None and line_no > args.max_markets:
-                        break
-
-                    lines_scanned += 1
-                    pbar.update(1)
-
-                    line = line.strip()
-                    if not line:
-                        continue
-
-                    try:
-                        raw = json.loads(line)
-                    except Exception:
-                        # Keep output clean: silently skip invalid JSON lines
-                        continue
-
-                    markets_parsed += 1
-
-                    slug = _safe_str(raw.get("slug"))
-                    question = _safe_str(raw.get("question")) or _safe_str(raw.get("title"))
-                    market_id = extract_market_id(raw)
-                    resolved_outcome = extract_resolved_outcome(raw)
-                    ticker = extract_ticker(raw, question)
-
-                    if not is_candidate_earnings_market(question, slug):
-                        ignored_non_candidate += 1
-                        continue
-
-                    considered += 1
-
-                    anchor_dt, _anchor_src = parse_anchor_date(slug, question, raw)
-
-                    q_est, q_src = extract_estimate_from_question(question)
-                    s_est, s_src = extract_estimate_from_slug(slug)
-                    polymarket_est = q_est if q_est is not None else s_est
-                    polymarket_est_src = q_src if q_est is not None else s_src
-
-                    yes_semantics, tie_counts_as = infer_yes_semantics(question, slug)
-
-                    base = ResultRecord(
-                        line_no=line_no,
-                        market_id=market_id,
-                        slug=slug,
-                        question=question,
-                        ticker=ticker,
-                        ric=None,
-                        polymarket_resolved_outcome=resolved_outcome,
-                        anchor_date=_to_date_iso(anchor_dt),
-                        polymarket_estimate=polymarket_est,
-                        polymarket_estimate_source=polymarket_est_src,
-                        yes_semantics=yes_semantics,
-                        inline_counts_as=tie_counts_as,
-                        matched_announce_date=None,
-                        matched_fperiod=None,
-                        matched_period_end_date=None,
-                        eikon_actual_eps=None,
-                        eikon_eps_mean_estimate=None,
-                        estimate_used=None,
-                        estimate_used_source=None,
-                        surprise=None,
-                        label=None,
-                        expected_resolution=None,
-                        match_method=None,
-                        status="UNMATCHED",
-                        skip_reason=None,
-                    )
-
-                    # Unmatched conditions (considered markets only)
-                    if not resolved_outcome:
-                        base.skip_reason = "unresolved_or_missing_outcome"
-                        unmatched_records.append(base)
-                        unmatched_n += 1
-                        continue
-                    if not ticker:
-                        base.skip_reason = "no_ticker"
-                        unmatched_records.append(base)
-                        unmatched_n += 1
-                        continue
-                    if not anchor_dt:
-                        base.skip_reason = "no_anchor_date"
-                        unmatched_records.append(base)
-                        unmatched_n += 1
-                        continue
-
-                    ric = ticker_to_ric_best_effort(ticker, fail_fast=fail_fast)
-                    if not ric:
-                        base.skip_reason = "no_ric"
-                        unmatched_records.append(base)
-                        unmatched_n += 1
-                        continue
-                    base.ric = ric
-
-                    events = fetch_eps_events(ric, fail_fast=fail_fast)
-                    if not events:
-                        base.skip_reason = "no_events_returned"
-                        unmatched_records.append(base)
-                        unmatched_n += 1
-                        continue
-
-                    ev, method = match_event_by_anchor_date(
-                        events,
-                        anchor_dt,
-                        pre_days=args.event_pre_days,
-                        post_days=args.event_post_days,
-                        max_distance_days=args.max_event_distance_days,
-                    )
-                    if not ev:
-                        base.skip_reason = "no_event_match"
-                        unmatched_records.append(base)
-                        unmatched_n += 1
-                        continue
-
-                    base.matched_announce_date = _to_date_iso(ev.announce_date)
-                    base.matched_fperiod = ev.fperiod
-                    base.matched_period_end_date = _to_date_iso(ev.period_end_date)
-                    base.eikon_actual_eps = ev.actual_eps
-                    base.eikon_eps_mean_estimate = ev.mean_estimate
-                    base.match_method = method
-
-                    if ev.actual_eps is None:
-                        base.skip_reason = "no_actual_eps"
-                        unmatched_records.append(base)
-                        unmatched_n += 1
-                        continue
-
-                    estimate_used: Optional[float] = None
-                    estimate_used_source: Optional[str] = None
-                    if polymarket_est is not None:
-                        estimate_used = float(polymarket_est)
-                        estimate_used_source = polymarket_est_src
-                    elif ev.mean_estimate is not None:
-                        estimate_used = float(ev.mean_estimate)
-                        estimate_used_source = "eikon_mean"
-
-                    if estimate_used is None:
-                        base.skip_reason = "no_estimate"
-                        unmatched_records.append(base)
-                        unmatched_n += 1
-                        continue
-
-                    # Matched at this point
-                    matched += 1
-
-                    base.estimate_used = estimate_used
-                    base.estimate_used_source = estimate_used_source
-
-                    lab = decide_label(float(ev.actual_eps), estimate_used)
-                    base.label = lab
-                    base.surprise = float(ev.actual_eps) - estimate_used
-                    base.expected_resolution = expected_resolution_from_label(
-                        lab,
-                        yes_semantics or "YES_MEANS_BEAT",
-                        tie_counts_as or "NO",
-                    )
-
-                    if base.expected_resolution == resolved_outcome:
-                        base.status = "MATCHED_CORRECT"
-                        correct_records.append(base)
-                        correct_n += 1
-                    else:
-                        base.status = "MATCHED_INCORRECT"
-                        incorrect_records.append(base)
-                        incorrect_n += 1
-
+        summary = run_optional_check_consistency(
+            markets_path=markets_path,
+            validation_dir=validation_dir,
+            app_key=app_key,
+            eikon_port=args.eikon_port,
+            require_proxy=(not args.skip_proxy_check),
+            fail_fast=fail_fast,
+            max_markets=args.max_markets,
+            event_pre_days=args.event_pre_days,
+            event_post_days=args.event_post_days,
+            max_event_distance_days=args.max_event_distance_days,
+            symbology_chunk_size=args.symbology_chunk_size,
+            validate_chunk_size=args.validate_chunk_size,
+            eps_chunk_size=args.eps_chunk_size,
+            show_progress=(not args.no_progress),
+        )
     except FatalEikonNetworkError as exc:
-        # Catastrophic: write partial outputs and print one error
-        write_jsonl(out_correct, correct_records)
-        write_jsonl(out_incorrect, incorrect_records)
-        write_jsonl(out_unmatched, unmatched_records)
-
-        write_csv(out_correct_csv, correct_records)
-        write_csv(out_incorrect_csv, incorrect_records)
-        write_csv(out_unmatched_csv, unmatched_records)
-
-
         LOG.error(
             "%s\n\n"
-            "Partial outputs were written. Fix likely involves:\n"
+            "Partial outputs may have been written. Fix likely involves:\n"
             "  - Ensure Workspace/Eikon is running AND logged in\n"
             "  - Verify the API proxy is running (port 9000/9060)\n"
             "  - If on VPN/corporate proxy, allowlist/firewall may be required\n",
             exc,
         )
         return 2
+    except Exception as exc:
+        LOG.error("Fatal error: %s", exc)
+        return 2
 
-    # Always write all three files
-    write_jsonl(out_correct, correct_records)
-    write_jsonl(out_incorrect, incorrect_records)
-    write_jsonl(out_unmatched, unmatched_records)
-
-    write_csv(out_correct_csv, correct_records)
-    write_csv(out_incorrect_csv, incorrect_records)
-    write_csv(out_unmatched_csv, unmatched_records)
-
-
-    # End-of-run summary (prints once)
-    summary = (
+    summary_txt = (
         "\n"
         "==================== SUMMARY ====================\n"
-        f"Lines scanned:                       {lines_scanned}\n"
-        f"Markets parsed (valid JSON):         {markets_parsed}\n"
-        f"Ignored (non-earnings candidate):    {ignored_non_candidate}\n"
-        f"Considered (earnings-like):          {considered}\n"
-        f"Matched (event+actual+estimate):     {matched}\n"
-        f"  - Correct:                         {correct_n}\n"
-        f"  - Incorrectly resolved:            {incorrect_n}\n"
-        f"Unmatched (skip_reason set):         {unmatched_n}\n"
+        f"Lines scanned:                       {summary['lines_scanned']}\n"
+        f"Markets parsed (valid JSON):         {summary['markets_parsed']}\n"
+        f"Ignored (non-earnings candidate):    {summary['ignored_non_candidate']}\n"
+        f"Considered (earnings-like):          {summary['considered']}\n"
+        f"Matched (event+actual+estimate):     {summary['matched']}\n"
+        f"  - Correct:                         {summary['correct']}\n"
+        f"  - Incorrectly resolved:            {summary['incorrect']}\n"
+        f"Unmatched (skip_reason set):         {summary['unmatched']}\n"
         "\n"
         "Outputs:\n"
-        f"  - {out_correct}\n"
-        f"  - {out_incorrect}\n"
-        f"  - {out_unmatched}\n"
+        f"  - {summary['out_correct']}\n"
+        f"  - {summary['out_incorrect']}\n"
+        f"  - {summary['out_unmatched']}\n"
+        "Batching:\n"
+        f"  - symbology_chunk_size:            {summary['batching']['symbology_chunk_size']}\n"
+        f"  - validate_chunk_size:             {summary['batching']['validate_chunk_size']}\n"
+        f"  - eps_chunk_size:                  {summary['batching']['eps_chunk_size']}\n"
         "=================================================\n"
     )
-    tqdm.write(summary) if tqdm is not None else print(summary)
+    if tqdm is not None and not args.no_progress:
+        tqdm.write(summary_txt)
+    else:
+        print(summary_txt)
 
     return 0
 
