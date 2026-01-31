@@ -14,7 +14,7 @@ What this script does
 2) Flatten to per-event rows (ric, market_id, slug, anchor_date, ...)
 3) Group events into date buckets (default: month buckets) to avoid huge date ranges per request
 4) For each bucket:
-   - Fetch daily OHLCV for all RICs in that bucket using batched ek.get_data calls
+   - Fetch daily close for all RICs in that bucket using batched ek.get_data calls
 5) For each event:
    - Find event trading date (anchor date if trading day else next trading day)
    - Slice trading-day window: [-pre_td, +post_td]
@@ -75,7 +75,6 @@ try:
     from tqdm import tqdm  # type: ignore
 except Exception:
     tqdm = None  # type: ignore
-
 
 # -----------------------------------------------------------------------------
 # Suppress noisy warnings from eikon/pandas (requested)
@@ -140,26 +139,16 @@ class EarningsEvent:
     slug: str
     anchor_date: str  # YYYY-MM-DD
 
-
-# -----------------------------------------------------------------------------
-# Path helpers
-# -----------------------------------------------------------------------------
-def guess_project_root() -> Path:
-    here = Path(__file__).resolve()
-    for p in [here.parent] + list(here.parents):
-        if (p / "data").exists():
-            return p
-    return here.parent
-
+# ------------------------------------------------------------------
+# Path helpers (deterministic relative paths)
+# ------------------------------------------------------------------
+PROJECT_ROOT = Path(__file__).resolve().parent.parent  # Corporate_Earnings/
 
 def default_input_path() -> Path:
-    root = guess_project_root()
-    return root / "data" / "corporate_info" / "corporate_info.jsonl"
-
+    return PROJECT_ROOT / "data" / "corporate_info" / "corporate_info.jsonl"
 
 def default_output_dir() -> Path:
-    root = guess_project_root()
-    return root / "data" / "stock_prices"
+    return PROJECT_ROOT / "data" / "stock_prices"
 
 
 # -----------------------------------------------------------------------------
@@ -334,7 +323,7 @@ def get_first_present_column(columns: List[str], preferred_exact: List[str], fal
 # -----------------------------------------------------------------------------
 # FAST price fetch via ek.get_data (batched)
 # -----------------------------------------------------------------------------
-def fetch_ohlcv_batch(
+def fetch_close_batch(
     rics: List[str],
     start_d: date,
     end_d: date,
@@ -343,21 +332,15 @@ def fetch_ohlcv_batch(
     throttle_s: float = 0.0,
 ) -> Tuple[pd.DataFrame, Optional[str]]:
     """
-    Fetch daily OHLCV for many rics in one call.
+    Fetch daily CLOSE for many rics in one call.
 
-    Returns dataframe with standardized columns:
-      ric, date, open, high, low, close, volume
-
-    On failure returns empty df and error string.
+    Returns standardized columns:
+      ric, date, close
     """
     assert ek is not None
 
     fields: List[Any] = [
-        "TR.PriceOpen",
-        "TR.PriceHigh",
-        "TR.PriceLow",
         "TR.PriceClose",
-        "TR.Volume",
         "TR.PriceClose.date",
     ]
     params = {"SDate": start_d.isoformat(), "EDate": end_d.isoformat(), "Frq": frq}
@@ -367,35 +350,25 @@ def fetch_ohlcv_batch(
         time.sleep(throttle_s)
 
     if df is None or df.empty:
-        return pd.DataFrame(columns=["ric", "date", "open", "high", "low", "close", "volume"]), str(err)
+        return pd.DataFrame(columns=["ric", "date", "close"]), str(err)
 
     cols = list(df.columns)
 
     inst_col = "Instrument" if "Instrument" in cols else cols[0]
     date_col = get_first_present_column(cols, preferred_exact=["Date"], fallback_substrings=["date"])
-    open_col = get_first_present_column(cols, preferred_exact=[], fallback_substrings=["price open", "open"])
-    high_col = get_first_present_column(cols, preferred_exact=[], fallback_substrings=["price high", "high"])
-    low_col = get_first_present_column(cols, preferred_exact=[], fallback_substrings=["price low", "low"])
     close_col = get_first_present_column(cols, preferred_exact=[], fallback_substrings=["price close", "close"])
-    vol_col = get_first_present_column(cols, preferred_exact=[], fallback_substrings=["volume"])
 
-    missing = [x for x in [date_col, open_col, high_col, low_col, close_col, vol_col] if x is None]
-    if missing:
-        return pd.DataFrame(columns=["ric", "date", "open", "high", "low", "close", "volume"]), (
-            f"Could not map required columns from Eikon output. Columns={cols}"
-        )
+    if date_col is None or close_col is None:
+        return pd.DataFrame(columns=["ric", "date", "close"]), f"Could not map columns. Columns={cols}"
 
-    out = df[[inst_col, date_col, open_col, high_col, low_col, close_col, vol_col]].copy()
-    out.columns = ["ric", "date", "open", "high", "low", "close", "volume"]
+    out = df[[inst_col, date_col, close_col]].copy()
+    out.columns = ["ric", "date", "close"]
 
     out["ric"] = out["ric"].astype(str)
-
     out["date"] = pd.to_datetime(out["date"], errors="coerce").dt.date
     out = out.dropna(subset=["date"])
 
-    for c in ["open", "high", "low", "close", "volume"]:
-        out[c] = pd.to_numeric(out[c], errors="coerce")
-
+    out["close"] = pd.to_numeric(out["close"], errors="coerce")
     out = out.drop_duplicates(subset=["ric", "date"]).sort_values(["ric", "date"])
     return out, None
 
@@ -564,6 +537,8 @@ def run_fetch_stock_prices(
     """
     if tqdm is None and show_progress:
         show_progress = False
+    
+    BENCHMARK_RIC = ".SPX"
 
     set_eikon_app_key(app_key)
     ensure_dir(out_dir)
@@ -583,14 +558,26 @@ def run_fetch_stock_prices(
         holiday_buffer_days=holiday_buffer_days,
     )
 
-    # Storage for fetched OHLCV by RIC
-    ohlcv_by_ric: Dict[str, pd.DataFrame] = {}
+    # Overall calendar span across all events (for benchmark)
+    all_anchors = [safe_date(e.anchor_date) for e in events]
+    overall_start = min(all_anchors) - timedelta(days=lookback_days)
+    overall_end   = max(all_anchors) + timedelta(days=lookahead_days)
+
+    # Storage for fetched CLOSE by RIC
+    close_by_ric: Dict[str, pd.DataFrame] = {}
 
     failures_fetch: List[str] = []
     failures_window: List[str] = []
     failures_time: List[str] = []
+    
+    # Fetch benchmark once
+    df_spx, err_spx = fetch_close_batch([BENCHMARK_RIC], overall_start, overall_end, throttle_s=throttle_s)
+    if err_spx:
+        failures_fetch.append(f"Benchmark {BENCHMARK_RIC}: {err_spx}")
+    else:
+        close_by_ric[BENCHMARK_RIC] = df_spx[["date", "close"]].sort_values("date")
 
-    # ---- Fetch OHLCV per bucket in batches ----
+    # ---- Fetch close per bucket in batches ----
     bucket_items = sorted(buckets.items(), key=lambda kv: kv[0])
     bucket_iter = bucket_items
     if show_progress:
@@ -608,25 +595,28 @@ def run_fetch_stock_prices(
         # Fetch in chunks
         chunk_iter = list(chunked(rics, max(1, int(chunk_size))))
         if show_progress:
-            chunk_iter = tqdm(chunk_iter, desc=f"OHLCV {bkey}", unit="chunk", leave=False)  # type: ignore
+            chunk_iter = tqdm(chunk_iter, desc=f"close {bkey}", unit="chunk", leave=False)  # type: ignore
 
         for ric_chunk in chunk_iter:  # type: ignore
-            df_batch, err = fetch_ohlcv_batch(ric_chunk, start_cal, end_cal, throttle_s=throttle_s)
+            df_batch, err = fetch_close_batch(ric_chunk, start_cal, end_cal, throttle_s=throttle_s)
             if err:
                 failures_fetch.append(f"Bucket {bkey} chunk size={len(ric_chunk)}: {err}")
                 continue
 
             # Merge batch into per-ric dict
             for ric, g in df_batch.groupby("ric"):
-                g2 = g.copy()
-                # keep only needed columns
-                g2 = g2[["date", "open", "high", "low", "close", "volume"]].sort_values("date")
-                if ric in ohlcv_by_ric:
-                    merged = pd.concat([ohlcv_by_ric[ric], g2], ignore_index=True)
+                g2 = g[["date", "close"]].sort_values("date").copy()
+                if ric in close_by_ric:
+                    merged = pd.concat([close_by_ric[ric], g2], ignore_index=True)
                     merged = merged.drop_duplicates(subset=["date"]).sort_values("date")
-                    ohlcv_by_ric[ric] = merged
+                    close_by_ric[ric] = merged
                 else:
-                    ohlcv_by_ric[ric] = g2
+                    close_by_ric[ric] = g2
+
+    spx_ts = close_by_ric.get(BENCHMARK_RIC)
+    spx_map = {}
+    if spx_ts is not None and not spx_ts.empty:
+        spx_map = dict(zip(spx_ts["date"].tolist(), spx_ts["close"].tolist()))
 
     # ---- Build outputs per event ----
     all_rows: List[Dict[str, Any]] = []
@@ -637,7 +627,7 @@ def run_fetch_stock_prices(
         ev_iter = tqdm(events, desc="Slicing events", unit="evt")  # type: ignore
 
     for e in ev_iter:  # type: ignore
-        ts = ohlcv_by_ric.get(e.ric)
+        ts = close_by_ric.get(e.ric)
         if ts is None or ts.empty:
             failures_window.append(f"RIC {e.ric} event market_id={e.market_id} anchor_date={e.anchor_date}: NO_TS_DATA")
             continue
@@ -687,11 +677,8 @@ def run_fetch_stock_prices(
                 {
                     "date": d.isoformat(),
                     "offset_td": int(offset_td),
-                    "OPEN": float(row["open"]) if row is not None and pd.notna(row["open"]) else None,
-                    "HIGH": float(row["high"]) if row is not None and pd.notna(row["high"]) else None,
-                    "LOW": float(row["low"]) if row is not None and pd.notna(row["low"]) else None,
                     "CLOSE": float(row["close"]) if row is not None and pd.notna(row["close"]) else None,
-                    "VOLUME": float(row["volume"]) if row is not None and pd.notna(row["volume"]) else None,
+                    "SPX_CLOSE": float(spx_map[d]) if d in spx_map and pd.notna(spx_map[d]) else None,
                 }
             )
 
@@ -727,11 +714,8 @@ def run_fetch_stock_prices(
                     "earnings_time_field_used": tmeta.get("earnings_time_field_used"),
                     "date": r.get("date"),
                     "offset_td": r.get("offset_td"),
-                    "open": r.get("OPEN"),
-                    "high": r.get("HIGH"),
-                    "low": r.get("LOW"),
                     "close": r.get("CLOSE"),
-                    "volume": r.get("VOLUME"),
+                    "spx_close": r.get("SPX_CLOSE"),
                     "truncated_left": wmeta.get("truncated_left"),
                     "truncated_right": wmeta.get("truncated_right"),
                 }
@@ -768,7 +752,7 @@ def run_fetch_stock_prices(
     lines.append("")
     lines.append(f"Corporate rows: {len(corporate_rows)}")
     lines.append(f"Events parsed:  {len(events)}")
-    lines.append(f"RICs fetched:   {len(ohlcv_by_ric)}")
+    lines.append(f"RICs fetched:   {len(close_by_ric)}")
     lines.append(f"Output rows:    {len(all_rows)}")
     lines.append("")
     lines.append(f"Trading-day window: pre={pre_trading_days}, post={post_trading_days}")
@@ -814,7 +798,7 @@ def run_fetch_stock_prices(
         "summary_path": str(summary_path),
         "events_total": len(events),
         "rows_total": len(all_rows),
-        "rics_total": len(ohlcv_by_ric),
+        "rics_total": len(close_by_ric),
         "bucket_mode": bucket_mode,
         "chunk_size": chunk_size,
         "include_earnings_time": include_earnings_time,
@@ -830,7 +814,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     p.add_argument("--outdir", type=str, default=str(default_output_dir()), help="Output directory")
     p.add_argument("--app-key", type=str, default=None, help="Eikon App Key (or set env EIKON_APP_KEY)")
 
-    p.add_argument("--pre-td", type=int, default=30, help="Trading days before anchor")
+    p.add_argument("--pre-td", type=int, default=250, help="Trading days before anchor")
     p.add_argument("--post-td", type=int, default=30, help="Trading days after anchor")
     p.add_argument("--holiday-buffer", type=int, default=10, help="Extra calendar-day buffer for holidays/weekends")
 

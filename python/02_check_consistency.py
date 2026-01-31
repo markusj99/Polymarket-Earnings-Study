@@ -62,8 +62,11 @@ except Exception:
 # Defaults / Config
 # =========================
 
-DEFAULT_VALIDATION_DIR = Path(__file__).resolve().parent / "data" / "validation"
-DEFAULT_MARKETS_PATH = Path(__file__).resolve().parent / "data" / "markets" / "markets.jsonl"
+# Project root is one level above /python
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+DEFAULT_VALIDATION_DIR = PROJECT_ROOT / "data" / "validation"
+DEFAULT_MARKETS_PATH   = PROJECT_ROOT / "data" / "markets" / "markets.jsonl"
 
 # Prefer NYSE (.N) before NASDAQ (.O) in suffix guessing.
 RIC_SUFFIX_GUESSES = [".N", ".O", ".A", ".L", ".K"]

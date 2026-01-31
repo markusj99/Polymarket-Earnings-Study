@@ -51,6 +51,14 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 import requests
 from tqdm import tqdm
 
+
+# -------------------------
+# Default filenames
+# -------------------------
+DEFAULT_PRICES_WIDE_CSV = "poly_prices_wide.csv"
+DEFAULT_PRICES_LONG_CSV = "poly_prices_long.csv"
+DEFAULT_FAILED_CSV = "failed_poly_markets.csv"
+
 # -------------------------
 # Snapshot spec (fixed)
 # -------------------------
@@ -155,6 +163,151 @@ def atomic_write_jsonl(path: Path, rows: Iterable[Dict[str, Any]]) -> None:
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
     os.replace(tmp, path)
+
+def _to_json_str(x: Any) -> Optional[str]:
+    """
+    For CSV: store lists/dicts as JSON strings to avoid losing info.
+    """
+    if x is None:
+        return None
+    if isinstance(x, (dict, list)):
+        try:
+            return json.dumps(x, ensure_ascii=False)
+        except Exception:
+            return str(x)
+    return str(x)
+
+
+def write_csv_outputs(
+    out_prices_wide_csv: Path,
+    out_prices_long_csv: Path,
+    out_failed_csv: Path,
+    successes: List[Dict[str, Any]],
+    failures: List[Dict[str, Any]],
+) -> None:
+    """
+    Writes:
+      1) WIDE prices: 1 row per market, columns yes_4w, no_4w, ...
+      2) LONG prices: 1 row per (market, snapshot_label) with yes/no/target/source_ts
+      3) FAILED:      1 row per failed market
+    """
+    import pandas as pd  # local import to keep dependencies minimal
+
+    out_prices_wide_csv.parent.mkdir(parents=True, exist_ok=True)
+
+    snapshot_labels = [lab for lab, _ in SNAPSHOTS]
+
+    # -------------------------
+    # 1) WIDE (market-level)
+    # -------------------------
+    wide_rows: List[Dict[str, Any]] = []
+    for r in successes:
+        row: Dict[str, Any] = {}
+
+        # Basic identifiers
+        row["run_id"] = r.get("run_id")
+        row["market_id"] = r.get("market_id")
+        row["slug"] = r.get("slug")
+        row["yes_token_id"] = r.get("yes_token_id")
+        row["no_token_id"] = r.get("no_token_id")
+        row["generated_utc"] = r.get("generated_utc")
+
+        # Observed window
+        row["observed_start_ts"] = r.get("observed_start_ts")
+        row["observed_end_ts"] = r.get("observed_end_ts")
+        row["observed_start_utc"] = r.get("observed_start_utc")
+        row["observed_end_utc"] = r.get("observed_end_utc")
+        row["observed_span_hours"] = r.get("observed_span_hours")
+
+        # Query window
+        row["query_start_ts"] = r.get("query_start_ts")
+        row["query_end_ts"] = r.get("query_end_ts")
+
+        # Quality checks (store as JSON strings)
+        row["complement_tolerance"] = r.get("complement_tolerance")
+        row["complement_violations"] = _to_json_str(r.get("complement_violations"))
+        row["missing_yes"] = _to_json_str(r.get("missing_yes"))
+        row["missing_no"] = _to_json_str(r.get("missing_no"))
+
+        prices_yes = r.get("prices_yes") or {}
+        prices_no = r.get("prices_no") or {}
+        targets = r.get("snapshot_targets_ts") or {}
+        src_yes = r.get("snapshot_source_ts_yes") or {}
+        src_no = r.get("snapshot_source_ts_no") or {}
+
+        # Snapshot columns
+        for lab in snapshot_labels:
+            row[f"yes_{lab}"] = prices_yes.get(lab)
+            row[f"no_{lab}"] = prices_no.get(lab)
+            row[f"target_ts_{lab}"] = targets.get(lab)
+            row[f"src_yes_ts_{lab}"] = src_yes.get(lab)
+            row[f"src_no_ts_{lab}"] = src_no.get(lab)
+
+        wide_rows.append(row)
+
+    pd.DataFrame(wide_rows).to_csv(out_prices_wide_csv, index=False, encoding="utf-8")
+
+    # -------------------------
+    # 2) LONG (snapshot-level)
+    # -------------------------
+    long_rows: List[Dict[str, Any]] = []
+    for r in successes:
+        prices_yes = r.get("prices_yes") or {}
+        prices_no = r.get("prices_no") or {}
+        targets = r.get("snapshot_targets_ts") or {}
+        src_yes = r.get("snapshot_source_ts_yes") or {}
+        src_no = r.get("snapshot_source_ts_no") or {}
+
+        base = {
+            "run_id": r.get("run_id"),
+            "market_id": r.get("market_id"),
+            "slug": r.get("slug"),
+            "generated_utc": r.get("generated_utc"),
+            "observed_end_ts": r.get("observed_end_ts"),
+            "observed_end_utc": r.get("observed_end_utc"),
+            "complement_tolerance": r.get("complement_tolerance"),
+        }
+
+        for lab, off in SNAPSHOTS:
+            row = dict(base)
+            row["snapshot_label"] = lab
+            row["snapshot_offset_seconds"] = int(off)
+
+            row["target_ts"] = targets.get(lab)
+            row["src_yes_ts"] = src_yes.get(lab)
+            row["src_no_ts"] = src_no.get(lab)
+
+            row["price_yes"] = prices_yes.get(lab)
+            row["price_no"] = prices_no.get(lab)
+
+            # convenience columns
+            y = row["price_yes"]
+            n = row["price_no"]
+            row["yes_plus_no"] = (y + n) if (isinstance(y, (int, float)) and isinstance(n, (int, float))) else None
+            row["abs_complement_error"] = (
+                abs((y + n) - 1.0)
+                if (isinstance(y, (int, float)) and isinstance(n, (int, float)))
+                else None
+            )
+
+            long_rows.append(row)
+
+    pd.DataFrame(long_rows).to_csv(out_prices_long_csv, index=False, encoding="utf-8")
+
+    # -------------------------
+    # 3) FAILED markets CSV
+    # -------------------------
+    failed_rows: List[Dict[str, Any]] = []
+    for f in failures:
+        row = dict(f)
+        # store nested details safely
+        for k, v in list(row.items()):
+            if isinstance(v, (dict, list)):
+                row[k] = _to_json_str(v)
+        failed_rows.append(row)
+
+    pd.DataFrame(failed_rows).to_csv(out_failed_csv, index=False, encoding="utf-8")
+
 
 
 def atomic_write_text(path: Path, text: str) -> None:
@@ -726,6 +879,9 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     p.add_argument("--input", type=str, default=None, help="Input markets JSONL path.")
     p.add_argument("--out-dir", type=str, default=None, help="Output directory for JSONL + summary.txt")
     p.add_argument("--data-root", type=str, default=None, help="Project data root. If omitted, tries a Windows default then ./data")
+    p.add_argument("--out-prices-wide-csv", type=str, default=DEFAULT_PRICES_WIDE_CSV)
+    p.add_argument("--out-prices-long-csv", type=str, default=DEFAULT_PRICES_LONG_CSV)
+    p.add_argument("--out-failed-csv", type=str, default=DEFAULT_FAILED_CSV)
 
     p.add_argument("--gamma-base", type=str, default=os.getenv("POLY_GAMMA_URL", "https://gamma-api.polymarket.com"))
     p.add_argument("--clob-base", type=str, default=os.getenv("POLY_CLOB_URL", "https://clob.polymarket.com"))
@@ -753,14 +909,14 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
 
 def _default_data_root(script_dir: Path) -> Path:
     """
-    Default data-root behavior:
-      1) If the common Windows thesis directory exists, use it.
-      2) Else use ./data next to this script.
+    Default data-root behavior (relative only):
+      - Script location: Corporate_Earnings/python/01_fetch_poly_prices.py
+      - Data root:       Corporate_Earnings/data
     """
-    win_root = Path(r"C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data")
-    if win_root.exists():
-        return win_root
-    return script_dir / "data"
+    # script_dir = .../Corporate_Earnings/python
+    # data_root  = .../Corporate_Earnings/data
+    return (script_dir.parent / "data").resolve()
+
 
 def main(argv: Optional[List[str]] = None) -> None:
     args = parse_args(argv)
@@ -784,6 +940,10 @@ def main(argv: Optional[List[str]] = None) -> None:
     out_prices_jsonl = out_dir / "poly_prices.jsonl"
     out_failed_jsonl = out_dir / "failed_poly_markets.jsonl"
     out_summary_txt = out_dir / "summary.txt"
+
+    out_prices_wide_csv = out_dir / str(args.out_prices_wide_csv)
+    out_prices_long_csv = out_dir / str(args.out_prices_long_csv)
+    out_failed_csv = out_dir / str(args.out_failed_csv)
 
     cfg = Config(
         gamma_base=str(args.gamma_base).rstrip("/"),
@@ -888,6 +1048,14 @@ def main(argv: Optional[List[str]] = None) -> None:
     atomic_write_jsonl(out_prices_jsonl, successes)
     atomic_write_jsonl(out_failed_jsonl, failures)
 
+    write_csv_outputs(
+        out_prices_wide_csv=out_prices_wide_csv,
+        out_prices_long_csv=out_prices_long_csv,
+        out_failed_csv=out_failed_csv,
+        successes=successes,
+        failures=failures,
+    )
+
     run_finished = datetime.now(timezone.utc)
     elapsed_s = round((run_finished - run_started).total_seconds(), 3)
 
@@ -921,6 +1089,9 @@ def main(argv: Optional[List[str]] = None) -> None:
     lines.append("Outputs")
     lines.append(f"- Historical prices JSONL: {out_prices_jsonl}")
     lines.append(f"- Failed markets JSONL:    {out_failed_jsonl}")
+    lines.append(f"- Prices WIDE CSV:        {out_prices_wide_csv}")
+    lines.append(f"- Prices LONG CSV:        {out_prices_long_csv}")
+    lines.append(f"- Failed markets CSV:     {out_failed_csv}")
     lines.append(f"- Summary TXT:             {out_summary_txt}")
     lines.append("")
     lines.append("Results")
@@ -966,7 +1137,9 @@ def main(argv: Optional[List[str]] = None) -> None:
     tqdm.write(f"[{fmt_dt_utc(run_finished)}] DONE")
     tqdm.write(f"- Success: {len(successes)} | Fail: {len(failures)} | Elapsed: {elapsed_s}s")
     tqdm.write(f"- Summary TXT: {out_summary_txt}")
-
+    tqdm.write(f"- Prices WIDE CSV: {out_prices_wide_csv}")
+    tqdm.write(f"- Prices LONG CSV: {out_prices_long_csv}")
+    tqdm.write(f"- Failed markets CSV: {out_failed_csv}")
 
 if __name__ == "__main__":
     main()

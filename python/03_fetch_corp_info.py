@@ -67,7 +67,7 @@ except Exception:
 # =========================
 
 def project_root() -> Path:
-    return Path(__file__).resolve().parent
+    return Path(__file__).resolve().parent.parent
 
 
 DEFAULT_CORRECT_JSONL = project_root() / "data" / "validation" / "correct.jsonl"
@@ -75,6 +75,9 @@ DEFAULT_INCORRECT_JSONL = project_root() / "data" / "validation" / "incorrectly_
 DEFAULT_OUT_JSONL = project_root() / "data" / "corporate_info" / "corporate_info.jsonl"
 DEFAULT_SUMMARY_JSON = project_root() / "data" / "corporate_info" / "missing_summary.json"
 DEFAULT_SUMMARY_TXT = project_root() / "data" / "corporate_info" / "missing_summary.txt"
+DEFAULT_OUT_CSV = project_root() / "data" / "corporate_info" / "corporate_info.csv"
+DEFAULT_OUT_MARKETS_CSV = project_root() / "data" / "corporate_info" / "corporate_info_markets.csv"
+
 
 DEFAULT_LOOKBACK_DAYS = 183  # ~6 months
 
@@ -509,6 +512,68 @@ def write_jsonl(path: Path, records: List[CorporateInfoRecord]) -> None:
         for r in records:
             f.write(json.dumps(asdict(r), ensure_ascii=False) + "\n")
 
+def _to_json_str(x: Any) -> Optional[str]:
+    """
+    For CSV: store lists/dicts as compact JSON strings.
+    """
+    if x is None:
+        return None
+    try:
+        return json.dumps(x, ensure_ascii=False)
+    except Exception:
+        return str(x)
+
+
+def write_csvs(company_csv: Path, markets_csv: Path, records: List[CorporateInfoRecord]) -> None:
+    """
+    Write:
+      1) Company-level CSV (1 row per CorporateInfoRecord)
+      2) Market-level CSV (1 row per entry in record.markets)
+    """
+    company_csv.parent.mkdir(parents=True, exist_ok=True)
+    markets_csv.parent.mkdir(parents=True, exist_ok=True)
+
+    # ---- Company-level ----
+    company_rows: List[Dict[str, Any]] = []
+    for r in records:
+        d = asdict(r)
+
+        # Convert nested/list fields to JSON strings for safe CSV storage
+        for k in ["market_ids", "slugs", "markets", "notes"]:
+            d[k] = _to_json_str(d.get(k))
+
+        company_rows.append(d)
+
+    pd.DataFrame(company_rows).to_csv(company_csv, index=False, encoding="utf-8")
+
+    # ---- Market-level (normalized) ----
+    market_rows: List[Dict[str, Any]] = []
+    for r in records:
+        base = {
+            "ric": r.ric,
+            "ticker": r.ticker,
+            "company_name": r.company_name,
+            "hq_country": r.hq_country,
+            "hq_country_code": r.hq_country_code,
+            "country_of_risk": r.country_of_risk,
+            "exchange_country": r.exchange_country,
+            "primary_exchange": r.primary_exchange,
+            "retrieved_at_utc": r.retrieved_at_utc,
+        }
+        for m in (r.markets or []):
+            row = dict(base)
+            row.update(m)
+
+            # If anything inside per-market rows is nested in the future, guard it:
+            for kk, vv in list(row.items()):
+                if isinstance(vv, (list, dict)):
+                    row[kk] = _to_json_str(vv)
+
+            market_rows.append(row)
+
+    pd.DataFrame(market_rows).to_csv(markets_csv, index=False, encoding="utf-8")
+
+
 
 def write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -743,6 +808,8 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Fetch corporate info from Eikon for Polymarket earnings thesis.")
     p.add_argument("--correct-jsonl", type=str, default=str(DEFAULT_CORRECT_JSONL))
     p.add_argument("--out-jsonl", type=str, default=str(DEFAULT_OUT_JSONL))
+    p.add_argument("--out-csv", type=str, default=str(DEFAULT_OUT_CSV))
+    p.add_argument("--out-markets-csv", type=str, default=str(DEFAULT_OUT_MARKETS_CSV))
     p.add_argument("--summary-json", type=str, default=str(DEFAULT_SUMMARY_JSON))
     p.add_argument("--summary-txt", type=str, default=str(DEFAULT_SUMMARY_TXT))
     p.add_argument("--max-markets", type=int, default=None, help="TEST MODE: only first X lines of correct.jsonl")
@@ -775,6 +842,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     incorrect_jsonl = Path(getattr(args, "incorrect_jsonl", "")) if hasattr(args, "incorrect_jsonl") else None
 
     out_jsonl = Path(args.out_jsonl)
+    out_csv = Path(args.out_csv)
+    out_markets_csv = Path(args.out_markets_csv)
     summary_json = Path(args.summary_json)
     summary_txt = Path(args.summary_txt)
 
@@ -1058,6 +1127,7 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     # Write outputs
     write_jsonl(out_jsonl, results)
+    write_csvs(out_csv, out_markets_csv, results)
 
     summary = build_missing_summary(results)
     summary_json.parent.mkdir(parents=True, exist_ok=True)
@@ -1070,6 +1140,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         f"  - correct:   {correct_jsonl} ({'OK' if have_correct else 'MISSING'})\n"
         f"  - incorrect: {incorrect_jsonl} ({'OK' if have_incorrect else 'MISSING'})\n"
         f"Output:       {out_jsonl}\n"
+        f"Output JSONL:  {out_jsonl}\n"
+        f"Output CSV:    {out_csv}\n"
+        f"Markets CSV:   {out_markets_csv}\n"
         f"Summary JSON: {summary_json}\n"
         f"Summary TXT:  {summary_txt}\n"
         f"RICs:         {len(rics)}\n"

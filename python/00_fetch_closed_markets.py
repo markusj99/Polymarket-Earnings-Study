@@ -82,7 +82,7 @@ INCREMENTAL_MODE = True
 # -------------------------
 # Default output dir is RELATIVE to this script, for portability/sharing.
 # You can edit this for standalone runs or pass out_dir=... when calling from another script.
-OUT_DIR = Path(__file__).resolve().parent / "data" / "markets"
+OUT_DIR = Path(__file__).resolve().parent.parent / "data" / "markets"
 
 # Output filenames
 FNAME_MARKETS_JSONL = "markets.jsonl"
@@ -288,7 +288,6 @@ def extract_tag_slugs(tags_payload: Any) -> List[str]:
             out.append(t["slug"])
     return out
 
-
 def record_discard(discarded: List[Dict[str, Any]], m: Dict[str, Any], reason: str, stage: str) -> None:
     """Append a discard record for auditability."""
     discarded.append({
@@ -297,13 +296,43 @@ def record_discard(discarded: List[Dict[str, Any]], m: Dict[str, Any], reason: s
         "id": str(m.get("id")) if m.get("id") is not None else None,
         "slug": m.get("slug"),
         "question": m.get("question"),
+
+        # Key dates (helpful for debugging and time-alignment)
+        "startDate": m.get("startDate"),
         "endDate": m.get("endDate"),
+        "closedTime": m.get("closedTime"),
+        "umaEndDate": m.get("umaEndDate"),
+        "acceptingOrdersTimestamp": m.get("acceptingOrdersTimestamp"),
+
+        # Status flags
         "closed": m.get("closed"),
         "active": m.get("active"),
         "archived": m.get("archived"),
-        "category": m.get("category"),
+        "restricted": m.get("restricted"),
+
+        # Resolution & mechanics identifiers
         "resolutionSource": m.get("resolutionSource"),
+        "resolvedBy": m.get("resolvedBy"),
+        "umaResolutionStatus": m.get("umaResolutionStatus"),
+        "conditionId": m.get("conditionId"),
+        "questionID": m.get("questionID"),
+
+        # Market design / tradability
+        "enableOrderBook": m.get("enableOrderBook"),
+        "orderPriceMinTickSize": m.get("orderPriceMinTickSize"),
+        "orderMinSize": m.get("orderMinSize"),
+        "feesEnabled": m.get("feesEnabled"),
+        "acceptingOrders": m.get("acceptingOrders"),
+
+        # Liquidity/attention
+        "volumeNum": m.get("volumeNum"),
+        "liquidityNum": m.get("liquidityNum"),
+
+        # Category & text
+        "category": m.get("category"),
         "description": m.get("description"),
+
+        # Tags (audit-friendly)
         "tags": extract_tag_slugs(m.get("tags")),
     })
 
@@ -1023,32 +1052,93 @@ def build_resolved_earnings_dataset(
                     record_discard(discarded_markets, d, "missing_earnings_tag_after_detail", stage="detail")
                     continue
 
-                outs = parse_json_list_maybe(d.get("outcomes")) or ["Yes", "No"]
-                outs_norm = normalize_yes_no(outs) or ["Yes", "No"]
+                outs_raw = parse_json_list_maybe(d.get("outcomes")) or ["Yes", "No"]
+                outs_norm = normalize_yes_no(outs_raw) or ["Yes", "No"]
+
+                # CLOB token id parsing + safe YES/NO mapping
+                toks_raw = parse_json_list_maybe(d.get("clobTokenIds")) or []
+                clob_yes = None
+                clob_no = None
+                if len(outs_raw) == 2 and len(toks_raw) == 2:
+                    try:
+                        for o, tok in zip([str(x).strip().lower() for x in outs_raw], toks_raw):
+                            if o == "yes":
+                                clob_yes = tok
+                            elif o == "no":
+                                clob_no = tok
+                    except Exception:
+                        clob_yes = None
+                        clob_no = None
 
                 rec = {
+                    # Identifiers
                     "id": mid,
                     "ticker": ticker,
                     "slug": d.get("slug"),
                     "question": d.get("question"),
+
+                    # Contract definition (very important for thesis interpretation)
+                    "description": d.get("description"),
+
+                    # Outcomes
                     "outcomes": outs_norm,
-                    "endDate": d.get("endDate"),
-                    "resolutionSource": d.get("resolutionSource"),
+                    "outcomePrices": d.get("outcomePrices"),
                     "resolvedOutcome": resolved,
+
+                    # Key dates (time alignment)
+                    "startDate": d.get("startDate"),
+                    "endDate": d.get("endDate"),
+                    "closedTime": d.get("closedTime"),
+                    "umaEndDate": d.get("umaEndDate"),
+                    "acceptingOrdersTimestamp": d.get("acceptingOrdersTimestamp"),
+
+                    # Resolution / UMA
+                    "resolutionSource": d.get("resolutionSource"),
+                    "resolvedBy": d.get("resolvedBy"),
+                    "umaResolutionStatus": d.get("umaResolutionStatus"),
+                    "customLiveness": d.get("customLiveness"),
+                    "umaBond": d.get("umaBond"),
+                    "umaReward": d.get("umaReward"),
+                    "automaticallyResolved": d.get("automaticallyResolved"),
+
+                    # Market status flags
                     "closed": d.get("closed"),
                     "active": d.get("active"),
                     "archived": d.get("archived"),
                     "restricted": d.get("restricted"),
-                    "resolvedBy": d.get("resolvedBy"),
-                    "outcomePrices": d.get("outcomePrices"),
+
+                    # CLOB / join keys (critical if you later pull order books / trades)
+                    "conditionId": d.get("conditionId"),
+                    "questionID": d.get("questionID"),
+                    "clobTokenIds": toks_raw if toks_raw else None,
+                    "clobTokenId_yes": clob_yes,
+                    "clobTokenId_no": clob_no,
+
+                    # Tradability / market mechanics
+                    "enableOrderBook": d.get("enableOrderBook"),
+                    "orderPriceMinTickSize": d.get("orderPriceMinTickSize"),
+                    "orderMinSize": d.get("orderMinSize"),
+                    "feesEnabled": d.get("feesEnabled"),
+                    "acceptingOrders": d.get("acceptingOrders"),
+
+                    # Metrics
+                    "volumeNum": d.get("volumeNum"),
+                    "liquidityNum": d.get("liquidityNum"),
+
+                    # Rewards / incentives (confounders for accuracy + selection)
+                    "rewardsMinSize": d.get("rewardsMinSize"),
+                    "rewardsMaxSpread": d.get("rewardsMaxSpread"),
+                    "clobRewards": d.get("clobRewards"),
+
+                    # Misc
                     "category": d.get("category"),
                     "createdAt": d.get("createdAt"),
                     "updatedAt": d.get("updatedAt"),
-                    "volumeNum": d.get("volumeNum"),
-                    "liquidityNum": d.get("liquidityNum"),
                     "tags": tag_slugs,
                 }
+
                 final_new.append(rec)
+
 
                 pbar.set_postfix({
                     "kept_new": len(final_new),
@@ -1104,10 +1194,61 @@ def build_resolved_earnings_dataset(
         if write_csv:
             log(f"Writing CSV -> {out_csv}", verbose=verbose)
             fields = [
-                "id", "ticker", "slug", "question", "endDate", "resolutionSource",
-                "resolvedOutcome", "closed", "active", "archived", "restricted",
-                "resolvedBy", "category", "volumeNum", "liquidityNum", "tags"
+                # Identifiers
+                "id",
+                "ticker",
+                "slug",
+                "question",
+
+                # Key dates (time alignment)
+                "startDate",
+                "endDate",
+                "closedTime",
+                "umaEndDate",
+                "acceptingOrdersTimestamp",
+
+                # Resolution / status
+                "resolutionSource",
+                "resolvedOutcome",
+                "umaResolutionStatus",
+                "automaticallyResolved",
+                "closed",
+                "active",
+                "archived",
+                "restricted",
+                "resolvedBy",
+
+                # CLOB join keys (scalar)
+                "conditionId",
+                "questionID",
+                "clobTokenId_yes",
+                "clobTokenId_no",
+
+                # Tradability / market mechanics
+                "enableOrderBook",
+                "orderPriceMinTickSize",
+                "orderMinSize",
+                "feesEnabled",
+                "acceptingOrders",
+
+                # Metrics
+                "volumeNum",
+                "liquidityNum",
+
+                # Rewards / incentives (scalar)
+                "rewardsMinSize",
+                "rewardsMaxSpread",
+                "umaBond",
+                "umaReward",
+                "customLiveness",
+
+                # Misc
+                "category",
+                "createdAt",
+                "updatedAt",
+                "tags",
             ]
+
             tmp_csv = out_csv.with_suffix(".csv.tmp")
             with tmp_csv.open("w", newline="", encoding="utf-8") as f:
                 w = csv.DictWriter(f, fieldnames=fields)
