@@ -1,0 +1,77 @@
+Polymarket Earnings — Historical Prices Fetch Summary
+========================================================
+Run ID:            20260131T103017Z
+Generated (UTC):   2026-01-31 10:34:48Z
+Elapsed seconds:   270.508
+
+Mode
+- TEST:            False
+
+Inputs
+- Markets JSONL:   C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\markets\markets.jsonl
+- Markets in file: 447
+- Markets processed:447
+
+Resolution window (based on OBSERVED first/last price timestamps)
+- Earliest first price (UTC): 2025-06-03 21:50:06Z
+- Latest last price (UTC):    2026-01-30 23:30:21Z
+
+Outputs
+- Historical prices JSONL: C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\poly_prices\poly_prices.jsonl
+- Failed markets JSONL:    C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\poly_prices\failed_poly_markets.jsonl
+- Prices WIDE CSV:        C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\poly_prices\poly_prices_wide.csv
+- Prices LONG CSV:        C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\poly_prices\poly_prices_long.csv
+- Failed markets CSV:     C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\poly_prices\failed_poly_markets.csv
+- Summary TXT:             C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\poly_prices\summary.txt
+
+Results
+- Successful markets written: 447
+- Failed markets:             0
+
+Failure reasons (hard failures only)
+- (none)
+
+Quality stats (not failures)
+- Markets with partial missing snapshots: 443
+- Markets with YES+NO complement violations: 35
+- YES+NO complement tolerance: 0.05
+
+Missing snapshot counts (not failures)
+YES missing:
+- 4w: 443
+- 3w: 428
+- 2w: 349
+- 1w: 169
+- 6d: 85
+- 5d: 39
+- 4d: 24
+- 3d: 11
+- 2d: 2
+- 1d: 1
+- 12h: 1
+- 6h: 0
+
+NO missing:
+- 4w: 443
+- 3w: 428
+- 2w: 349
+- 1w: 169
+- 6d: 85
+- 5d: 39
+- 4d: 24
+- 3d: 11
+- 2d: 2
+- 1d: 1
+- 12h: 1
+- 6h: 0
+
+Config (selected)
+- gamma_base:      https://gamma-api.polymarket.com
+- clob_base:       https://clob.polymarket.com
+- max_workers:     10
+- http_timeout:    25.0
+- retries:         3
+- retry_sleep_s:   0.8
+- fidelity_min:    5 minutes
+- fidelity_fallback:720 minutes
+- buffer_seconds:  7200

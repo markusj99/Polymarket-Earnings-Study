@@ -1,0 +1,141 @@
+{
+  "generated_at_utc": "2026-01-31T11:01:53Z",
+  "rows": 2206,
+  "columns": {
+    "ric": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "event_date": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "event_time": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "event_type": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "event_title": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "ticker": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "company_name": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "gics_sector": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "gics_industry": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "trbc_industry": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "primary_exchange": {
+      "missing": 2206,
+      "total": 2206,
+      "missing_pct": 100.0
+    },
+    "exchange_mic": {
+      "missing": 2206,
+      "total": 2206,
+      "missing_pct": 100.0
+    },
+    "hq_country": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "hq_country_code": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "country_of_risk": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "exchange_country": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "market_cap_usd_asof_mid": {
+      "missing": 2,
+      "total": 2206,
+      "missing_pct": 0.09066183136899365
+    },
+    "analysts_covering_asof_mid": {
+      "missing": 214,
+      "total": 2206,
+      "missing_pct": 9.700815956482321
+    },
+    "turnover_lookback_sum_volume_asof_mid": {
+      "missing": 7,
+      "total": 2206,
+      "missing_pct": 0.3173164097914778
+    },
+    "turnover_lookback_avg_daily_volume_asof_mid": {
+      "missing": 7,
+      "total": 2206,
+      "missing_pct": 0.3173164097914778
+    },
+    "volatility_lookback_asof_mid": {
+      "missing": 9,
+      "total": 2206,
+      "missing_pct": 0.40797824116047143
+    },
+    "turnover_lookback_window_start_asof_mid": {
+      "missing": 7,
+      "total": 2206,
+      "missing_pct": 0.3173164097914778
+    },
+    "turnover_lookback_window_end_asof_mid": {
+      "missing": 7,
+      "total": 2206,
+      "missing_pct": 0.3173164097914778
+    },
+    "asof_mid_date_utc": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "observed_window_start_utc": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "observed_window_end_utc": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    },
+    "retrieved_at_utc": {
+      "missing": 0,
+      "total": 2206,
+      "missing_pct": 0.0
+    }
+  }
+}
