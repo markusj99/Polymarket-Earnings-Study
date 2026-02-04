@@ -4,25 +4,46 @@ r"""
 01_optional_check_consistency.py
 
 Validate Polymarket "beat earnings / beat EPS estimate" market resolutions against Refinitiv Eikon
-(Earnings Surprise / Estimates data).
+(Earnings Surprise / Estimates data) AND WRITE RESULTS BACK INTO THE ORIGINAL MARKETS FILES.
 
-Key fixes vs the previous "new script":
-- Robust batched symbology parsing (case-insensitive input column detection + row-order fallback).
-- Robust batched Eikon calls: if a batch fails due to one bad instrument, we automatically bisect the batch
-  and salvage the rest (for get_data + get_symbology).
-- Tightened validation heuristic to avoid "false-valid" instruments that later yield no EPS events.
-- Prefer .N before .O for US tickers when suffix-guessing.
+WHAT THIS SCRIPT DOES (UPDATED)
+-------------------------------
+This script reads your existing:
+  - Corporate_Earnings/data/markets/markets.jsonl
+  - Corporate_Earnings/data/markets/markets.csv
 
-OUTPUTS (always written)
-------------------------
-1) correct.jsonl
-2) incorrectly_resolved.jsonl
-3) unmatched.jsonl
-(+ CSV versions)
+It then:
+  1) Identifies “earnings/EPS” candidate markets.
+  2) Resolves tickers -> RICs (robust batching + bisect salvage).
+  3) Fetches EPS actual/estimates history from Eikon (robust batching + bisect salvage).
+  4) Matches the closest relevant earnings event around an “anchor date” inferred from slug/question/json fields.
+  5) Computes whether the market SHOULD have resolved YES/NO (based on actual vs estimate).
+  6) **Updates the original markets.jsonl and markets.csv in place** by adding a set of prefixed fields
+     (val_*) that contain the same information that previously lived in separate output files.
+
+IN-PLACE UPDATE OUTPUT
+----------------------
+- markets.jsonl is overwritten (atomic replace) with the same market objects plus new fields:
+    val_status, val_skip_reason, val_ric, val_anchor_date, val_polymarket_estimate, val_label,
+    val_expected_resolution, val_matched_announce_date, val_eikon_actual_eps, etc. (see ResultRecord).
+
+- markets.csv is overwritten (atomic replace) to mirror markets.jsonl, preserving existing column order
+  and appending any new val_* columns at the end.
+
+ADDITIONAL OUTPUTS (still written)
+----------------------------------
+1) Unmatched markets for manual investigation:
+   - Corporate_Earnings/data/validation/unmatched.jsonl
+   - Corporate_Earnings/data/validation/unmatched.csv
+
+2) A human-readable summary .txt that includes how many markets were resolved incorrectly:
+   - Corporate_Earnings/data/validation/consistency_summary.txt
 
 NOTES
 -----
 - Requires Eikon Desktop / Refinitiv Workspace running + logged in, with Data API proxy available.
+- This script does NOT create new “correct/incorrect” datasets anymore; those results are now stored in-place
+  inside markets.jsonl / markets.csv.
 """
 
 from __future__ import annotations
@@ -66,7 +87,9 @@ except Exception:
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 DEFAULT_VALIDATION_DIR = PROJECT_ROOT / "data" / "validation"
-DEFAULT_MARKETS_PATH   = PROJECT_ROOT / "data" / "markets" / "markets.jsonl"
+
+DEFAULT_MARKETS_JSONL_PATH = PROJECT_ROOT / "data" / "markets" / "markets.jsonl"
+DEFAULT_MARKETS_CSV_PATH   = PROJECT_ROOT / "data" / "markets" / "markets.csv"
 
 # Prefer NYSE (.N) before NASDAQ (.O) in suffix guessing.
 RIC_SUFFIX_GUESSES = [".N", ".O", ".A", ".L", ".K"]
@@ -87,6 +110,9 @@ EIKON_STATUS_PATHS = ["/api/status", "/api/handshake"]
 DEFAULT_SYMBOLOGY_CHUNK_SIZE = 250     # symbols per ek.get_symbology call
 DEFAULT_VALIDATE_CHUNK_SIZE = 200      # instruments per ek.get_data validation call
 DEFAULT_EPS_CHUNK_SIZE = 25            # RICs per EPS history call
+
+# New: prefix for fields written back into markets.* files
+VAL_PREFIX = "val_"
 
 
 # =========================
@@ -157,6 +183,7 @@ def setup_warnings_suppression() -> None:
         module=r"eikon\.data_grid",
     )
 
+
 def is_missing_value(x: Any) -> bool:
     if x is None:
         return True
@@ -174,14 +201,13 @@ def is_missing_value(x: Any) -> bool:
     return s.lower() in {"nan", "<na>", "none", "null"}
 
 
-
 # =========================
 # Exceptions / Overrides
 # =========================
 
-
 class FatalEikonNetworkError(RuntimeError):
     """Raised when Eikon repeatedly returns 500 'Network Error' and fail-fast is enabled."""
+
 
 # Eikon RICs can be case-sensitive. Berkshire Hathaway Class A is BRKa in Eikon.
 TICKER_TO_RIC_OVERRIDES: Dict[str, str] = {
@@ -190,11 +216,9 @@ TICKER_TO_RIC_OVERRIDES: Dict[str, str] = {
 }
 
 
-
 # =========================
 # Data models
 # =========================
-
 
 @dataclass
 class EarningsEvent:
@@ -256,7 +280,6 @@ class PendingMarket:
 # =========================
 # Parsing helpers
 # =========================
-
 
 def _safe_str(x: Any) -> Optional[str]:
     if x is None:
@@ -363,8 +386,6 @@ def parse_anchor_date(
                 return d, f"json_scan:{k}"
 
     return None, None
-
-
 
 
 def extract_estimate_from_question(question: Optional[str]) -> Tuple[Optional[float], Optional[str]]:
@@ -502,7 +523,6 @@ def extract_ticker(raw_market: Dict[str, Any], question: Optional[str]) -> Optio
 # Eikon proxy helpers
 # =========================
 
-
 def _http_get_text(url: str, timeout_s: float = 1.5) -> Optional[str]:
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "python-eikon-proxy-check"})
@@ -562,7 +582,6 @@ def detect_eikon_proxy_port(extra_ports: Optional[List[int]] = None) -> Optional
 # =========================
 # Eikon SDK helpers
 # =========================
-
 
 def require_eikon() -> None:
     if ek is None:
@@ -735,7 +754,6 @@ def chunked(xs: List[str], n: int) -> Iterable[List[str]]:
 # Robust symbology (batched + bisect on failure)
 # =========================
 
-
 def _safe_get_symbology_df(symbols: List[str], *, best_match: bool) -> Optional[Any]:
     """
     Robust ek.get_symbology:
@@ -772,39 +790,6 @@ def _safe_get_symbology_df(symbols: List[str], *, best_match: bool) -> Optional[
                 return df1
 
 
-def _detect_symbology_cols(df) -> Tuple[Optional[str], Optional[str]]:
-    """
-    Return (input_col, ric_col) for a symbology dataframe, using case-insensitive matching.
-    """
-    if df is None or getattr(df, "empty", True):
-        return None, None
-
-    cols = list(df.columns)
-    cols_lc = {str(c).lower(): c for c in cols}
-
-    # RIC column
-    ric_col = None
-    for key in ["ric", "to ric", "to_ric", "to symbol", "tosymbol", "to"]:
-        if key in cols_lc:
-            ric_col = cols_lc[key]
-            break
-    if ric_col is None:
-        # common case: exactly "RIC"
-        for c in cols:
-            if str(c).strip().lower() == "ric":
-                ric_col = c
-                break
-
-    # Input column
-    in_col = None
-    for key in ["ticker", "symbol", "from", "input", "fromsymbol", "from symbol", "instrument", "original", "source"]:
-        if key in cols_lc:
-            in_col = cols_lc[key]
-            break
-
-    return in_col, ric_col
-
-
 def batch_get_symbology_best_match(
     symbols: List[str],
     *,
@@ -826,19 +811,7 @@ def batch_get_symbology_best_match(
         return out
 
     def _is_missing_value(x: Any) -> bool:
-        if x is None:
-            return True
-        # pandas NA / NaN
-        try:
-            import pandas as _pd  # type: ignore
-            if _pd.isna(x):
-                return True
-        except Exception:
-            pass
-        s = str(x).strip()
-        if not s:
-            return True
-        return s.lower() in {"nan", "<na>", "none", "null"}
+        return is_missing_value(x)
 
     # De-dupe while preserving order (normalize to UPPER because caller treats symbols case-insensitively)
     seen: set[str] = set()
@@ -874,7 +847,6 @@ def batch_get_symbology_best_match(
                     ric_col = c
                     break
         if ric_col is None:
-            # Can't parse reliably
             for s in chunk:
                 out.setdefault(s, None)
             continue
@@ -903,11 +875,9 @@ def batch_get_symbology_best_match(
                     v = str(v_raw).strip()
                     out[k] = v if v else None
             except Exception:
-                # If parsing fails, treat entire chunk as unknown
                 for s in chunk:
                     out.setdefault(s, None)
 
-            # Ensure all inputs exist in mapping
             for s in chunk:
                 out.setdefault(s, None)
             continue
@@ -960,7 +930,6 @@ def batch_validate_instruments(
     - Uses safe_get_data() so one failing instrument doesn't kill the whole chunk.
     - Uses a stricter heuristic to avoid "false valid" rows:
         valid if at least one of TR.CommonName or TR.ExchangeName is non-empty.
-      (This prevents accepting many bogus suffix guesses that later return no EPS events.)
     """
     valid: set[str] = set()
     if not instruments:
@@ -990,7 +959,6 @@ def batch_validate_instruments(
             _mark_valid_cache(ch, set())
             continue
 
-        # locate the returned field columns (best effort)
         common_col = "TR.CommonName" if "TR.CommonName" in cols else find_col(df, ["common name"])
         exch_col = "TR.ExchangeName" if "TR.ExchangeName" in cols else find_col(df, ["exchange name"])
 
@@ -1086,6 +1054,7 @@ def _ric_guess_candidates_for_ticker(t: str) -> List[str]:
 
     return out
 
+
 def resolve_tickers_to_rics_batched(
     tickers: List[str],
     *,
@@ -1104,20 +1073,8 @@ def resolve_tickers_to_rics_batched(
     - Ensure suffix-guess fallback runs when symbology returns missing.
     """
     def _is_missing_value(x: Any) -> bool:
-        if x is None:
-            return True
-        try:
-            import pandas as _pd  # type: ignore
-            if _pd.isna(x):
-                return True
-        except Exception:
-            pass
-        s = str(x).strip()
-        if not s:
-            return True
-        return s.lower() in {"nan", "<na>", "none", "null"}
+        return is_missing_value(x)
 
-    # Normalize + de-dupe tickers preserving order
     seen: set[str] = set()
     uniq: List[str] = []
     for t in tickers:
@@ -1130,7 +1087,6 @@ def resolve_tickers_to_rics_batched(
 
     out: Dict[str, Optional[str]] = {t: None for t in uniq}
 
-    # Cache hits first
     remaining: List[str] = []
     for t in uniq:
         if t in _TICKER_TO_RIC_CACHE:
@@ -1142,7 +1098,6 @@ def resolve_tickers_to_rics_batched(
     if not remaining:
         return out
 
-    # ---- Step 1: direct RIC-like tickers ----
     direct_rics: List[str] = [t for t in remaining if ("." in t or t.endswith("=R"))]
     if direct_rics:
         valid_direct = batch_validate_instruments(
@@ -1155,12 +1110,10 @@ def resolve_tickers_to_rics_batched(
 
     unresolved: List[str] = [t for t in remaining if out.get(t) is None]
 
-    # ---- Step 2: batched symbology best match ----
     sym_inputs: List[str] = []
     sym_inputs_by_ticker: Dict[str, List[str]] = {}
     for t in unresolved:
         cands = _symbology_inputs_for_ticker(t)
-        # Ensure sym inputs are uppercase to match batch_get_symbology_best_match normalization
         cands_u = [c.strip().upper() for c in cands if c and c.strip()]
         sym_inputs_by_ticker[t] = cands_u
         sym_inputs.extend(cands_u)
@@ -1175,7 +1128,6 @@ def resolve_tickers_to_rics_batched(
         else:
             sym_map = batch_get_symbology_best_match(sym_inputs, chunk_size=symbology_chunk_size)
 
-    # Validate all returned RICs at once (skip missing/NA)
     returned_rics: List[str] = []
     for v in sym_map.values():
         if _is_missing_value(v):
@@ -1190,7 +1142,6 @@ def resolve_tickers_to_rics_batched(
             returned_rics, fail_fast=fail_fast, chunk_size=validate_chunk_size
         )
 
-    # Assign per ticker using the ticker's input preference ordering
     for t in unresolved:
         for sym in sym_inputs_by_ticker.get(t, []):
             ric_raw = sym_map.get(sym)
@@ -1204,7 +1155,6 @@ def resolve_tickers_to_rics_batched(
 
     unresolved2: List[str] = [t for t in unresolved if out.get(t) is None]
 
-    # ---- Step 3: suffix guesses in batch (DOCU.O, SNOW.K, etc.) ----
     if unresolved2:
         guess_map: Dict[str, List[str]] = {t: _ric_guess_candidates_for_ticker(t) for t in unresolved2}
         all_guesses: List[str] = []
@@ -1224,7 +1174,6 @@ def resolve_tickers_to_rics_batched(
 
     unresolved3: List[str] = [t for t in unresolved2 if out.get(t) is None]
 
-    # ---- Step 4: final fallback: validate ticker itself (no suffix) ----
     if unresolved3:
         valid_fallback = batch_validate_instruments(
             unresolved3, fail_fast=fail_fast, chunk_size=validate_chunk_size
@@ -1237,13 +1186,12 @@ def resolve_tickers_to_rics_batched(
                 out[t] = None
                 _TICKER_TO_RIC_CACHE[t] = None
 
-    # ---- Step 5: hard overrides for known vendor quirks / case-sensitive RICs ----
     for t, ric_override in TICKER_TO_RIC_OVERRIDES.items():
         t2 = (t or "").strip().upper()
         if not t2:
             continue
         if t2 in out:
-            out[t2] = ric_override               # keep exact case of the RIC value
+            out[t2] = ric_override
             _TICKER_TO_RIC_CACHE[t2] = ric_override
 
     return out
@@ -1252,7 +1200,6 @@ def resolve_tickers_to_rics_batched(
 # =========================
 # Earnings data retrieval (BATCHED + robust split)
 # =========================
-
 
 def _parse_float(x: Any) -> Optional[float]:
     try:
@@ -1311,7 +1258,6 @@ def fetch_eps_events_batched(
         chunk_iter = tqdm(chunks, desc="Eikon EPS history", unit="chunk")
 
     for ric_chunk in chunk_iter:
-        # IMPORTANT FIX: safe_get_data() bisects failures so one bad ric doesn't nuke the entire batch.
         df, _err = safe_get_data(
             ric_chunk,
             fields,
@@ -1402,7 +1348,6 @@ def match_event_by_anchor_date(
 # Validation logic
 # =========================
 
-
 def decide_label(actual: float, estimate: float, tie_tol: float = EPS_TIE_TOL) -> str:
     if actual > estimate + tie_tol:
         return "BEAT"
@@ -1435,15 +1380,14 @@ def expected_resolution_from_label(label: str, yes_semantics: str, tie_counts_as
 # I/O helpers
 # =========================
 
-
-def write_jsonl(path: Path, records: List[ResultRecord]) -> None:
+def write_jsonl_records(path: Path, records: List[ResultRecord]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
         for r in records:
             f.write(json.dumps(asdict(r), ensure_ascii=False) + "\n")
 
 
-def write_csv(path: Path, records: List[ResultRecord]) -> None:
+def write_csv_records(path: Path, records: List[ResultRecord]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(ResultRecord.__annotations__.keys()))
@@ -1452,24 +1396,107 @@ def write_csv(path: Path, records: List[ResultRecord]) -> None:
             w.writerow(asdict(r))
 
 
-def count_lines_for_progress(path: Path, max_markets: Optional[int]) -> int:
-    if max_markets is not None:
-        return max_markets
-    n = 0
-    with path.open("r", encoding="utf-8", errors="ignore") as f:
-        for _ in f:
-            n += 1
-    return n
+def _atomic_replace(tmp_path: Path, final_path: Path) -> None:
+    """
+    Atomic-ish replacement:
+    - On Windows, os.replace is atomic for same-volume moves.
+    """
+    os.replace(str(tmp_path), str(final_path))
+
+
+def write_markets_jsonl_inplace(path: Path, markets: List[Dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with tmp.open("w", encoding="utf-8") as f:
+        for obj in markets:
+            f.write(json.dumps(obj, ensure_ascii=False) + "\n")
+    _atomic_replace(tmp, path)
+
+
+def _read_existing_csv_columns(csv_path: Path) -> Optional[List[str]]:
+    """
+    Read column order from existing markets.csv, if available.
+    If pandas is installed, use it; otherwise use csv module.
+    """
+    if not csv_path.exists():
+        return None
+
+    try:
+        if pd is not None:
+            df0 = pd.read_csv(csv_path, nrows=1)  # type: ignore
+            return list(df0.columns)
+    except Exception:
+        pass
+
+    try:
+        with csv_path.open("r", encoding="utf-8", newline="") as f:
+            reader = csv.reader(f)
+            header = next(reader, None)
+            if header:
+                return [h.strip() for h in header]
+    except Exception:
+        return None
+
+    return None
+
+
+def write_markets_csv_inplace(csv_path: Path, markets: List[Dict[str, Any]]) -> None:
+    """
+    Overwrite markets.csv to mirror markets.jsonl.
+
+    - Preserves existing column order if markets.csv exists.
+    - Appends any new columns at the end (sorted for stability).
+    """
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+
+    existing_cols = _read_existing_csv_columns(csv_path)
+
+    # Collect all keys
+    all_keys: set[str] = set()
+    for m in markets:
+        all_keys.update(m.keys())
+
+    if existing_cols:
+        base_cols = [c for c in existing_cols if c in all_keys]
+        new_cols = sorted([c for c in all_keys if c not in set(existing_cols)])
+        cols = base_cols + new_cols
+    else:
+        cols = sorted(all_keys)
+
+    tmp = csv_path.with_suffix(csv_path.suffix + ".tmp")
+
+    if pd is not None:
+        try:
+            df = pd.DataFrame(markets)  # type: ignore
+            # Ensure all columns exist
+            for c in cols:
+                if c not in df.columns:
+                    df[c] = None
+            df = df[cols]
+            df.to_csv(tmp, index=False, encoding="utf-8")  # type: ignore
+            _atomic_replace(tmp, csv_path)
+            return
+        except Exception:
+            # fallback below
+            pass
+
+    # csv module fallback
+    with tmp.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
+        w.writeheader()
+        for row in markets:
+            w.writerow({k: row.get(k, None) for k in cols})
+    _atomic_replace(tmp, csv_path)
 
 
 # =========================
 # Runner (importable)
 # =========================
 
-
-def run_optional_check_consistency(
+def run_optional_check_consistency_inplace(
     *,
-    markets_path: Path,
+    markets_jsonl_path: Path,
+    markets_csv_path: Path,
     validation_dir: Path,
     app_key: str,
     eikon_port: Optional[int],
@@ -1484,15 +1511,22 @@ def run_optional_check_consistency(
     eps_chunk_size: int,
     show_progress: bool,
 ) -> Dict[str, Any]:
-    out_correct = validation_dir / "correct.jsonl"
-    out_incorrect = validation_dir / "incorrectly_resolved.jsonl"
-    out_unmatched = validation_dir / "unmatched.jsonl"
-    out_correct_csv = validation_dir / "correct.csv"
-    out_incorrect_csv = validation_dir / "incorrectly_resolved.csv"
-    out_unmatched_csv = validation_dir / "unmatched.csv"
+    """
+    Main entrypoint.
 
-    correct_records: List[ResultRecord] = []
-    incorrect_records: List[ResultRecord] = []
+    Reads markets_jsonl_path, validates candidate earnings markets,
+    then writes results back into:
+      - markets_jsonl_path (overwrite)
+      - markets_csv_path (overwrite)
+
+    Still writes:
+      - validation_dir/unmatched.jsonl + .csv
+      - validation_dir/consistency_summary.txt
+    """
+    out_unmatched = validation_dir / "unmatched.jsonl"
+    out_unmatched_csv = validation_dir / "unmatched.csv"
+    out_summary_txt = validation_dir / "consistency_summary.txt"
+
     unmatched_records: List[ResultRecord] = []
 
     lines_scanned = 0
@@ -1507,17 +1541,24 @@ def run_optional_check_consistency(
     pending: List[PendingMarket] = []
     tickers_needed: set[str] = set()
 
-    if not markets_path.exists():
-        raise FileNotFoundError(f"Markets file not found: {markets_path}")
+    if not markets_jsonl_path.exists():
+        raise FileNotFoundError(f"Markets JSONL file not found: {markets_jsonl_path}")
 
     init_eikon(app_key, eikon_port=eikon_port, require_proxy=require_proxy)
 
-    total_for_bar = count_lines_for_progress(markets_path, max_markets)
+    # Read ALL markets into memory (so we can overwrite in place)
+    all_markets: List[Dict[str, Any]] = []
+    line_no_to_idx: Dict[int, int] = {}
 
-    # PASS A: parse + pre-filter
-    parse_bar_ctx = tqdm(total=total_for_bar, desc="Parsing markets", unit="line") if (show_progress and tqdm is not None) else None
+    # PASS A: parse + pre-filter (and store all markets)
+    parse_bar_ctx = None
+    if show_progress and tqdm is not None:
+        # If max_markets is set, use that; otherwise we still need a pass to count lines,
+        # but to avoid a second pass we just use "unknown total" (tqdm without total).
+        parse_bar_ctx = tqdm(total=(max_markets if max_markets else None), desc="Parsing markets", unit="line")
+
     try:
-        with markets_path.open("r", encoding="utf-8", errors="ignore") as f:
+        with markets_jsonl_path.open("r", encoding="utf-8", errors="strict") as f:
             for line_no, line in enumerate(f, start=1):
                 if max_markets is not None and line_no > max_markets:
                     break
@@ -1532,10 +1573,17 @@ def run_optional_check_consistency(
 
                 try:
                     raw = json.loads(line)
-                except Exception:
-                    continue
+                except Exception as exc:
+                    # We abort to avoid rewriting a file with dropped/altered invalid lines.
+                    raise RuntimeError(
+                        f"Invalid JSON on line {line_no} in {markets_jsonl_path}. "
+                        "Fix the file before running in-place updates."
+                    ) from exc
 
                 markets_parsed += 1
+                idx = len(all_markets)
+                all_markets.append(raw)
+                line_no_to_idx[line_no] = idx
 
                 slug = _safe_str(raw.get("slug"))
                 question = _safe_str(raw.get("question")) or _safe_str(raw.get("title"))
@@ -1645,6 +1693,11 @@ def run_optional_check_consistency(
     # PASS D: finalize record classification
     iter_pm: Iterable[PendingMarket] = tqdm(pending2, desc="Classifying", unit="mkt") if (show_progress and tqdm is not None) else pending2
 
+    # We'll keep a dict of line_no -> ResultRecord to write back into all_markets
+    results_by_line_no: Dict[int, ResultRecord] = {}
+    for r in unmatched_records:
+        results_by_line_no[r.line_no] = r
+
     for pm in iter_pm:
         base = pm.base
         anchor_dt = pm.anchor_dt
@@ -1655,6 +1708,7 @@ def run_optional_check_consistency(
             base.skip_reason = "no_events_returned"
             unmatched_records.append(base)
             unmatched_n += 1
+            results_by_line_no[base.line_no] = base
             continue
 
         ev, method = match_event_by_anchor_date(
@@ -1668,6 +1722,7 @@ def run_optional_check_consistency(
             base.skip_reason = "no_event_match"
             unmatched_records.append(base)
             unmatched_n += 1
+            results_by_line_no[base.line_no] = base
             continue
 
         base.matched_announce_date = _to_date_iso(ev.announce_date)
@@ -1684,6 +1739,7 @@ def run_optional_check_consistency(
             base.skip_reason = "no_actual_eps"
             unmatched_records.append(base)
             unmatched_n += 1
+            results_by_line_no[base.line_no] = base
             continue
 
         polymarket_est = base.polymarket_estimate
@@ -1703,6 +1759,7 @@ def run_optional_check_consistency(
             base.skip_reason = "no_estimate"
             unmatched_records.append(base)
             unmatched_n += 1
+            results_by_line_no[base.line_no] = base
             continue
 
         matched += 1
@@ -1721,21 +1778,72 @@ def run_optional_check_consistency(
 
         if base.expected_resolution == base.polymarket_resolved_outcome:
             base.status = "MATCHED_CORRECT"
-            correct_records.append(base)
             correct_n += 1
         else:
             base.status = "MATCHED_INCORRECT"
-            incorrect_records.append(base)
             incorrect_n += 1
 
-    # Write outputs
-    write_jsonl(out_correct, correct_records)
-    write_jsonl(out_incorrect, incorrect_records)
-    write_jsonl(out_unmatched, unmatched_records)
+        results_by_line_no[base.line_no] = base
 
-    write_csv(out_correct_csv, correct_records)
-    write_csv(out_incorrect_csv, incorrect_records)
-    write_csv(out_unmatched_csv, unmatched_records)
+    # Write unmatched output files (still produced)
+    write_jsonl_records(out_unmatched, unmatched_records)
+    write_csv_records(out_unmatched_csv, unmatched_records)
+
+    # Apply results back into the in-memory markets
+    updated_utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    updated_count = 0
+
+    def _apply_result_to_market(market_obj: Dict[str, Any], rec: ResultRecord) -> None:
+        """
+        Write the validation results back to the market dict using a stable prefix (val_*).
+        """
+        d = asdict(rec)
+        for k, v in d.items():
+            market_obj[f"{VAL_PREFIX}{k}"] = v
+        market_obj[f"{VAL_PREFIX}updated_utc"] = updated_utc
+        market_obj[f"{VAL_PREFIX}script"] = Path(__file__).name
+
+    for ln, rec in results_by_line_no.items():
+        idx = line_no_to_idx.get(ln)
+        if idx is None:
+            continue
+        _apply_result_to_market(all_markets[idx], rec)
+        updated_count += 1
+
+    # Overwrite markets.jsonl and markets.csv in place
+    write_markets_jsonl_inplace(markets_jsonl_path, all_markets)
+    write_markets_csv_inplace(markets_csv_path, all_markets)
+
+    # Write summary txt (requested)
+    summary_txt = (
+        "==================== CONSISTENCY SUMMARY ====================\n"
+        f"Timestamp (UTC):                    {updated_utc}\n"
+        f"Markets JSONL updated:              {markets_jsonl_path}\n"
+        f"Markets CSV updated:                {markets_csv_path}\n"
+        "\n"
+        f"Lines scanned:                      {lines_scanned}\n"
+        f"Markets parsed (valid JSON):        {markets_parsed}\n"
+        f"Ignored (non-earnings candidate):   {ignored_non_candidate}\n"
+        f"Considered (earnings-like):         {considered}\n"
+        f"Matched (event+actual+estimate):    {matched}\n"
+        f"  - Correctly resolved:             {correct_n}\n"
+        f"  - Incorrectly resolved:           {incorrect_n}\n"
+        f"Unmatched (skip_reason set):        {unmatched_n}\n"
+        "\n"
+        f"Markets updated with val_* fields:  {updated_count}\n"
+        "\n"
+        "Manual investigation outputs:\n"
+        f"  - {out_unmatched}\n"
+        f"  - {out_unmatched_csv}\n"
+        "\n"
+        "Batching:\n"
+        f"  - symbology_chunk_size:           {int(symbology_chunk_size)}\n"
+        f"  - validate_chunk_size:            {int(validate_chunk_size)}\n"
+        f"  - eps_chunk_size:                 {int(eps_chunk_size)}\n"
+        "=============================================================\n"
+    )
+    validation_dir.mkdir(parents=True, exist_ok=True)
+    out_summary_txt.write_text(summary_txt, encoding="utf-8")
 
     return {
         "lines_scanned": lines_scanned,
@@ -1746,12 +1854,12 @@ def run_optional_check_consistency(
         "correct": correct_n,
         "incorrect": incorrect_n,
         "unmatched": unmatched_n,
-        "out_correct": str(out_correct),
-        "out_incorrect": str(out_incorrect),
+        "updated_count": updated_count,
+        "markets_jsonl_path": str(markets_jsonl_path),
+        "markets_csv_path": str(markets_csv_path),
         "out_unmatched": str(out_unmatched),
-        "out_correct_csv": str(out_correct_csv),
-        "out_incorrect_csv": str(out_incorrect_csv),
         "out_unmatched_csv": str(out_unmatched_csv),
+        "out_summary_txt": str(out_summary_txt),
         "batching": {
             "symbology_chunk_size": int(symbology_chunk_size),
             "validate_chunk_size": int(validate_chunk_size),
@@ -1760,20 +1868,35 @@ def run_optional_check_consistency(
     }
 
 
+# Backwards-compatible alias (old name)
+def run_optional_check_consistency(**kwargs: Any) -> Dict[str, Any]:
+    """
+    Backwards-compatible wrapper.
+
+    If you previously imported run_optional_check_consistency, it now performs the in-place update.
+    """
+    return run_optional_check_consistency_inplace(**kwargs)
+
+
 # =========================
 # CLI
 # =========================
 
-
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        description="Validate Polymarket earnings markets vs Refinitiv Eikon EPS actual/estimates."
+        description="Validate Polymarket earnings markets vs Refinitiv Eikon EPS actual/estimates (in-place update of markets files)."
     )
     p.add_argument(
-        "--markets",
+        "--markets-jsonl",
         type=str,
-        default=str(DEFAULT_MARKETS_PATH),
-        help=f"Path to markets.jsonl (default: {DEFAULT_MARKETS_PATH})",
+        default=str(DEFAULT_MARKETS_JSONL_PATH),
+        help=f"Path to markets.jsonl (default: {DEFAULT_MARKETS_JSONL_PATH})",
+    )
+    p.add_argument(
+        "--markets-csv",
+        type=str,
+        default=str(DEFAULT_MARKETS_CSV_PATH),
+        help=f"Path to markets.csv to overwrite/update (default: {DEFAULT_MARKETS_CSV_PATH})",
     )
     p.add_argument("--max-markets", type=int, default=None, help="Max number of markets (lines) to scan (debug).")
     p.add_argument(
@@ -1786,7 +1909,8 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     p.add_argument("--eikon-port", type=int, default=None, help="Force Eikon/Workspace API proxy port (e.g., 9000/9060).")
     p.add_argument("--skip-proxy-check", action="store_true", help="Skip early proxy reachability check.")
     p.add_argument("--no-fail-fast", action="store_true", help="Do NOT abort early on repeated Eikon 500 'Network Error'.")
-    p.add_argument("--validation-dir", type=str, default=str(DEFAULT_VALIDATION_DIR), help="Output dir for jsonl results")
+    p.add_argument("--validation-dir", type=str, default=str(DEFAULT_VALIDATION_DIR), help="Output dir for unmatched + summary.txt")
+
     p.add_argument("--event-pre-days", type=int, default=DEFAULT_EVENT_PRE_DAYS)
     p.add_argument("--event-post-days", type=int, default=DEFAULT_EVENT_POST_DAYS)
     p.add_argument("--max-event-distance-days", type=int, default=DEFAULT_MAX_EVENT_DISTANCE_DAYS)
@@ -1810,7 +1934,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = parse_args(argv)
     fail_fast = (not args.no_fail_fast)
 
-    markets_path = Path(args.markets)
+    markets_jsonl_path = Path(args.markets_jsonl)
+    markets_csv_path = Path(args.markets_csv)
     validation_dir = Path(args.validation_dir)
 
     if args.app_key is None:
@@ -1825,8 +1950,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         app_key = args.app_key
 
     try:
-        summary = run_optional_check_consistency(
-            markets_path=markets_path,
+        summary = run_optional_check_consistency_inplace(
+            markets_jsonl_path=markets_jsonl_path,
+            markets_csv_path=markets_csv_path,
             validation_dir=validation_dir,
             app_key=app_key,
             eikon_port=args.eikon_port,
@@ -1844,7 +1970,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     except FatalEikonNetworkError as exc:
         LOG.error(
             "%s\n\n"
-            "Partial outputs may have been written. Fix likely involves:\n"
+            "Fix likely involves:\n"
             "  - Ensure Workspace/Eikon is running AND logged in\n"
             "  - Verify the API proxy is running (port 9000/9060)\n"
             "  - If on VPN/corporate proxy, allowlist/firewall may be required\n",
@@ -1855,32 +1981,32 @@ def main(argv: Optional[List[str]] = None) -> int:
         LOG.error("Fatal error: %s", exc)
         return 2
 
-    summary_txt = (
+    printable = (
         "\n"
         "==================== SUMMARY ====================\n"
-        f"Lines scanned:                       {summary['lines_scanned']}\n"
-        f"Markets parsed (valid JSON):         {summary['markets_parsed']}\n"
-        f"Ignored (non-earnings candidate):    {summary['ignored_non_candidate']}\n"
-        f"Considered (earnings-like):          {summary['considered']}\n"
-        f"Matched (event+actual+estimate):     {summary['matched']}\n"
-        f"  - Correct:                         {summary['correct']}\n"
-        f"  - Incorrectly resolved:            {summary['incorrect']}\n"
-        f"Unmatched (skip_reason set):         {summary['unmatched']}\n"
+        f"Markets updated (JSONL):            {summary['markets_jsonl_path']}\n"
+        f"Markets updated (CSV):              {summary['markets_csv_path']}\n"
         "\n"
-        "Outputs:\n"
-        f"  - {summary['out_correct']}\n"
-        f"  - {summary['out_incorrect']}\n"
-        f"  - {summary['out_unmatched']}\n"
-        "Batching:\n"
-        f"  - symbology_chunk_size:            {summary['batching']['symbology_chunk_size']}\n"
-        f"  - validate_chunk_size:             {summary['batching']['validate_chunk_size']}\n"
-        f"  - eps_chunk_size:                  {summary['batching']['eps_chunk_size']}\n"
+        f"Lines scanned:                      {summary['lines_scanned']}\n"
+        f"Markets parsed (valid JSON):        {summary['markets_parsed']}\n"
+        f"Ignored (non-earnings candidate):   {summary['ignored_non_candidate']}\n"
+        f"Considered (earnings-like):         {summary['considered']}\n"
+        f"Matched (event+actual+estimate):    {summary['matched']}\n"
+        f"  - Correctly resolved:             {summary['correct']}\n"
+        f"  - Incorrectly resolved:           {summary['incorrect']}\n"
+        f"Unmatched:                          {summary['unmatched']}\n"
+        f"Markets updated with val_* fields:  {summary['updated_count']}\n"
+        "\n"
+        "Manual investigation:\n"
+        f"  - Unmatched JSONL:                {summary['out_unmatched']}\n"
+        f"  - Unmatched CSV:                  {summary['out_unmatched_csv']}\n"
+        f"Summary TXT:                        {summary['out_summary_txt']}\n"
         "=================================================\n"
     )
     if tqdm is not None and not args.no_progress:
-        tqdm.write(summary_txt)
+        tqdm.write(printable)
     else:
-        print(summary_txt)
+        print(printable)
 
     return 0
 
