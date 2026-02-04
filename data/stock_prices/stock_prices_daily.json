@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-01-31T10:58:11.742865Z",
+  "generated_at_utc": "2026-02-02T16:25:03.730038Z",
   "events": [
     {
       "market_id": "627739",
@@ -3249,31 +3249,31 @@
           "date": "2026-01-26",
           "offset_td": 2,
           "CLOSE": 14.57,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 3,
           "CLOSE": 13.56,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 4,
           "CLOSE": 13.44,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 5,
           "CLOSE": 13.505,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 6,
           "CLOSE": 13.295,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -6495,31 +6495,31 @@
           "date": "2026-01-26",
           "offset_td": -3,
           "CLOSE": 255.485,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": -2,
           "CLOSE": 258.25,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": -1,
           "CLOSE": 256.3,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 0,
           "CLOSE": 257.955,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 1,
           "CLOSE": 259.01,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -16743,31 +16743,31 @@
           "date": "2026-01-26",
           "offset_td": 24,
           "CLOSE": 280.71,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 25,
           "CLOSE": 275.8,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 26,
           "CLOSE": 270.43,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 27,
           "CLOSE": 261.22,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 28,
           "CLOSE": 263.64,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -18477,7 +18477,7 @@
           "date": "2026-01-26",
           "offset_td": 30,
           "CLOSE": 304.65,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         }
       ]
     },
@@ -28545,31 +28545,31 @@
           "date": "2026-01-26",
           "offset_td": 3,
           "CLOSE": 42.21,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 4,
           "CLOSE": 42.89,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 5,
           "CLOSE": 42.3,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 6,
           "CLOSE": 42.96,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 7,
           "CLOSE": 42.28,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -60927,13 +60927,13 @@
           "date": "2026-01-26",
           "offset_td": 29,
           "CLOSE": 324.99,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 30,
           "CLOSE": 332.755,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         }
       ]
     },
@@ -65739,31 +65739,31 @@
           "date": "2026-01-26",
           "offset_td": -4,
           "CLOSE": 363.25,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": -3,
           "CLOSE": 359.45,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": -2,
           "CLOSE": 356.99,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": -1,
           "CLOSE": 358.5,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 0,
           "CLOSE": 352.17,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -74157,31 +74157,31 @@
           "date": "2026-01-26",
           "offset_td": 7,
           "CLOSE": 52.02,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 8,
           "CLOSE": 52.17,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 9,
           "CLOSE": 51.81,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 10,
           "CLOSE": 53.08,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 11,
           "CLOSE": 53.2,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -85983,31 +85983,31 @@
           "date": "2026-01-26",
           "offset_td": 4,
           "CLOSE": 139.09,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 5,
           "CLOSE": 136.82,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 6,
           "CLOSE": null,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 7,
           "CLOSE": 136.41,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 8,
           "CLOSE": 138.42,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -94155,31 +94155,31 @@
           "date": "2026-01-26",
           "offset_td": 8,
           "CLOSE": 119.02,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 9,
           "CLOSE": 118.87,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 10,
           "CLOSE": 118.9,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 11,
           "CLOSE": 121.49,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 12,
           "CLOSE": 119.92,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -99165,31 +99165,31 @@
           "date": "2026-01-26",
           "offset_td": 6,
           "CLOSE": 1121.54,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 7,
           "CLOSE": 1106.69,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 8,
           "CLOSE": 1121.67,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 9,
           "CLOSE": 1127.78,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 10,
           "CLOSE": 1118.94,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -120501,31 +120501,31 @@
           "date": "2026-01-26",
           "offset_td": 7,
           "CLOSE": 114.82,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 8,
           "CLOSE": 114.79,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 9,
           "CLOSE": 114.2,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 10,
           "CLOSE": 115.2,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 11,
           "CLOSE": 115.71,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -122193,31 +122193,31 @@
           "date": "2026-01-26",
           "offset_td": 23,
           "CLOSE": 18.09,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 24,
           "CLOSE": 17.95,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 25,
           "CLOSE": 17.68,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 26,
           "CLOSE": 17.83,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 27,
           "CLOSE": 18.51,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -139203,31 +139203,31 @@
           "date": "2026-01-26",
           "offset_td": 23,
           "CLOSE": 28.67,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 24,
           "CLOSE": 28.69,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 25,
           "CLOSE": 28.72,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 26,
           "CLOSE": 31.15,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 27,
           "CLOSE": 30.02,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -144195,31 +144195,31 @@
           "date": "2026-01-26",
           "offset_td": 3,
           "CLOSE": 62.52,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 4,
           "CLOSE": 63.42,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 5,
           "CLOSE": 62.92,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 6,
           "CLOSE": 63.49,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 7,
           "CLOSE": 62.98,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -152739,7 +152739,7 @@
           "date": "2026-01-26",
           "offset_td": 30,
           "CLOSE": 31.43,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         }
       ]
     },
@@ -163629,31 +163629,31 @@
           "date": "2026-01-26",
           "offset_td": 2,
           "CLOSE": 220.18,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 3,
           "CLOSE": 217.11,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 4,
           "CLOSE": 218.41,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 5,
           "CLOSE": 219.31,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 6,
           "CLOSE": 218.93,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -168759,13 +168759,13 @@
           "date": "2026-01-26",
           "offset_td": 29,
           "CLOSE": 977.77,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 30,
           "CLOSE": 970.34,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         }
       ]
     },
@@ -184935,31 +184935,31 @@
           "date": "2026-01-26",
           "offset_td": 24,
           "CLOSE": 193.67,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 25,
           "CLOSE": 191.165,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 26,
           "CLOSE": 189.35,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 27,
           "CLOSE": 189.65,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 28,
           "CLOSE": 191.35,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -191595,31 +191595,31 @@
           "date": "2026-01-26",
           "offset_td": -4,
           "CLOSE": 167.5,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": -3,
           "CLOSE": 169.05,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": -2,
           "CLOSE": 169.93,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": -1,
           "CLOSE": 171.19,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 0,
           "CLOSE": 176.9,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -196587,31 +196587,31 @@
           "date": "2026-01-26",
           "offset_td": 8,
           "CLOSE": 67.5,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 9,
           "CLOSE": 66.14,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 10,
           "CLOSE": 65.83,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 11,
           "CLOSE": 66.54,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 12,
           "CLOSE": 65.89,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -256191,31 +256191,31 @@
           "date": "2026-01-26",
           "offset_td": 24,
           "CLOSE": 286.33,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 25,
           "CLOSE": 268.66,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 26,
           "CLOSE": 269.86,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 27,
           "CLOSE": 252.79,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 28,
           "CLOSE": 254.36,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -259581,31 +259581,31 @@
           "date": "2026-01-26",
           "offset_td": 24,
           "CLOSE": 304.47,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 25,
           "CLOSE": 312.42,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 26,
           "CLOSE": 314.65,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 27,
           "CLOSE": 319.93,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 28,
           "CLOSE": 322.25,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -288861,31 +288861,31 @@
           "date": "2026-01-26",
           "offset_td": 25,
           "CLOSE": 44.63,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 26,
           "CLOSE": 44.71,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 27,
           "CLOSE": 44.35,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 28,
           "CLOSE": 44.43,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 29,
           "CLOSE": 46.26,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -302403,31 +302403,31 @@
           "date": "2026-01-26",
           "offset_td": 6,
           "CLOSE": 931.86,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 7,
           "CLOSE": 929.72,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 8,
           "CLOSE": 936.81,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 9,
           "CLOSE": 940.12,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 10,
           "CLOSE": 935.41,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -309069,31 +309069,31 @@
           "date": "2026-01-26",
           "offset_td": 3,
           "CLOSE": 34.16,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 4,
           "CLOSE": 34.26,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 5,
           "CLOSE": 33.36,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 6,
           "CLOSE": 33.39,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 7,
           "CLOSE": 33.52,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -343911,31 +343911,31 @@
           "date": "2026-01-26",
           "offset_td": 4,
           "CLOSE": 75.34,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 5,
           "CLOSE": 75.47,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 6,
           "CLOSE": 75.47,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 7,
           "CLOSE": 75.66,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 8,
           "CLOSE": 74.87,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -347163,31 +347163,31 @@
           "date": "2026-01-26",
           "offset_td": -2,
           "CLOSE": 296.33,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": -1,
           "CLOSE": 293.86,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 0,
           "CLOSE": 294.16,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 1,
           "CLOSE": 309.24,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 2,
           "CLOSE": 306.7,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -369285,31 +369285,31 @@
           "date": "2026-01-26",
           "offset_td": 12,
           "CLOSE": 62.97,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 13,
           "CLOSE": 62.23,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 14,
           "CLOSE": 61.85,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 15,
           "CLOSE": 61.2,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 16,
           "CLOSE": 61.18,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -372567,31 +372567,31 @@
           "date": "2026-01-26",
           "offset_td": 3,
           "CLOSE": 221.49,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 4,
           "CLOSE": 224.44,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 5,
           "CLOSE": 227.72,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 6,
           "CLOSE": 227.29,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 7,
           "CLOSE": 227.25,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -375879,31 +375879,31 @@
           "date": "2026-01-26",
           "offset_td": 8,
           "CLOSE": 301.04,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 9,
           "CLOSE": 300.31,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 10,
           "CLOSE": 300.77,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 11,
           "CLOSE": 306.42,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 12,
           "CLOSE": 305.89,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -377577,31 +377577,31 @@
           "date": "2026-01-26",
           "offset_td": 24,
           "CLOSE": 58.51,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 25,
           "CLOSE": 57.56,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 26,
           "CLOSE": 57.95,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 27,
           "CLOSE": 57.78,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 28,
           "CLOSE": 57.54,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -380865,31 +380865,31 @@
           "date": "2026-01-26",
           "offset_td": 4,
           "CLOSE": 21.29,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 5,
           "CLOSE": 21.46,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 6,
           "CLOSE": 21.31,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 7,
           "CLOSE": 21.63,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 8,
           "CLOSE": 21.52,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -389265,31 +389265,31 @@
           "date": "2026-01-26",
           "offset_td": 3,
           "CLOSE": 29.34,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 4,
           "CLOSE": 29.59,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 5,
           "CLOSE": 30.07,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 6,
           "CLOSE": 30.24,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 7,
           "CLOSE": 30.49,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -392673,31 +392673,31 @@
           "date": "2026-01-26",
           "offset_td": 24,
           "CLOSE": 45.14,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 25,
           "CLOSE": 46.34,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 26,
           "CLOSE": 46.96,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 27,
           "CLOSE": 45.53,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 28,
           "CLOSE": 44.54,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -396110,1716 +396110,6 @@
       ]
     },
     {
-      "market_id": "675620",
-      "slug": "kss-quarterly-earnings-gaap-eps-11-25-2025-neg0pt21",
-      "ric": "KSS",
-      "ticker": "KSS",
-      "company_name": "Kohls Corp",
-      "anchor_date": "2025-11-25",
-      "event_trading_date": "2025-11-25",
-      "bmo_amc_tag": "TNS",
-      "earnings_time_raw": null,
-      "earnings_time_field_used": null,
-      "earnings_time_note": "Skipped by config.",
-      "window_meta": {
-        "event_trading_date": "2025-11-25",
-        "requested_pre_td": 250,
-        "requested_post_td": 30,
-        "truncated_left": false,
-        "truncated_right": false,
-        "available_rows": 281,
-        "expected_rows": 281
-      },
-      "prices": [
-        {
-          "date": "2024-11-25",
-          "offset_td": -250,
-          "CLOSE": 18.34,
-          "SPX_CLOSE": 5987.37
-        },
-        {
-          "date": "2024-11-26",
-          "offset_td": -249,
-          "CLOSE": 15.22,
-          "SPX_CLOSE": 6021.63
-        },
-        {
-          "date": "2024-11-27",
-          "offset_td": -248,
-          "CLOSE": 14.75,
-          "SPX_CLOSE": 5998.74
-        },
-        {
-          "date": "2024-11-29",
-          "offset_td": -247,
-          "CLOSE": 14.97,
-          "SPX_CLOSE": 6032.38
-        },
-        {
-          "date": "2024-12-02",
-          "offset_td": -246,
-          "CLOSE": 15.43,
-          "SPX_CLOSE": 6047.15
-        },
-        {
-          "date": "2024-12-03",
-          "offset_td": -245,
-          "CLOSE": 15.25,
-          "SPX_CLOSE": 6049.88
-        },
-        {
-          "date": "2024-12-04",
-          "offset_td": -244,
-          "CLOSE": 15.3,
-          "SPX_CLOSE": 6086.49
-        },
-        {
-          "date": "2024-12-05",
-          "offset_td": -243,
-          "CLOSE": 15.39,
-          "SPX_CLOSE": 6075.11
-        },
-        {
-          "date": "2024-12-06",
-          "offset_td": -242,
-          "CLOSE": 15.31,
-          "SPX_CLOSE": 6090.27
-        },
-        {
-          "date": "2024-12-09",
-          "offset_td": -241,
-          "CLOSE": 15.26,
-          "SPX_CLOSE": 6052.85
-        },
-        {
-          "date": "2024-12-10",
-          "offset_td": -240,
-          "CLOSE": 15.22,
-          "SPX_CLOSE": 6034.91
-        },
-        {
-          "date": "2024-12-11",
-          "offset_td": -239,
-          "CLOSE": 14.77,
-          "SPX_CLOSE": 6084.19
-        },
-        {
-          "date": "2024-12-12",
-          "offset_td": -238,
-          "CLOSE": 14.15,
-          "SPX_CLOSE": 6051.25
-        },
-        {
-          "date": "2024-12-13",
-          "offset_td": -237,
-          "CLOSE": 14.35,
-          "SPX_CLOSE": 6051.09
-        },
-        {
-          "date": "2024-12-16",
-          "offset_td": -236,
-          "CLOSE": 14.31,
-          "SPX_CLOSE": 6074.08
-        },
-        {
-          "date": "2024-12-17",
-          "offset_td": -235,
-          "CLOSE": 14.25,
-          "SPX_CLOSE": 6050.61
-        },
-        {
-          "date": "2024-12-18",
-          "offset_td": -234,
-          "CLOSE": 13.87,
-          "SPX_CLOSE": 5872.16
-        },
-        {
-          "date": "2024-12-19",
-          "offset_td": -233,
-          "CLOSE": 13.86,
-          "SPX_CLOSE": 5867.08
-        },
-        {
-          "date": "2024-12-20",
-          "offset_td": -232,
-          "CLOSE": 14.17,
-          "SPX_CLOSE": 5930.85
-        },
-        {
-          "date": "2024-12-23",
-          "offset_td": -231,
-          "CLOSE": 14.29,
-          "SPX_CLOSE": 5974.07
-        },
-        {
-          "date": "2024-12-24",
-          "offset_td": -230,
-          "CLOSE": 14.39,
-          "SPX_CLOSE": 6040.04
-        },
-        {
-          "date": "2024-12-26",
-          "offset_td": -229,
-          "CLOSE": 14.85,
-          "SPX_CLOSE": 6037.59
-        },
-        {
-          "date": "2024-12-27",
-          "offset_td": -228,
-          "CLOSE": 14.36,
-          "SPX_CLOSE": 5970.84
-        },
-        {
-          "date": "2024-12-30",
-          "offset_td": -227,
-          "CLOSE": 13.86,
-          "SPX_CLOSE": 5906.94
-        },
-        {
-          "date": "2024-12-31",
-          "offset_td": -226,
-          "CLOSE": 14.04,
-          "SPX_CLOSE": 5881.63
-        },
-        {
-          "date": "2025-01-02",
-          "offset_td": -225,
-          "CLOSE": 14.03,
-          "SPX_CLOSE": 5868.55
-        },
-        {
-          "date": "2025-01-03",
-          "offset_td": -224,
-          "CLOSE": 14.12,
-          "SPX_CLOSE": 5942.47
-        },
-        {
-          "date": "2025-01-06",
-          "offset_td": -223,
-          "CLOSE": 14.0,
-          "SPX_CLOSE": 5975.38
-        },
-        {
-          "date": "2025-01-07",
-          "offset_td": -222,
-          "CLOSE": 13.82,
-          "SPX_CLOSE": 5909.03
-        },
-        {
-          "date": "2025-01-08",
-          "offset_td": -221,
-          "CLOSE": 13.49,
-          "SPX_CLOSE": 5918.25
-        },
-        {
-          "date": "2025-01-10",
-          "offset_td": -220,
-          "CLOSE": 13.68,
-          "SPX_CLOSE": 5827.04
-        },
-        {
-          "date": "2025-01-13",
-          "offset_td": -219,
-          "CLOSE": 13.04,
-          "SPX_CLOSE": 5836.22
-        },
-        {
-          "date": "2025-01-14",
-          "offset_td": -218,
-          "CLOSE": 12.7,
-          "SPX_CLOSE": 5842.91
-        },
-        {
-          "date": "2025-01-15",
-          "offset_td": -217,
-          "CLOSE": 12.82,
-          "SPX_CLOSE": 5949.91
-        },
-        {
-          "date": "2025-01-16",
-          "offset_td": -216,
-          "CLOSE": 12.85,
-          "SPX_CLOSE": 5937.34
-        },
-        {
-          "date": "2025-01-17",
-          "offset_td": -215,
-          "CLOSE": 13.0,
-          "SPX_CLOSE": 5996.66
-        },
-        {
-          "date": "2025-01-21",
-          "offset_td": -214,
-          "CLOSE": 13.2,
-          "SPX_CLOSE": 6049.24
-        },
-        {
-          "date": "2025-01-22",
-          "offset_td": -213,
-          "CLOSE": 13.37,
-          "SPX_CLOSE": 6086.37
-        },
-        {
-          "date": "2025-01-23",
-          "offset_td": -212,
-          "CLOSE": 13.74,
-          "SPX_CLOSE": 6118.71
-        },
-        {
-          "date": "2025-01-24",
-          "offset_td": -211,
-          "CLOSE": 13.6,
-          "SPX_CLOSE": 6101.24
-        },
-        {
-          "date": "2025-01-27",
-          "offset_td": -210,
-          "CLOSE": 13.55,
-          "SPX_CLOSE": 6012.28
-        },
-        {
-          "date": "2025-01-28",
-          "offset_td": -209,
-          "CLOSE": 13.56,
-          "SPX_CLOSE": 6067.7
-        },
-        {
-          "date": "2025-01-29",
-          "offset_td": -208,
-          "CLOSE": 13.2,
-          "SPX_CLOSE": 6039.31
-        },
-        {
-          "date": "2025-01-30",
-          "offset_td": -207,
-          "CLOSE": 13.43,
-          "SPX_CLOSE": 6071.17
-        },
-        {
-          "date": "2025-01-31",
-          "offset_td": -206,
-          "CLOSE": 13.21,
-          "SPX_CLOSE": 6040.53
-        },
-        {
-          "date": "2025-02-03",
-          "offset_td": -205,
-          "CLOSE": 12.98,
-          "SPX_CLOSE": 5994.57
-        },
-        {
-          "date": "2025-02-04",
-          "offset_td": -204,
-          "CLOSE": 13.22,
-          "SPX_CLOSE": 6037.88
-        },
-        {
-          "date": "2025-02-05",
-          "offset_td": -203,
-          "CLOSE": 12.99,
-          "SPX_CLOSE": 6061.48
-        },
-        {
-          "date": "2025-02-06",
-          "offset_td": -202,
-          "CLOSE": 12.76,
-          "SPX_CLOSE": 6083.57
-        },
-        {
-          "date": "2025-02-07",
-          "offset_td": -201,
-          "CLOSE": 12.08,
-          "SPX_CLOSE": 6025.99
-        },
-        {
-          "date": "2025-02-10",
-          "offset_td": -200,
-          "CLOSE": 11.81,
-          "SPX_CLOSE": 6066.44
-        },
-        {
-          "date": "2025-02-11",
-          "offset_td": -199,
-          "CLOSE": 11.78,
-          "SPX_CLOSE": 6068.5
-        },
-        {
-          "date": "2025-02-12",
-          "offset_td": -198,
-          "CLOSE": 11.62,
-          "SPX_CLOSE": 6051.97
-        },
-        {
-          "date": "2025-02-13",
-          "offset_td": -197,
-          "CLOSE": 11.86,
-          "SPX_CLOSE": 6115.07
-        },
-        {
-          "date": "2025-02-14",
-          "offset_td": -196,
-          "CLOSE": 11.72,
-          "SPX_CLOSE": 6114.63
-        },
-        {
-          "date": "2025-02-18",
-          "offset_td": -195,
-          "CLOSE": 11.81,
-          "SPX_CLOSE": 6129.58
-        },
-        {
-          "date": "2025-02-19",
-          "offset_td": -194,
-          "CLOSE": 11.68,
-          "SPX_CLOSE": 6144.15
-        },
-        {
-          "date": "2025-02-20",
-          "offset_td": -193,
-          "CLOSE": 12.0,
-          "SPX_CLOSE": 6117.52
-        },
-        {
-          "date": "2025-02-21",
-          "offset_td": -192,
-          "CLOSE": 12.01,
-          "SPX_CLOSE": 6013.13
-        },
-        {
-          "date": "2025-02-24",
-          "offset_td": -191,
-          "CLOSE": 12.27,
-          "SPX_CLOSE": 5983.25
-        },
-        {
-          "date": "2025-02-25",
-          "offset_td": -190,
-          "CLOSE": 12.03,
-          "SPX_CLOSE": 5955.25
-        },
-        {
-          "date": "2025-02-26",
-          "offset_td": -189,
-          "CLOSE": 11.95,
-          "SPX_CLOSE": 5956.06
-        },
-        {
-          "date": "2025-02-27",
-          "offset_td": -188,
-          "CLOSE": 11.4,
-          "SPX_CLOSE": 5861.57
-        },
-        {
-          "date": "2025-02-28",
-          "offset_td": -187,
-          "CLOSE": 11.41,
-          "SPX_CLOSE": 5954.5
-        },
-        {
-          "date": "2025-03-03",
-          "offset_td": -186,
-          "CLOSE": 11.33,
-          "SPX_CLOSE": 5849.72
-        },
-        {
-          "date": "2025-03-04",
-          "offset_td": -185,
-          "CLOSE": 11.37,
-          "SPX_CLOSE": 5778.15
-        },
-        {
-          "date": "2025-03-05",
-          "offset_td": -184,
-          "CLOSE": 11.36,
-          "SPX_CLOSE": 5842.63
-        },
-        {
-          "date": "2025-03-06",
-          "offset_td": -183,
-          "CLOSE": 11.23,
-          "SPX_CLOSE": 5738.52
-        },
-        {
-          "date": "2025-03-07",
-          "offset_td": -182,
-          "CLOSE": 12.21,
-          "SPX_CLOSE": 5770.2
-        },
-        {
-          "date": "2025-03-10",
-          "offset_td": -181,
-          "CLOSE": 12.05,
-          "SPX_CLOSE": 5614.56
-        },
-        {
-          "date": "2025-03-11",
-          "offset_td": -180,
-          "CLOSE": 9.15,
-          "SPX_CLOSE": 5572.07
-        },
-        {
-          "date": "2025-03-12",
-          "offset_td": -179,
-          "CLOSE": 8.61,
-          "SPX_CLOSE": 5599.3
-        },
-        {
-          "date": "2025-03-13",
-          "offset_td": -178,
-          "CLOSE": 8.21,
-          "SPX_CLOSE": 5521.52
-        },
-        {
-          "date": "2025-03-14",
-          "offset_td": -177,
-          "CLOSE": 8.06,
-          "SPX_CLOSE": 5638.94
-        },
-        {
-          "date": "2025-03-17",
-          "offset_td": -176,
-          "CLOSE": 8.55,
-          "SPX_CLOSE": 5675.12
-        },
-        {
-          "date": "2025-03-18",
-          "offset_td": -175,
-          "CLOSE": 8.33,
-          "SPX_CLOSE": 5614.66
-        },
-        {
-          "date": "2025-03-19",
-          "offset_td": -174,
-          "CLOSE": 8.71,
-          "SPX_CLOSE": 5675.29
-        },
-        {
-          "date": "2025-03-20",
-          "offset_td": -173,
-          "CLOSE": 8.54,
-          "SPX_CLOSE": 5662.89
-        },
-        {
-          "date": "2025-03-21",
-          "offset_td": -172,
-          "CLOSE": 8.28,
-          "SPX_CLOSE": 5667.56
-        },
-        {
-          "date": "2025-03-24",
-          "offset_td": -171,
-          "CLOSE": 9.4,
-          "SPX_CLOSE": 5767.57
-        },
-        {
-          "date": "2025-03-25",
-          "offset_td": -170,
-          "CLOSE": 9.15,
-          "SPX_CLOSE": 5776.65
-        },
-        {
-          "date": "2025-03-26",
-          "offset_td": -169,
-          "CLOSE": 8.95,
-          "SPX_CLOSE": 5712.2
-        },
-        {
-          "date": "2025-03-27",
-          "offset_td": -168,
-          "CLOSE": 8.61,
-          "SPX_CLOSE": 5693.31
-        },
-        {
-          "date": "2025-03-28",
-          "offset_td": -167,
-          "CLOSE": 8.47,
-          "SPX_CLOSE": 5580.94
-        },
-        {
-          "date": "2025-03-31",
-          "offset_td": -166,
-          "CLOSE": 8.18,
-          "SPX_CLOSE": 5611.85
-        },
-        {
-          "date": "2025-04-01",
-          "offset_td": -165,
-          "CLOSE": 8.26,
-          "SPX_CLOSE": 5633.07
-        },
-        {
-          "date": "2025-04-02",
-          "offset_td": -164,
-          "CLOSE": 8.6,
-          "SPX_CLOSE": 5670.97
-        },
-        {
-          "date": "2025-04-03",
-          "offset_td": -163,
-          "CLOSE": 6.64,
-          "SPX_CLOSE": 5396.52
-        },
-        {
-          "date": "2025-04-04",
-          "offset_td": -162,
-          "CLOSE": 7.17,
-          "SPX_CLOSE": 5074.08
-        },
-        {
-          "date": "2025-04-07",
-          "offset_td": -161,
-          "CLOSE": 6.81,
-          "SPX_CLOSE": 5062.25
-        },
-        {
-          "date": "2025-04-08",
-          "offset_td": -160,
-          "CLOSE": 6.18,
-          "SPX_CLOSE": 4982.77
-        },
-        {
-          "date": "2025-04-09",
-          "offset_td": -159,
-          "CLOSE": 7.76,
-          "SPX_CLOSE": 5456.9
-        },
-        {
-          "date": "2025-04-10",
-          "offset_td": -158,
-          "CLOSE": 6.84,
-          "SPX_CLOSE": 5268.05
-        },
-        {
-          "date": "2025-04-11",
-          "offset_td": -157,
-          "CLOSE": 6.72,
-          "SPX_CLOSE": 5363.36
-        },
-        {
-          "date": "2025-04-14",
-          "offset_td": -156,
-          "CLOSE": 6.51,
-          "SPX_CLOSE": 5405.97
-        },
-        {
-          "date": "2025-04-15",
-          "offset_td": -155,
-          "CLOSE": 6.26,
-          "SPX_CLOSE": 5396.63
-        },
-        {
-          "date": "2025-04-16",
-          "offset_td": -154,
-          "CLOSE": 6.13,
-          "SPX_CLOSE": 5275.7
-        },
-        {
-          "date": "2025-04-17",
-          "offset_td": -153,
-          "CLOSE": 6.48,
-          "SPX_CLOSE": 5282.7
-        },
-        {
-          "date": "2025-04-21",
-          "offset_td": -152,
-          "CLOSE": 7.02,
-          "SPX_CLOSE": 5158.2
-        },
-        {
-          "date": "2025-04-22",
-          "offset_td": -151,
-          "CLOSE": 6.76,
-          "SPX_CLOSE": 5287.76
-        },
-        {
-          "date": "2025-04-23",
-          "offset_td": -150,
-          "CLOSE": 6.71,
-          "SPX_CLOSE": 5375.86
-        },
-        {
-          "date": "2025-04-24",
-          "offset_td": -149,
-          "CLOSE": 7.03,
-          "SPX_CLOSE": 5484.77
-        },
-        {
-          "date": "2025-04-25",
-          "offset_td": -148,
-          "CLOSE": 7.06,
-          "SPX_CLOSE": 5525.21
-        },
-        {
-          "date": "2025-04-28",
-          "offset_td": -147,
-          "CLOSE": 6.98,
-          "SPX_CLOSE": 5528.75
-        },
-        {
-          "date": "2025-04-29",
-          "offset_td": -146,
-          "CLOSE": 6.82,
-          "SPX_CLOSE": 5560.83
-        },
-        {
-          "date": "2025-04-30",
-          "offset_td": -145,
-          "CLOSE": 6.7,
-          "SPX_CLOSE": 5569.06
-        },
-        {
-          "date": "2025-05-01",
-          "offset_td": -144,
-          "CLOSE": 7.21,
-          "SPX_CLOSE": 5604.14
-        },
-        {
-          "date": "2025-05-02",
-          "offset_td": -143,
-          "CLOSE": 7.5,
-          "SPX_CLOSE": 5686.67
-        },
-        {
-          "date": "2025-05-05",
-          "offset_td": -142,
-          "CLOSE": 7.06,
-          "SPX_CLOSE": 5650.38
-        },
-        {
-          "date": "2025-05-06",
-          "offset_td": -141,
-          "CLOSE": 6.52,
-          "SPX_CLOSE": 5606.91
-        },
-        {
-          "date": "2025-05-07",
-          "offset_td": -140,
-          "CLOSE": 6.52,
-          "SPX_CLOSE": 5631.28
-        },
-        {
-          "date": "2025-05-08",
-          "offset_td": -139,
-          "CLOSE": 7.06,
-          "SPX_CLOSE": 5663.94
-        },
-        {
-          "date": "2025-05-09",
-          "offset_td": -138,
-          "CLOSE": 6.71,
-          "SPX_CLOSE": 5659.91
-        },
-        {
-          "date": "2025-05-12",
-          "offset_td": -137,
-          "CLOSE": 7.57,
-          "SPX_CLOSE": 5844.19
-        },
-        {
-          "date": "2025-05-13",
-          "offset_td": -136,
-          "CLOSE": 8.06,
-          "SPX_CLOSE": 5886.55
-        },
-        {
-          "date": "2025-05-14",
-          "offset_td": -135,
-          "CLOSE": 8.11,
-          "SPX_CLOSE": 5892.58
-        },
-        {
-          "date": "2025-05-15",
-          "offset_td": -134,
-          "CLOSE": 8.37,
-          "SPX_CLOSE": 5916.93
-        },
-        {
-          "date": "2025-05-16",
-          "offset_td": -133,
-          "CLOSE": 8.56,
-          "SPX_CLOSE": 5958.38
-        },
-        {
-          "date": "2025-05-19",
-          "offset_td": -132,
-          "CLOSE": 8.44,
-          "SPX_CLOSE": 5963.6
-        },
-        {
-          "date": "2025-05-20",
-          "offset_td": -131,
-          "CLOSE": 8.3,
-          "SPX_CLOSE": 5940.46
-        },
-        {
-          "date": "2025-05-21",
-          "offset_td": -130,
-          "CLOSE": 7.81,
-          "SPX_CLOSE": 5844.61
-        },
-        {
-          "date": "2025-05-22",
-          "offset_td": -129,
-          "CLOSE": 8.11,
-          "SPX_CLOSE": 5842.01
-        },
-        {
-          "date": "2025-05-23",
-          "offset_td": -128,
-          "CLOSE": 7.48,
-          "SPX_CLOSE": 5802.82
-        },
-        {
-          "date": "2025-05-27",
-          "offset_td": -127,
-          "CLOSE": 7.91,
-          "SPX_CLOSE": 5921.54
-        },
-        {
-          "date": "2025-05-28",
-          "offset_td": -126,
-          "CLOSE": 8.1,
-          "SPX_CLOSE": 5888.55
-        },
-        {
-          "date": "2025-05-29",
-          "offset_td": -125,
-          "CLOSE": 8.04,
-          "SPX_CLOSE": 5912.17
-        },
-        {
-          "date": "2025-05-30",
-          "offset_td": -124,
-          "CLOSE": 8.13,
-          "SPX_CLOSE": 5911.69
-        },
-        {
-          "date": "2025-06-02",
-          "offset_td": -123,
-          "CLOSE": 8.16,
-          "SPX_CLOSE": 5935.94
-        },
-        {
-          "date": "2025-06-03",
-          "offset_td": -122,
-          "CLOSE": 8.37,
-          "SPX_CLOSE": 5970.37
-        },
-        {
-          "date": "2025-06-04",
-          "offset_td": -121,
-          "CLOSE": 8.13,
-          "SPX_CLOSE": 5970.81
-        },
-        {
-          "date": "2025-06-05",
-          "offset_td": -120,
-          "CLOSE": 8.57,
-          "SPX_CLOSE": 5939.3
-        },
-        {
-          "date": "2025-06-06",
-          "offset_td": -119,
-          "CLOSE": 8.75,
-          "SPX_CLOSE": 6000.36
-        },
-        {
-          "date": "2025-06-09",
-          "offset_td": -118,
-          "CLOSE": 9.01,
-          "SPX_CLOSE": 6005.88
-        },
-        {
-          "date": "2025-06-10",
-          "offset_td": -117,
-          "CLOSE": 9.4,
-          "SPX_CLOSE": 6038.81
-        },
-        {
-          "date": "2025-06-11",
-          "offset_td": -116,
-          "CLOSE": 8.78,
-          "SPX_CLOSE": 6022.24
-        },
-        {
-          "date": "2025-06-12",
-          "offset_td": -115,
-          "CLOSE": 8.72,
-          "SPX_CLOSE": 6045.26
-        },
-        {
-          "date": "2025-06-13",
-          "offset_td": -114,
-          "CLOSE": 8.12,
-          "SPX_CLOSE": 5976.97
-        },
-        {
-          "date": "2025-06-16",
-          "offset_td": -113,
-          "CLOSE": 8.93,
-          "SPX_CLOSE": 6033.11
-        },
-        {
-          "date": "2025-06-17",
-          "offset_td": -112,
-          "CLOSE": 8.47,
-          "SPX_CLOSE": 5982.72
-        },
-        {
-          "date": "2025-06-18",
-          "offset_td": -111,
-          "CLOSE": 8.32,
-          "SPX_CLOSE": 5980.87
-        },
-        {
-          "date": "2025-06-20",
-          "offset_td": -110,
-          "CLOSE": 8.23,
-          "SPX_CLOSE": 5967.84
-        },
-        {
-          "date": "2025-06-23",
-          "offset_td": -109,
-          "CLOSE": 8.1,
-          "SPX_CLOSE": 6025.17
-        },
-        {
-          "date": "2025-06-24",
-          "offset_td": -108,
-          "CLOSE": 8.22,
-          "SPX_CLOSE": 6092.18
-        },
-        {
-          "date": "2025-06-25",
-          "offset_td": -107,
-          "CLOSE": 8.11,
-          "SPX_CLOSE": 6092.16
-        },
-        {
-          "date": "2025-06-26",
-          "offset_td": -106,
-          "CLOSE": 8.33,
-          "SPX_CLOSE": 6141.02
-        },
-        {
-          "date": "2025-06-27",
-          "offset_td": -105,
-          "CLOSE": 8.44,
-          "SPX_CLOSE": 6173.07
-        },
-        {
-          "date": "2025-06-30",
-          "offset_td": -104,
-          "CLOSE": 8.48,
-          "SPX_CLOSE": 6204.95
-        },
-        {
-          "date": "2025-07-01",
-          "offset_td": -103,
-          "CLOSE": 9.16,
-          "SPX_CLOSE": 6198.01
-        },
-        {
-          "date": "2025-07-02",
-          "offset_td": -102,
-          "CLOSE": 9.2,
-          "SPX_CLOSE": 6227.42
-        },
-        {
-          "date": "2025-07-03",
-          "offset_td": -101,
-          "CLOSE": 9.28,
-          "SPX_CLOSE": 6279.35
-        },
-        {
-          "date": "2025-07-07",
-          "offset_td": -100,
-          "CLOSE": 9.02,
-          "SPX_CLOSE": 6229.98
-        },
-        {
-          "date": "2025-07-08",
-          "offset_td": -99,
-          "CLOSE": 9.08,
-          "SPX_CLOSE": 6225.52
-        },
-        {
-          "date": "2025-07-09",
-          "offset_td": -98,
-          "CLOSE": 9.35,
-          "SPX_CLOSE": 6263.26
-        },
-        {
-          "date": "2025-07-10",
-          "offset_td": -97,
-          "CLOSE": 9.65,
-          "SPX_CLOSE": 6280.46
-        },
-        {
-          "date": "2025-07-11",
-          "offset_td": -96,
-          "CLOSE": 9.57,
-          "SPX_CLOSE": 6259.75
-        },
-        {
-          "date": "2025-07-14",
-          "offset_td": -95,
-          "CLOSE": 9.71,
-          "SPX_CLOSE": 6268.56
-        },
-        {
-          "date": "2025-07-15",
-          "offset_td": -94,
-          "CLOSE": 9.27,
-          "SPX_CLOSE": 6243.76
-        },
-        {
-          "date": "2025-07-16",
-          "offset_td": -93,
-          "CLOSE": 9.39,
-          "SPX_CLOSE": 6263.7
-        },
-        {
-          "date": "2025-07-17",
-          "offset_td": -92,
-          "CLOSE": 9.63,
-          "SPX_CLOSE": 6297.36
-        },
-        {
-          "date": "2025-07-18",
-          "offset_td": -91,
-          "CLOSE": 9.58,
-          "SPX_CLOSE": 6296.79
-        },
-        {
-          "date": "2025-07-21",
-          "offset_td": -90,
-          "CLOSE": 10.42,
-          "SPX_CLOSE": 6305.6
-        },
-        {
-          "date": "2025-07-22",
-          "offset_td": -89,
-          "CLOSE": 14.34,
-          "SPX_CLOSE": 6309.62
-        },
-        {
-          "date": "2025-07-23",
-          "offset_td": -88,
-          "CLOSE": 12.3,
-          "SPX_CLOSE": 6358.91
-        },
-        {
-          "date": "2025-07-24",
-          "offset_td": -87,
-          "CLOSE": 13.63,
-          "SPX_CLOSE": 6363.35
-        },
-        {
-          "date": "2025-07-25",
-          "offset_td": -86,
-          "CLOSE": 12.79,
-          "SPX_CLOSE": 6388.64
-        },
-        {
-          "date": "2025-07-28",
-          "offset_td": -85,
-          "CLOSE": 12.83,
-          "SPX_CLOSE": 6389.77
-        },
-        {
-          "date": "2025-07-29",
-          "offset_td": -84,
-          "CLOSE": 11.69,
-          "SPX_CLOSE": 6370.86
-        },
-        {
-          "date": "2025-07-30",
-          "offset_td": -83,
-          "CLOSE": 11.37,
-          "SPX_CLOSE": 6362.9
-        },
-        {
-          "date": "2025-07-31",
-          "offset_td": -82,
-          "CLOSE": 10.84,
-          "SPX_CLOSE": 6339.39
-        },
-        {
-          "date": "2025-08-01",
-          "offset_td": -81,
-          "CLOSE": 10.73,
-          "SPX_CLOSE": 6238.01
-        },
-        {
-          "date": "2025-08-04",
-          "offset_td": -80,
-          "CLOSE": 11.39,
-          "SPX_CLOSE": 6329.94
-        },
-        {
-          "date": "2025-08-05",
-          "offset_td": -79,
-          "CLOSE": 11.5,
-          "SPX_CLOSE": 6299.19
-        },
-        {
-          "date": "2025-08-06",
-          "offset_td": -78,
-          "CLOSE": 11.75,
-          "SPX_CLOSE": 6345.06
-        },
-        {
-          "date": "2025-08-07",
-          "offset_td": -77,
-          "CLOSE": 11.29,
-          "SPX_CLOSE": 6340.0
-        },
-        {
-          "date": "2025-08-08",
-          "offset_td": -76,
-          "CLOSE": 11.12,
-          "SPX_CLOSE": 6389.45
-        },
-        {
-          "date": "2025-08-11",
-          "offset_td": -75,
-          "CLOSE": 12.21,
-          "SPX_CLOSE": 6373.45
-        },
-        {
-          "date": "2025-08-12",
-          "offset_td": -74,
-          "CLOSE": 12.83,
-          "SPX_CLOSE": 6445.76
-        },
-        {
-          "date": "2025-08-13",
-          "offset_td": -73,
-          "CLOSE": 14.0,
-          "SPX_CLOSE": 6466.58
-        },
-        {
-          "date": "2025-08-14",
-          "offset_td": -72,
-          "CLOSE": 14.46,
-          "SPX_CLOSE": 6468.54
-        },
-        {
-          "date": "2025-08-15",
-          "offset_td": -71,
-          "CLOSE": 13.77,
-          "SPX_CLOSE": 6449.8
-        },
-        {
-          "date": "2025-08-18",
-          "offset_td": -70,
-          "CLOSE": 13.64,
-          "SPX_CLOSE": 6449.15
-        },
-        {
-          "date": "2025-08-19",
-          "offset_td": -69,
-          "CLOSE": 13.65,
-          "SPX_CLOSE": 6411.37
-        },
-        {
-          "date": "2025-08-20",
-          "offset_td": -68,
-          "CLOSE": 13.34,
-          "SPX_CLOSE": 6395.78
-        },
-        {
-          "date": "2025-08-21",
-          "offset_td": -67,
-          "CLOSE": 13.32,
-          "SPX_CLOSE": 6370.17
-        },
-        {
-          "date": "2025-08-22",
-          "offset_td": -66,
-          "CLOSE": 13.89,
-          "SPX_CLOSE": 6466.91
-        },
-        {
-          "date": "2025-08-25",
-          "offset_td": -65,
-          "CLOSE": 13.95,
-          "SPX_CLOSE": 6439.32
-        },
-        {
-          "date": "2025-08-26",
-          "offset_td": -64,
-          "CLOSE": 13.04,
-          "SPX_CLOSE": 6465.94
-        },
-        {
-          "date": "2025-08-27",
-          "offset_td": -63,
-          "CLOSE": 16.17,
-          "SPX_CLOSE": 6481.4
-        },
-        {
-          "date": "2025-08-28",
-          "offset_td": -62,
-          "CLOSE": 15.37,
-          "SPX_CLOSE": 6501.86
-        },
-        {
-          "date": "2025-08-29",
-          "offset_td": -61,
-          "CLOSE": 15.06,
-          "SPX_CLOSE": 6460.26
-        },
-        {
-          "date": "2025-09-02",
-          "offset_td": -60,
-          "CLOSE": 16.13,
-          "SPX_CLOSE": 6415.54
-        },
-        {
-          "date": "2025-09-03",
-          "offset_td": -59,
-          "CLOSE": 15.85,
-          "SPX_CLOSE": 6448.26
-        },
-        {
-          "date": "2025-09-04",
-          "offset_td": -58,
-          "CLOSE": 16.42,
-          "SPX_CLOSE": 6502.08
-        },
-        {
-          "date": "2025-09-05",
-          "offset_td": -57,
-          "CLOSE": 16.57,
-          "SPX_CLOSE": 6481.5
-        },
-        {
-          "date": "2025-09-08",
-          "offset_td": -56,
-          "CLOSE": 16.59,
-          "SPX_CLOSE": 6495.15
-        },
-        {
-          "date": "2025-09-09",
-          "offset_td": -55,
-          "CLOSE": 16.62,
-          "SPX_CLOSE": 6512.61
-        },
-        {
-          "date": "2025-09-10",
-          "offset_td": -54,
-          "CLOSE": 16.04,
-          "SPX_CLOSE": 6532.04
-        },
-        {
-          "date": "2025-09-11",
-          "offset_td": -53,
-          "CLOSE": 16.14,
-          "SPX_CLOSE": 6587.47
-        },
-        {
-          "date": "2025-09-12",
-          "offset_td": -52,
-          "CLOSE": 15.3,
-          "SPX_CLOSE": 6584.29
-        },
-        {
-          "date": "2025-09-15",
-          "offset_td": -51,
-          "CLOSE": 16.05,
-          "SPX_CLOSE": 6615.28
-        },
-        {
-          "date": "2025-09-16",
-          "offset_td": -50,
-          "CLOSE": 16.65,
-          "SPX_CLOSE": 6606.76
-        },
-        {
-          "date": "2025-09-17",
-          "offset_td": -49,
-          "CLOSE": 17.24,
-          "SPX_CLOSE": 6600.35
-        },
-        {
-          "date": "2025-09-18",
-          "offset_td": -48,
-          "CLOSE": 17.38,
-          "SPX_CLOSE": 6631.96
-        },
-        {
-          "date": "2025-09-19",
-          "offset_td": -47,
-          "CLOSE": 17.26,
-          "SPX_CLOSE": 6664.36
-        },
-        {
-          "date": "2025-09-22",
-          "offset_td": -46,
-          "CLOSE": 16.89,
-          "SPX_CLOSE": 6693.75
-        },
-        {
-          "date": "2025-09-23",
-          "offset_td": -45,
-          "CLOSE": 17.28,
-          "SPX_CLOSE": 6656.92
-        },
-        {
-          "date": "2025-09-24",
-          "offset_td": -44,
-          "CLOSE": 17.12,
-          "SPX_CLOSE": 6637.97
-        },
-        {
-          "date": "2025-09-25",
-          "offset_td": -43,
-          "CLOSE": 16.05,
-          "SPX_CLOSE": 6604.72
-        },
-        {
-          "date": "2025-09-26",
-          "offset_td": -42,
-          "CLOSE": 16.23,
-          "SPX_CLOSE": 6643.7
-        },
-        {
-          "date": "2025-09-29",
-          "offset_td": -41,
-          "CLOSE": 15.38,
-          "SPX_CLOSE": 6661.21
-        },
-        {
-          "date": "2025-09-30",
-          "offset_td": -40,
-          "CLOSE": 15.37,
-          "SPX_CLOSE": 6688.46
-        },
-        {
-          "date": "2025-10-01",
-          "offset_td": -39,
-          "CLOSE": 15.82,
-          "SPX_CLOSE": 6711.2
-        },
-        {
-          "date": "2025-10-02",
-          "offset_td": -38,
-          "CLOSE": 16.43,
-          "SPX_CLOSE": 6715.35
-        },
-        {
-          "date": "2025-10-03",
-          "offset_td": -37,
-          "CLOSE": 16.91,
-          "SPX_CLOSE": 6715.79
-        },
-        {
-          "date": "2025-10-06",
-          "offset_td": -36,
-          "CLOSE": 16.51,
-          "SPX_CLOSE": 6740.28
-        },
-        {
-          "date": "2025-10-07",
-          "offset_td": -35,
-          "CLOSE": 15.86,
-          "SPX_CLOSE": 6714.59
-        },
-        {
-          "date": "2025-10-08",
-          "offset_td": -34,
-          "CLOSE": 15.73,
-          "SPX_CLOSE": 6753.72
-        },
-        {
-          "date": "2025-10-09",
-          "offset_td": -33,
-          "CLOSE": 15.27,
-          "SPX_CLOSE": 6735.11
-        },
-        {
-          "date": "2025-10-10",
-          "offset_td": -32,
-          "CLOSE": 13.98,
-          "SPX_CLOSE": 6552.51
-        },
-        {
-          "date": "2025-10-13",
-          "offset_td": -31,
-          "CLOSE": 15.53,
-          "SPX_CLOSE": 6654.72
-        },
-        {
-          "date": "2025-10-14",
-          "offset_td": -30,
-          "CLOSE": 15.49,
-          "SPX_CLOSE": 6644.31
-        },
-        {
-          "date": "2025-10-15",
-          "offset_td": -29,
-          "CLOSE": 15.35,
-          "SPX_CLOSE": 6671.06
-        },
-        {
-          "date": "2025-10-16",
-          "offset_td": -28,
-          "CLOSE": 15.77,
-          "SPX_CLOSE": 6629.07
-        },
-        {
-          "date": "2025-10-17",
-          "offset_td": -27,
-          "CLOSE": 15.49,
-          "SPX_CLOSE": 6664.01
-        },
-        {
-          "date": "2025-10-20",
-          "offset_td": -26,
-          "CLOSE": 16.17,
-          "SPX_CLOSE": 6735.13
-        },
-        {
-          "date": "2025-10-21",
-          "offset_td": -25,
-          "CLOSE": 16.4,
-          "SPX_CLOSE": 6735.35
-        },
-        {
-          "date": "2025-10-22",
-          "offset_td": -24,
-          "CLOSE": 16.67,
-          "SPX_CLOSE": 6699.4
-        },
-        {
-          "date": "2025-10-23",
-          "offset_td": -23,
-          "CLOSE": 16.2,
-          "SPX_CLOSE": 6738.44
-        },
-        {
-          "date": "2025-10-24",
-          "offset_td": -22,
-          "CLOSE": 16.38,
-          "SPX_CLOSE": 6791.69
-        },
-        {
-          "date": "2025-10-27",
-          "offset_td": -21,
-          "CLOSE": 16.37,
-          "SPX_CLOSE": 6875.16
-        },
-        {
-          "date": "2025-10-28",
-          "offset_td": -20,
-          "CLOSE": 16.43,
-          "SPX_CLOSE": 6890.89
-        },
-        {
-          "date": "2025-10-29",
-          "offset_td": -19,
-          "CLOSE": 15.93,
-          "SPX_CLOSE": 6890.59
-        },
-        {
-          "date": "2025-10-30",
-          "offset_td": -18,
-          "CLOSE": 15.77,
-          "SPX_CLOSE": 6822.34
-        },
-        {
-          "date": "2025-10-31",
-          "offset_td": -17,
-          "CLOSE": 16.27,
-          "SPX_CLOSE": 6840.2
-        },
-        {
-          "date": "2025-11-03",
-          "offset_td": -16,
-          "CLOSE": 16.4,
-          "SPX_CLOSE": 6851.97
-        },
-        {
-          "date": "2025-11-04",
-          "offset_td": -15,
-          "CLOSE": 16.11,
-          "SPX_CLOSE": 6771.55
-        },
-        {
-          "date": "2025-11-05",
-          "offset_td": -14,
-          "CLOSE": 17.54,
-          "SPX_CLOSE": 6796.29
-        },
-        {
-          "date": "2025-11-06",
-          "offset_td": -13,
-          "CLOSE": 16.75,
-          "SPX_CLOSE": 6720.32
-        },
-        {
-          "date": "2025-11-07",
-          "offset_td": -12,
-          "CLOSE": 17.01,
-          "SPX_CLOSE": 6728.8
-        },
-        {
-          "date": "2025-11-10",
-          "offset_td": -11,
-          "CLOSE": 17.91,
-          "SPX_CLOSE": 6832.43
-        },
-        {
-          "date": "2025-11-11",
-          "offset_td": -10,
-          "CLOSE": 17.98,
-          "SPX_CLOSE": 6846.61
-        },
-        {
-          "date": "2025-11-12",
-          "offset_td": -9,
-          "CLOSE": 18.06,
-          "SPX_CLOSE": 6850.92
-        },
-        {
-          "date": "2025-11-13",
-          "offset_td": -8,
-          "CLOSE": 17.5,
-          "SPX_CLOSE": 6737.49
-        },
-        {
-          "date": "2025-11-14",
-          "offset_td": -7,
-          "CLOSE": 16.75,
-          "SPX_CLOSE": 6734.11
-        },
-        {
-          "date": "2025-11-17",
-          "offset_td": -6,
-          "CLOSE": 15.99,
-          "SPX_CLOSE": 6672.41
-        },
-        {
-          "date": "2025-11-18",
-          "offset_td": -5,
-          "CLOSE": 15.73,
-          "SPX_CLOSE": 6617.32
-        },
-        {
-          "date": "2025-11-19",
-          "offset_td": -4,
-          "CLOSE": 15.41,
-          "SPX_CLOSE": 6642.16
-        },
-        {
-          "date": "2025-11-20",
-          "offset_td": -3,
-          "CLOSE": 15.0,
-          "SPX_CLOSE": 6538.76
-        },
-        {
-          "date": "2025-11-21",
-          "offset_td": -2,
-          "CLOSE": 15.71,
-          "SPX_CLOSE": 6602.99
-        },
-        {
-          "date": "2025-11-24",
-          "offset_td": -1,
-          "CLOSE": 15.73,
-          "SPX_CLOSE": 6705.12
-        },
-        {
-          "date": "2025-11-25",
-          "offset_td": 0,
-          "CLOSE": 22.42,
-          "SPX_CLOSE": 6765.88
-        },
-        {
-          "date": "2025-11-26",
-          "offset_td": 1,
-          "CLOSE": 24.1,
-          "SPX_CLOSE": 6812.61
-        },
-        {
-          "date": "2025-11-28",
-          "offset_td": 2,
-          "CLOSE": 24.59,
-          "SPX_CLOSE": 6849.09
-        },
-        {
-          "date": "2025-12-01",
-          "offset_td": 3,
-          "CLOSE": 24.13,
-          "SPX_CLOSE": 6812.63
-        },
-        {
-          "date": "2025-12-02",
-          "offset_td": 4,
-          "CLOSE": 24.71,
-          "SPX_CLOSE": 6829.37
-        },
-        {
-          "date": "2025-12-03",
-          "offset_td": 5,
-          "CLOSE": 22.97,
-          "SPX_CLOSE": 6849.72
-        },
-        {
-          "date": "2025-12-04",
-          "offset_td": 6,
-          "CLOSE": 22.58,
-          "SPX_CLOSE": 6857.12
-        },
-        {
-          "date": "2025-12-05",
-          "offset_td": 7,
-          "CLOSE": 23.05,
-          "SPX_CLOSE": 6870.4
-        },
-        {
-          "date": "2025-12-08",
-          "offset_td": 8,
-          "CLOSE": 22.7,
-          "SPX_CLOSE": 6846.51
-        },
-        {
-          "date": "2025-12-09",
-          "offset_td": 9,
-          "CLOSE": 23.41,
-          "SPX_CLOSE": 6840.51
-        },
-        {
-          "date": "2025-12-10",
-          "offset_td": 10,
-          "CLOSE": 23.63,
-          "SPX_CLOSE": 6886.68
-        },
-        {
-          "date": "2025-12-11",
-          "offset_td": 11,
-          "CLOSE": 23.9,
-          "SPX_CLOSE": 6901.0
-        },
-        {
-          "date": "2025-12-12",
-          "offset_td": 12,
-          "CLOSE": 23.27,
-          "SPX_CLOSE": 6827.41
-        },
-        {
-          "date": "2025-12-15",
-          "offset_td": 13,
-          "CLOSE": 22.18,
-          "SPX_CLOSE": 6816.51
-        },
-        {
-          "date": "2025-12-16",
-          "offset_td": 14,
-          "CLOSE": 22.95,
-          "SPX_CLOSE": 6800.26
-        },
-        {
-          "date": "2025-12-17",
-          "offset_td": 15,
-          "CLOSE": 22.44,
-          "SPX_CLOSE": 6721.43
-        },
-        {
-          "date": "2025-12-18",
-          "offset_td": 16,
-          "CLOSE": 22.67,
-          "SPX_CLOSE": 6774.76
-        },
-        {
-          "date": "2025-12-19",
-          "offset_td": 17,
-          "CLOSE": 23.2,
-          "SPX_CLOSE": 6834.5
-        },
-        {
-          "date": "2025-12-22",
-          "offset_td": 18,
-          "CLOSE": 21.84,
-          "SPX_CLOSE": 6878.49
-        },
-        {
-          "date": "2025-12-23",
-          "offset_td": 19,
-          "CLOSE": 21.42,
-          "SPX_CLOSE": 6909.79
-        },
-        {
-          "date": "2025-12-24",
-          "offset_td": 20,
-          "CLOSE": 21.6,
-          "SPX_CLOSE": 6932.05
-        },
-        {
-          "date": "2025-12-26",
-          "offset_td": 21,
-          "CLOSE": 21.57,
-          "SPX_CLOSE": 6929.94
-        },
-        {
-          "date": "2025-12-29",
-          "offset_td": 22,
-          "CLOSE": 20.87,
-          "SPX_CLOSE": 6905.74
-        },
-        {
-          "date": "2025-12-30",
-          "offset_td": 23,
-          "CLOSE": 20.35,
-          "SPX_CLOSE": 6896.24
-        },
-        {
-          "date": "2025-12-31",
-          "offset_td": 24,
-          "CLOSE": 20.41,
-          "SPX_CLOSE": 6845.5
-        },
-        {
-          "date": "2026-01-02",
-          "offset_td": 25,
-          "CLOSE": 21.34,
-          "SPX_CLOSE": 6858.47
-        },
-        {
-          "date": "2026-01-05",
-          "offset_td": 26,
-          "CLOSE": 21.39,
-          "SPX_CLOSE": 6902.05
-        },
-        {
-          "date": "2026-01-06",
-          "offset_td": 27,
-          "CLOSE": 22.11,
-          "SPX_CLOSE": 6944.82
-        },
-        {
-          "date": "2026-01-07",
-          "offset_td": 28,
-          "CLOSE": 20.65,
-          "SPX_CLOSE": 6920.93
-        },
-        {
-          "date": "2026-01-08",
-          "offset_td": 29,
-          "CLOSE": 21.76,
-          "SPX_CLOSE": 6921.46
-        },
-        {
-          "date": "2026-01-09",
-          "offset_td": 30,
-          "CLOSE": 20.54,
-          "SPX_CLOSE": 6966.28
-        }
-      ]
-    },
-    {
       "market_id": "899879",
       "slug": "len-quarterly-earnings-gaap-eps-12-16-2025-2pt22",
       "ric": "LEN",
@@ -399501,31 +397791,31 @@
           "date": "2026-01-26",
           "offset_td": 26,
           "CLOSE": 110.58,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 27,
           "CLOSE": 110.07,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 28,
           "CLOSE": 110.79,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 29,
           "CLOSE": 111.23,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 30,
           "CLOSE": 109.35,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -407865,31 +406155,31 @@
           "date": "2026-01-26",
           "offset_td": -3,
           "CLOSE": 581.66,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": -2,
           "CLOSE": 594.95,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": -1,
           "CLOSE": 597.27,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 0,
           "CLOSE": 622.51,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 1,
           "CLOSE": 634.22,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -411303,13 +409593,13 @@
           "date": "2026-01-26",
           "offset_td": 29,
           "CLOSE": 192.8,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 30,
           "CLOSE": 186.31,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         }
       ]
     },
@@ -418107,31 +416397,31 @@
           "date": "2026-01-26",
           "offset_td": 23,
           "CLOSE": 43.72,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 24,
           "CLOSE": 45.05,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 25,
           "CLOSE": 45.47,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 26,
           "CLOSE": 45.96,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 27,
           "CLOSE": 45.93,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -428157,31 +426447,31 @@
           "date": "2026-01-26",
           "offset_td": -3,
           "CLOSE": 527.36,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": -2,
           "CLOSE": 520.41,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": -1,
           "CLOSE": 521.37,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 0,
           "CLOSE": 543.73,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 1,
           "CLOSE": 538.79,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -433143,31 +431433,31 @@
           "date": "2026-01-26",
           "offset_td": 4,
           "CLOSE": 51.22,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 5,
           "CLOSE": 50.81,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 6,
           "CLOSE": 50.01,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 7,
           "CLOSE": 51.37,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 8,
           "CLOSE": 51.45,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -441483,31 +439773,31 @@
           "date": "2026-01-26",
           "offset_td": -2,
           "CLOSE": 672.37,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": -1,
           "CLOSE": 673.02,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 0,
           "CLOSE": 669.18,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 1,
           "CLOSE": 738.26,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 2,
           "CLOSE": 717.14,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -448155,31 +446445,31 @@
           "date": "2026-01-26",
           "offset_td": 2,
           "CLOSE": 60.97,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 3,
           "CLOSE": 63.41,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 4,
           "CLOSE": 61.86,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 5,
           "CLOSE": 61.32,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 6,
           "CLOSE": 61.83,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -454863,31 +453153,31 @@
           "date": "2026-01-26",
           "offset_td": 4,
           "CLOSE": 159.52,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 5,
           "CLOSE": 158.05,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 6,
           "CLOSE": 155.94,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 7,
           "CLOSE": 156.38,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 8,
           "CLOSE": 153.16,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -464991,31 +463281,31 @@
           "date": "2026-01-26",
           "offset_td": 6,
           "CLOSE": 181.88,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 7,
           "CLOSE": 182.66,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 8,
           "CLOSE": 182.34,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 9,
           "CLOSE": 182.4,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 10,
           "CLOSE": 182.8,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -469953,31 +468243,31 @@
           "date": "2026-01-26",
           "offset_td": -2,
           "CLOSE": 470.39,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": -1,
           "CLOSE": 480.54,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 0,
           "CLOSE": 481.86,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 1,
           "CLOSE": 433.16,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 2,
           "CLOSE": 430.28,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -473247,31 +471537,31 @@
           "date": "2026-01-26",
           "offset_td": 5,
           "CLOSE": 214.25,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 6,
           "CLOSE": 217.49,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 7,
           "CLOSE": 216.89,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 8,
           "CLOSE": 221.44,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 9,
           "CLOSE": 221.57,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -474981,7 +473271,7 @@
           "date": "2026-01-26",
           "offset_td": 30,
           "CLOSE": 137.36,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         }
       ]
     },
@@ -478371,31 +476661,31 @@
           "date": "2026-01-26",
           "offset_td": 25,
           "CLOSE": 389.23,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 26,
           "CLOSE": 410.14,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 27,
           "CLOSE": 435.19,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 28,
           "CLOSE": 435.94,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 29,
           "CLOSE": 414.96,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -485067,31 +483357,31 @@
           "date": "2026-01-26",
           "offset_td": 4,
           "CLOSE": 85.715,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 5,
           "CLOSE": 85.585,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 6,
           "CLOSE": 84.615,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 7,
           "CLOSE": 83.12,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 8,
           "CLOSE": 83.5,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -488475,31 +486765,31 @@
           "date": "2026-01-26",
           "offset_td": 24,
           "CLOSE": 64.99,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 25,
           "CLOSE": 63.09,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 26,
           "CLOSE": 62.24,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 27,
           "CLOSE": 62.6,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 28,
           "CLOSE": 61.81,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -522069,31 +520359,31 @@
           "date": "2026-01-26",
           "offset_td": 24,
           "CLOSE": 106.175,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 25,
           "CLOSE": 104.87,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 26,
           "CLOSE": 102.47,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 27,
           "CLOSE": 102.205,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 28,
           "CLOSE": 103.1,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -533847,31 +532137,31 @@
           "date": "2026-01-26",
           "offset_td": 2,
           "CLOSE": 149.49,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 3,
           "CLOSE": 148.34,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 4,
           "CLOSE": 147.34,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 5,
           "CLOSE": 149.9,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 6,
           "CLOSE": 151.77,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -548985,31 +547275,31 @@
           "date": "2026-01-26",
           "offset_td": 5,
           "CLOSE": 220.75,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 6,
           "CLOSE": 223.7,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 7,
           "CLOSE": 221.39,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 8,
           "CLOSE": 224.46,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 9,
           "CLOSE": 223.3,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -577491,13 +575781,13 @@
           "date": "2026-01-26",
           "offset_td": 29,
           "CLOSE": 219.09,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 30,
           "CLOSE": 209.81,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         }
       ]
     },
@@ -589263,31 +587553,31 @@
           "date": "2026-01-26",
           "offset_td": -2,
           "CLOSE": 96.32,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": -1,
           "CLOSE": 95.715,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 0,
           "CLOSE": 95.23,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 1,
           "CLOSE": 93.875,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 2,
           "CLOSE": 91.975,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -594255,31 +592545,31 @@
           "date": "2026-01-26",
           "offset_td": 3,
           "CLOSE": 102.94,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 4,
           "CLOSE": 103.72,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 5,
           "CLOSE": 103.47,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 6,
           "CLOSE": 103.47,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 7,
           "CLOSE": 103.92,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -625593,31 +623883,31 @@
           "date": "2026-01-26",
           "offset_td": 5,
           "CLOSE": 127.59,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 6,
           "CLOSE": 127.62,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 7,
           "CLOSE": 128.02,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 8,
           "CLOSE": 131.43,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 9,
           "CLOSE": 130.86,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -635637,31 +633927,31 @@
           "date": "2026-01-26",
           "offset_td": -2,
           "CLOSE": 23.45,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": -1,
           "CLOSE": 23.0,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 0,
           "CLOSE": 24.07,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 1,
           "CLOSE": 25.13,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 2,
           "CLOSE": 26.21,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -642327,31 +640617,31 @@
           "date": "2026-01-26",
           "offset_td": 3,
           "CLOSE": 50.19,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 4,
           "CLOSE": 50.89,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 5,
           "CLOSE": 50.31,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 6,
           "CLOSE": 51.32,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 7,
           "CLOSE": 51.42,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -659241,31 +657531,31 @@
           "date": "2026-01-26",
           "offset_td": -2,
           "CLOSE": 435.205,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": -1,
           "CLOSE": 430.89,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 0,
           "CLOSE": 431.45,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 1,
           "CLOSE": 416.52,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 2,
           "CLOSE": 430.25,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -660831,31 +659121,31 @@
           "date": "2026-01-26",
           "offset_td": 6,
           "CLOSE": 332.71,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 7,
           "CLOSE": 338.34,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 8,
           "CLOSE": 342.3,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 9,
           "CLOSE": 339.55,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 10,
           "CLOSE": 330.56,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -667509,31 +665799,31 @@
           "date": "2026-01-26",
           "offset_td": -1,
           "CLOSE": 196.625,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 0,
           "CLOSE": 196.68,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 1,
           "CLOSE": 216.09,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 2,
           "CLOSE": 218.93,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 3,
           "CLOSE": 215.595,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -670797,31 +669087,31 @@
           "date": "2026-01-26",
           "offset_td": 4,
           "CLOSE": 107.715,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 5,
           "CLOSE": 103.99,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 6,
           "CLOSE": 104.89,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 7,
           "CLOSE": 103.97,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 8,
           "CLOSE": 102.26,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -674055,31 +672345,31 @@
           "date": "2026-01-26",
           "offset_td": 1,
           "CLOSE": 41.375,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 2,
           "CLOSE": 41.57,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 3,
           "CLOSE": 41.74,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 4,
           "CLOSE": 42.32,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 5,
           "CLOSE": 42.32,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -684141,31 +682431,31 @@
           "date": "2026-01-26",
           "offset_td": -1,
           "CLOSE": 230.89,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 0,
           "CLOSE": 232.55,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 1,
           "CLOSE": 227.71,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 2,
           "CLOSE": 233.58,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 3,
           "CLOSE": 235.1,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -687231,31 +685521,31 @@
           "date": "2026-01-26",
           "offset_td": 3,
           "CLOSE": null,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 4,
           "CLOSE": null,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 5,
           "CLOSE": null,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 6,
           "CLOSE": null,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 7,
           "CLOSE": null,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -695211,31 +693501,31 @@
           "date": "2026-01-26",
           "offset_td": 4,
           "CLOSE": 55.83,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 5,
           "CLOSE": 56.53,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 6,
           "CLOSE": 55.74,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 7,
           "CLOSE": 56.33,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 8,
           "CLOSE": 56.11,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -698457,31 +696747,31 @@
           "date": "2026-01-26",
           "offset_td": -3,
           "CLOSE": 328.49,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": -2,
           "CLOSE": 325.26,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": -1,
           "CLOSE": 326.98,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 0,
           "CLOSE": 331.8,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 1,
           "CLOSE": 321.83,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -705111,31 +703401,31 @@
           "date": "2026-01-26",
           "offset_td": -4,
           "CLOSE": 39.62,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": -3,
           "CLOSE": 39.32,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": -2,
           "CLOSE": 39.41,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": -1,
           "CLOSE": 39.81,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 0,
           "CLOSE": 44.52,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -716901,31 +715191,31 @@
           "date": "2026-01-26",
           "offset_td": 11,
           "CLOSE": 216.16,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 12,
           "CLOSE": 217.86,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 13,
           "CLOSE": 218.98,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 14,
           "CLOSE": 225.72,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 15,
           "CLOSE": 229.01,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -721917,31 +720207,31 @@
           "date": "2026-01-26",
           "offset_td": 7,
           "CLOSE": 88.05,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 8,
           "CLOSE": 88.71,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 9,
           "CLOSE": 88.03,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 10,
           "CLOSE": 90.64,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 11,
           "CLOSE": 90.49,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -732201,31 +730491,31 @@
           "date": "2026-01-26",
           "offset_td": 4,
           "CLOSE": 146.42,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": 5,
           "CLOSE": 145.4,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": 6,
           "CLOSE": 145.18,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": 7,
           "CLOSE": 147.32,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 8,
           "CLOSE": 147.53,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },
@@ -737151,31 +735441,31 @@
           "date": "2026-01-26",
           "offset_td": -4,
           "CLOSE": 134.84,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6950.23
         },
         {
           "date": "2026-01-27",
           "offset_td": -3,
           "CLOSE": 136.83,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.6
         },
         {
           "date": "2026-01-28",
           "offset_td": -2,
           "CLOSE": 137.58,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6978.03
         },
         {
           "date": "2026-01-29",
           "offset_td": -1,
           "CLOSE": 140.51,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6969.01
         },
         {
           "date": "2026-01-30",
           "offset_td": 0,
           "CLOSE": 141.4,
-          "SPX_CLOSE": null
+          "SPX_CLOSE": 6939.03
         }
       ]
     },

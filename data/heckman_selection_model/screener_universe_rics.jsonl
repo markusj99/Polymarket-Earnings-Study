@@ -355,7 +355,6 @@
 {"ric": "CAAP.N"}
 {"ric": "CABO.N"}
 {"ric": "CACI.N"}
-{"ric": "CADE.N"}
 {"ric": "CAE.N"}
 {"ric": "CAF.N"}
 {"ric": "CAG.N"}
@@ -416,7 +415,6 @@
 {"ric": "CIM.N"}
 {"ric": "CINT.N"}
 {"ric": "CION.N"}
-{"ric": "CIVI.N"}
 {"ric": "CL.N"}
 {"ric": "CLB.N"}
 {"ric": "CLDT.N"}
@@ -428,7 +426,6 @@
 {"ric": "CLW.N"}
 {"ric": "CLX.N"}
 {"ric": "CM.N"}
-{"ric": "CMA.N"}
 {"ric": "CMBT.N"}
 {"ric": "CMC.N"}
 {"ric": "CMCM.N"}
@@ -1260,8 +1257,8 @@
 {"ric": "MPA.N"}
 {"ric": "MPC.N"}
 {"ric": "MPLX.N"}
+{"ric": "MPT.N"}
 {"ric": "MPV.N"}
-{"ric": "MPW.N"}
 {"ric": "MPX.N"}
 {"ric": "MQT.N"}
 {"ric": "MQY.N"}
@@ -1823,6 +1820,7 @@
 {"ric": "STWD.N"}
 {"ric": "STXK.N"}
 {"ric": "STZ.N"}
+{"ric": "SU.N"}
 {"ric": "SUI.N"}
 {"ric": "SUN.N"}
 {"ric": "SUNC.N"}

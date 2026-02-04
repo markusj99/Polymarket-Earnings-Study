@@ -1,13 +1,13 @@
 Polymarket Corporate Earnings — Stock Prices Fetch Summary (FAST MODE)
-Generated at (UTC): 2026-01-31T10:58:12.830645Z
+Generated at (UTC): 2026-02-02T16:25:04.224122Z
 
-Input:  C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\corporate_info\corporate_info.jsonl
-Output: C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\stock_prices
+Input:  /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/corporate_info/corporate_info.jsonl
+Output: /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/stock_prices
 
-Corporate rows: 392
-Events parsed:  446
+Corporate rows: 393
+Events parsed:  449
 RICs fetched:   393
-Output rows:    121649
+Output rows:    121368
 
 Trading-day window: pre=250, post=30
 Bucket mode: month
@@ -28,6 +28,7 @@ WINDOW ISSUES / EVENT FAILURES
 - RIC APLD.N event market_id=619984 anchor_date=2025-10-09: TRUNCATED (left=True, right=False, available_rows=279/281)
 - RIC APO event market_id=656760 anchor_date=2025-11-04: TRUNCATED (left=True, right=False, available_rows=279/281)
 - RIC APP.N event market_id=655266 anchor_date=2025-11-05: TRUNCATED (left=True, right=False, available_rows=280/281)
+- RIC APTV.N event market_id=1292721 anchor_date=2026-02-02: could not find event trading date
 - RIC ARES.N event market_id=652512 anchor_date=2025-11-03: TRUNCATED (left=True, right=False, available_rows=278/281)
 - RIC ARM.N event market_id=655388 anchor_date=2025-11-05: TRUNCATED (left=True, right=False, available_rows=280/281)
 - RIC ASAN.N event market_id=696259 anchor_date=2025-12-02: TRUNCATED (left=True, right=False, available_rows=277/281)
@@ -72,6 +73,7 @@ WINDOW ISSUES / EVENT FAILURES
 - RIC DASH.N event market_id=655439 anchor_date=2025-11-05: TRUNCATED (left=True, right=False, available_rows=280/281)
 - RIC DEFT.N event market_id=668522 anchor_date=2025-11-13: TRUNCATED (left=True, right=False, available_rows=160/281)
 - RIC DG event market_id=697463 anchor_date=2025-12-04: TRUNCATED (left=True, right=False, available_rows=279/281)
+- RIC DIS event market_id=1230450 anchor_date=2026-02-02: could not find event trading date
 - RIC DLTR.N event market_id=697448 anchor_date=2025-12-03: TRUNCATED (left=True, right=False, available_rows=278/281)
 - RIC DOCU.N event market_id=697470 anchor_date=2025-12-04: TRUNCATED (left=True, right=False, available_rows=279/281)
 - RIC DPZ.N event market_id=613066 anchor_date=2025-10-14: TRUNCATED (left=True, right=False, available_rows=226/281)
@@ -120,6 +122,7 @@ WINDOW ISSUES / EVENT FAILURES
 - RIC KMI event market_id=1198858 anchor_date=2026-01-21: TRUNCATED (left=False, right=True, available_rows=258/281)
 - RIC KMX event market_id=703172 anchor_date=2025-12-18: TRUNCATED (left=False, right=True, available_rows=279/281)
 - RIC KR event market_id=697475 anchor_date=2025-12-04: TRUNCATED (left=True, right=False, available_rows=279/281)
+- RIC KSS event market_id=675620 anchor_date=2025-11-25: NO_TS_DATA
 - RIC LEVI.N event market_id=613049 anchor_date=2025-10-09: TRUNCATED (left=True, right=False, available_rows=279/281)
 - RIC LMT event market_id=1198857 anchor_date=2026-01-29: TRUNCATED (left=False, right=True, available_rows=252/281)
 - RIC LW event market_id=703175 anchor_date=2025-12-19: TRUNCATED (left=False, right=True, available_rows=278/281)
@@ -181,6 +184,7 @@ WINDOW ISSUES / EVENT FAILURES
 - RIC TOST.N event market_id=656730 anchor_date=2025-11-04: TRUNCATED (left=True, right=False, available_rows=279/281)
 - RIC TSLA.N event market_id=1238170 anchor_date=2026-01-28: TRUNCATED (left=False, right=True, available_rows=253/281)
 - RIC TSM event market_id=1114909 anchor_date=2026-01-15: TRUNCATED (left=False, right=True, available_rows=261/281)
+- RIC TSN event market_id=1292720 anchor_date=2026-02-02: could not find event trading date
 - RIC TXN.N event market_id=1175891 anchor_date=2026-01-27: TRUNCATED (left=False, right=True, available_rows=254/281)
 - RIC UAL.N event market_id=1118156 anchor_date=2026-01-20: TRUNCATED (left=False, right=True, available_rows=259/281)
 - RIC UBER.N event market_id=643047 anchor_date=2025-11-04: TRUNCATED (left=True, right=False, available_rows=279/281)

@@ -1,5 +1,5 @@
 Descriptive statistics outputs written to:
-C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\statistics\descriptive_statistics
+/Users/jasmine/Desktop/Polymarket-Earnings-Study/statistics/descriptive_statistics
 
 Snapshot order enforced:
 4w, 3w, 2w, 1w, 6d, 5d, 4d, 3d, 2d, 1d, 12h, 6h

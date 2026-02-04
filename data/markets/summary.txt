@@ -1,48 +1,48 @@
 Polymarket Earnings Resolved Markets — Summary
 ====================================================
-Generated (UTC): 2026-01-31 10:30:17Z
+Generated (UTC): 2026-02-02 15:55:09Z
 Mode: incremental
 write_csv: True
-Existing loaded: 0 (parse_errors=0)
-New markets added this run: 447
+Existing loaded: 450 (parse_errors=0)
+New markets added this run: 0
 
 Outputs
-- Markets JSONL:     C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\markets\markets.jsonl
-- Markets CSV:       C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\markets\markets.csv
-- Discarded JSONL:   C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\markets\discarded_markets.jsonl (this run)
-- Summary TXT:       C:\Users\lasts\Desktop\Polymarket\Corporate_Earnings\data\markets\summary.txt
+- Markets JSONL:     /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/markets.jsonl
+- Markets CSV:       /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/markets.csv
+- Discarded JSONL:   /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/discarded_markets.jsonl (this run)
+- Summary TXT:       /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/summary.txt
 
 Resolution time range (based on endDate)
 - Earliest resolved: 2025-06-05 00:00:00Z
-- Latest resolved:   2026-01-30 22:00:00Z
+- Latest resolved:   2026-02-02 14:00:00Z
 
 Counts (overall output)
-- Total resolved markets saved: 447
-- Total Yes: 338
-- Total No:  109
+- Total resolved markets saved: 450
+- Total Yes: 340
+- Total No:  110
 
 This run (scan/fetch/build)
-- Scanned closed earnings-tag markets: 452
-- Skipped already-known markets:       0
-- Candidates after filter:             447
-- Details fetched OK:                  447
+- Scanned closed earnings-tag markets: 455
+- Skipped already-known markets:       450
+- Candidates after filter:             0
+- Details fetched OK:                  0
 - Detail errors:                       0
-- New resolved markets built:          447 (Yes=338, No=109)
+- New resolved markets built:          0 (Yes=0, No=0)
 - Discarded markets logged:            5
 
 Discard reasons (this run)
 - no_ticker_detected: 5
 
 volumeNum stats (overall output)
-- count:  447
+- count:  450
 - min:    1336.252219
 - max:    995129.929459
-- mean:   25453.468297521253
-- median: 15692.515334
+- mean:   25406.11032243778
+- median: 15670.161474
 
 Run metadata
 - Cancelled: False (stage=finalize)
-- Elapsed seconds: 275.34
+- Elapsed seconds: 1.54
 - Page limit: 200
 - Max workers: 15
 - END_DATE_MIN: None

@@ -74,25 +74,67 @@ UTC = timezone.utc
 # Project paths
 # ---------------------------------------------------------------------
 
-def find_project_root() -> Path:
+def find_project_root(explicit: Optional[str] = None) -> Path:
     """
-    Locate the 'Corporate_Earnings' directory by walking upward from this script location.
-    This keeps paths relative and portable across machines.
-    """
-    here = Path(__file__).resolve()
-    for p in [here] + list(here.parents):
-        if p.name == "Corporate_Earnings":
-            return p
+    Locate the project root in a portable way.
 
+    A valid project root is a directory that contains:
+      - data/markets/markets.jsonl
+      - data/poly_prices/poly_prices.jsonl
+
+    Backward compatible:
+      - If a directory contains Corporate_Earnings/data/... it returns that Corporate_Earnings folder.
+
+    You can also force it with --project-root.
+    """
+    def is_valid_root(p: Path) -> bool:
+        return (
+            (p / "data" / "markets" / "markets.jsonl").exists()
+            and (p / "data" / "poly_prices" / "poly_prices.jsonl").exists()
+        )
+
+    if explicit:
+        p = Path(explicit).expanduser().resolve()
+        if is_valid_root(p):
+            return p
+        # Backward compatible structure: explicit points to parent of Corporate_Earnings
+        ce = p / "Corporate_Earnings"
+        if is_valid_root(ce):
+            return ce
+        raise FileNotFoundError(
+            f"--project-root was provided but is not a valid project root: {p}\n"
+            "Expected to find:\n"
+            "  data/markets/markets.jsonl\n"
+            "  data/poly_prices/poly_prices.jsonl"
+        )
+
+    # Search upward from this script's location
+    start = Path(__file__).resolve()
+    start_dir = start if start.is_dir() else start.parent
+
+    for p in [start_dir] + list(start_dir.parents):
+        if is_valid_root(p):
+            return p
+        ce = p / "Corporate_Earnings"
+        if is_valid_root(ce):
+            return ce
+
+    # Also try current working directory upward
     cwd = Path.cwd().resolve()
-    if cwd.name == "Corporate_Earnings":
-        return cwd
-    if (cwd / "Corporate_Earnings").exists():
-        return (cwd / "Corporate_Earnings").resolve()
+    for p in [cwd] + list(cwd.parents):
+        if is_valid_root(p):
+            return p
+        ce = p / "Corporate_Earnings"
+        if is_valid_root(ce):
+            return ce
 
     raise FileNotFoundError(
-        "Could not locate project root folder named 'Corporate_Earnings'. "
-        "Place this script somewhere inside Corporate_Earnings/ or run from a directory that contains it."
+        "Could not locate project root.\n"
+        "Looked for either:\n"
+        "  <root>/data/markets/markets.jsonl and <root>/data/poly_prices/poly_prices.jsonl\n"
+        "or:\n"
+        "  <root>/Corporate_Earnings/data/markets/markets.jsonl and <root>/Corporate_Earnings/data/poly_prices/poly_prices.jsonl\n"
+        "Fix: run from the repo root, move files to match the expected structure, or pass --project-root <path>."
     )
 
 

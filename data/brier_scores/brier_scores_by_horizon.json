@@ -29,7 +29,7 @@
       "12h",
       "6h"
     ],
-    "n_markets_resolved": 447,
+    "n_markets_resolved": 450,
     "detail_rows": "one row per (market × horizon), including missing/invalid rows with status/reason",
     "historical_baseline_rule": "p_hist_i computed using markets with umaEndDate <= (umaEndDate_i - 1 day); if none, p_hist_i=0.5",
     "join_rule": "market_id primary; slug fallback",
@@ -38,11 +38,11 @@
   },
   "diagnostics_by_horizon": {
     "4w": {
-      "total_markets_considered": 447,
-      "matched_by_id": 447,
+      "total_markets_considered": 450,
+      "matched_by_id": 450,
       "matched_by_slug": 0,
       "missing_poly_record": 0,
-      "missing_price_at_horizon": 443,
+      "missing_price_at_horizon": 446,
       "invalid_price_range": 0,
       "missing_snapshot_time": 0,
       "usable_polymarket_n": 4,
@@ -51,11 +51,11 @@
       "sum_loss_dice_on_pm_sample": 1.0
     },
     "3w": {
-      "total_markets_considered": 447,
-      "matched_by_id": 447,
+      "total_markets_considered": 450,
+      "matched_by_id": 450,
       "matched_by_slug": 0,
       "missing_poly_record": 0,
-      "missing_price_at_horizon": 428,
+      "missing_price_at_horizon": 431,
       "invalid_price_range": 0,
       "missing_snapshot_time": 0,
       "usable_polymarket_n": 19,
@@ -64,11 +64,11 @@
       "sum_loss_dice_on_pm_sample": 4.75
     },
     "2w": {
-      "total_markets_considered": 447,
-      "matched_by_id": 447,
+      "total_markets_considered": 450,
+      "matched_by_id": 450,
       "matched_by_slug": 0,
       "missing_poly_record": 0,
-      "missing_price_at_horizon": 349,
+      "missing_price_at_horizon": 352,
       "invalid_price_range": 0,
       "missing_snapshot_time": 0,
       "usable_polymarket_n": 98,
@@ -77,121 +77,121 @@
       "sum_loss_dice_on_pm_sample": 24.5
     },
     "1w": {
-      "total_markets_considered": 447,
-      "matched_by_id": 447,
+      "total_markets_considered": 450,
+      "matched_by_id": 450,
       "matched_by_slug": 0,
       "missing_poly_record": 0,
-      "missing_price_at_horizon": 169,
+      "missing_price_at_horizon": 173,
       "invalid_price_range": 0,
       "missing_snapshot_time": 0,
-      "usable_polymarket_n": 278,
-      "sum_loss_polymarket": 46.69644550000002,
-      "sum_loss_hist_on_pm_sample": 53.03480384565849,
-      "sum_loss_dice_on_pm_sample": 69.5
+      "usable_polymarket_n": 277,
+      "sum_loss_polymarket": 45.011636500000016,
+      "sum_loss_hist_on_pm_sample": 51.936588987593915,
+      "sum_loss_dice_on_pm_sample": 69.25
     },
     "6d": {
-      "total_markets_considered": 447,
-      "matched_by_id": 447,
+      "total_markets_considered": 450,
+      "matched_by_id": 450,
       "matched_by_slug": 0,
       "missing_poly_record": 0,
-      "missing_price_at_horizon": 85,
+      "missing_price_at_horizon": 88,
       "invalid_price_range": 0,
       "missing_snapshot_time": 0,
       "usable_polymarket_n": 362,
-      "sum_loss_polymarket": 60.50978000000002,
-      "sum_loss_hist_on_pm_sample": 66.51535643576877,
+      "sum_loss_polymarket": 59.79938000000002,
+      "sum_loss_hist_on_pm_sample": 65.99597989973931,
       "sum_loss_dice_on_pm_sample": 90.5
     },
     "5d": {
-      "total_markets_considered": 447,
-      "matched_by_id": 447,
+      "total_markets_considered": 450,
+      "matched_by_id": 450,
       "matched_by_slug": 0,
       "missing_poly_record": 0,
-      "missing_price_at_horizon": 39,
+      "missing_price_at_horizon": 41,
       "invalid_price_range": 0,
       "missing_snapshot_time": 0,
-      "usable_polymarket_n": 408,
-      "sum_loss_polymarket": 64.62999149999995,
-      "sum_loss_hist_on_pm_sample": 77.29204073424405,
-      "sum_loss_dice_on_pm_sample": 102.0
+      "usable_polymarket_n": 409,
+      "sum_loss_polymarket": 64.68759149999994,
+      "sum_loss_hist_on_pm_sample": 77.3515025202497,
+      "sum_loss_dice_on_pm_sample": 102.25
     },
     "4d": {
-      "total_markets_considered": 447,
-      "matched_by_id": 447,
+      "total_markets_considered": 450,
+      "matched_by_id": 450,
       "matched_by_slug": 0,
       "missing_poly_record": 0,
       "missing_price_at_horizon": 24,
       "invalid_price_range": 0,
       "missing_snapshot_time": 0,
-      "usable_polymarket_n": 423,
-      "sum_loss_polymarket": 66.33268450000001,
-      "sum_loss_hist_on_pm_sample": 79.56192651387018,
-      "sum_loss_dice_on_pm_sample": 105.75
+      "usable_polymarket_n": 426,
+      "sum_loss_polymarket": 66.9780345,
+      "sum_loss_hist_on_pm_sample": 80.25261612244638,
+      "sum_loss_dice_on_pm_sample": 106.5
     },
     "3d": {
-      "total_markets_considered": 447,
-      "matched_by_id": 447,
+      "total_markets_considered": 450,
+      "matched_by_id": 450,
       "matched_by_slug": 0,
       "missing_poly_record": 0,
       "missing_price_at_horizon": 11,
       "invalid_price_range": 0,
       "missing_snapshot_time": 0,
-      "usable_polymarket_n": 436,
-      "sum_loss_polymarket": 67.0307705,
-      "sum_loss_hist_on_pm_sample": 81.55703337086716,
-      "sum_loss_dice_on_pm_sample": 109.0
+      "usable_polymarket_n": 439,
+      "sum_loss_polymarket": 67.63324550000002,
+      "sum_loss_hist_on_pm_sample": 82.24772297944337,
+      "sum_loss_dice_on_pm_sample": 109.75
     },
     "2d": {
-      "total_markets_considered": 447,
-      "matched_by_id": 447,
+      "total_markets_considered": 450,
+      "matched_by_id": 450,
       "matched_by_slug": 0,
       "missing_poly_record": 0,
       "missing_price_at_horizon": 2,
       "invalid_price_range": 0,
       "missing_snapshot_time": 0,
-      "usable_polymarket_n": 445,
-      "sum_loss_polymarket": 68.77185025,
-      "sum_loss_hist_on_pm_sample": 83.15368700859719,
-      "sum_loss_dice_on_pm_sample": 111.25
+      "usable_polymarket_n": 448,
+      "sum_loss_polymarket": 69.53900025,
+      "sum_loss_hist_on_pm_sample": 83.8443766171734,
+      "sum_loss_dice_on_pm_sample": 112.0
     },
     "1d": {
-      "total_markets_considered": 447,
-      "matched_by_id": 447,
+      "total_markets_considered": 450,
+      "matched_by_id": 450,
       "matched_by_slug": 0,
       "missing_poly_record": 0,
       "missing_price_at_horizon": 1,
       "invalid_price_range": 0,
       "missing_snapshot_time": 0,
-      "usable_polymarket_n": 446,
-      "sum_loss_polymarket": 68.01006899999999,
-      "sum_loss_hist_on_pm_sample": 83.19960537594413,
-      "sum_loss_dice_on_pm_sample": 111.5
+      "usable_polymarket_n": 449,
+      "sum_loss_polymarket": 68.856494,
+      "sum_loss_hist_on_pm_sample": 83.89029498452034,
+      "sum_loss_dice_on_pm_sample": 112.25
     },
     "12h": {
-      "total_markets_considered": 447,
-      "matched_by_id": 447,
+      "total_markets_considered": 450,
+      "matched_by_id": 450,
       "matched_by_slug": 0,
       "missing_poly_record": 0,
       "missing_price_at_horizon": 1,
       "invalid_price_range": 0,
       "missing_snapshot_time": 0,
-      "usable_polymarket_n": 446,
-      "sum_loss_polymarket": 65.71899800000006,
-      "sum_loss_hist_on_pm_sample": 83.19960537594413,
-      "sum_loss_dice_on_pm_sample": 111.5
+      "usable_polymarket_n": 449,
+      "sum_loss_polymarket": 66.60767300000005,
+      "sum_loss_hist_on_pm_sample": 83.89029498452034,
+      "sum_loss_dice_on_pm_sample": 112.25
     },
     "6h": {
-      "total_markets_considered": 447,
-      "matched_by_id": 447,
+      "total_markets_considered": 450,
+      "matched_by_id": 450,
       "matched_by_slug": 0,
       "missing_poly_record": 0,
       "missing_price_at_horizon": 0,
       "invalid_price_range": 0,
       "missing_snapshot_time": 0,
-      "usable_polymarket_n": 447,
-      "sum_loss_polymarket": 55.69864500000001,
-      "sum_loss_hist_on_pm_sample": 83.77569058093795,
-      "sum_loss_dice_on_pm_sample": 111.75
+      "usable_polymarket_n": 450,
+      "sum_loss_polymarket": 56.51087000000001,
+      "sum_loss_hist_on_pm_sample": 84.46638018951415,
+      "sum_loss_dice_on_pm_sample": 112.5
     }
   },
   "results_by_horizon": [
@@ -218,66 +218,66 @@
     },
     {
       "horizon": "1w",
-      "n": 278,
-      "brier_polymarket": 0.1679728255395684,
+      "n": 277,
+      "brier_polymarket": 0.16249688267148021,
       "brier_dice_50_50": 0.25,
-      "brier_historical_asof_end_minus_1d": 0.19077267570380751
+      "brier_historical_asof_end_minus_1d": 0.18749671114654842
     },
     {
       "horizon": "6d",
       "n": 362,
-      "brier_polymarket": 0.1671540883977901,
+      "brier_polymarket": 0.1651916574585636,
       "brier_dice_50_50": 0.25,
-      "brier_historical_asof_end_minus_1d": 0.1837440785518474
+      "brier_historical_asof_end_minus_1d": 0.18230933673961136
     },
     {
       "horizon": "5d",
-      "n": 408,
-      "brier_polymarket": 0.15840684191176457,
+      "n": 409,
+      "brier_polymarket": 0.15816037041564776,
       "brier_dice_50_50": 0.25,
-      "brier_historical_asof_end_minus_1d": 0.1894412763094217
+      "brier_historical_asof_end_minus_1d": 0.1891234780446203
     },
     {
       "horizon": "4d",
-      "n": 423,
-      "brier_polymarket": 0.1568148569739953,
+      "n": 426,
+      "brier_polymarket": 0.15722543309859158,
       "brier_dice_50_50": 0.25,
-      "brier_historical_asof_end_minus_1d": 0.1880896607892912
+      "brier_historical_asof_end_minus_1d": 0.1883864228226441
     },
     {
       "horizon": "3d",
-      "n": 436,
-      "brier_polymarket": 0.15374029931192662,
+      "n": 439,
+      "brier_polymarket": 0.15406206264236905,
       "brier_dice_50_50": 0.25,
-      "brier_historical_asof_end_minus_1d": 0.18705741598822742
+      "brier_historical_asof_end_minus_1d": 0.18735244414451793
     },
     {
       "horizon": "2d",
-      "n": 445,
-      "brier_polymarket": 0.15454348370786516,
+      "n": 448,
+      "brier_polymarket": 0.15522098270089285,
       "brier_dice_50_50": 0.25,
-      "brier_historical_asof_end_minus_1d": 0.1868622179968476
+      "brier_historical_asof_end_minus_1d": 0.18715262637761917
     },
     {
       "horizon": "1d",
-      "n": 446,
-      "brier_polymarket": 0.1524889439461883,
+      "n": 449,
+      "brier_polymarket": 0.1533552204899777,
       "brier_dice_50_50": 0.25,
-      "brier_historical_asof_end_minus_1d": 0.18654620039449357
+      "brier_historical_asof_end_minus_1d": 0.18683807346218337
     },
     {
       "horizon": "12h",
-      "n": 446,
-      "brier_polymarket": 0.14735201345291493,
+      "n": 449,
+      "brier_polymarket": 0.14834671046770612,
       "brier_dice_50_50": 0.25,
-      "brier_historical_asof_end_minus_1d": 0.18654620039449357
+      "brier_historical_asof_end_minus_1d": 0.18683807346218337
     },
     {
       "horizon": "6h",
-      "n": 447,
-      "brier_polymarket": 0.12460546979865775,
+      "n": 450,
+      "brier_polymarket": 0.12557971111111113,
       "brier_dice_50_50": 0.25,
-      "brier_historical_asof_end_minus_1d": 0.18741765230634888
+      "brier_historical_asof_end_minus_1d": 0.18770306708780923
     }
   ]
 }
