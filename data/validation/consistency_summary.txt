@@ -1,0 +1,25 @@
+==================== CONSISTENCY SUMMARY ====================
+Timestamp (UTC):                    2026-02-04T13:53:03.998692Z
+Markets JSONL updated:              C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.jsonl
+Markets CSV updated:                C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.csv
+
+Lines scanned:                      450
+Markets parsed (valid JSON):        450
+Ignored (non-earnings candidate):   0
+Considered (earnings-like):         450
+Matched (event+actual+estimate):    449
+  - Correctly resolved:             414
+  - Incorrectly resolved:           35
+Unmatched (skip_reason set):        1
+
+Markets updated with val_* fields:  450
+
+Manual investigation outputs:
+  - C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\validation\unmatched.jsonl
+  - C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\validation\unmatched.csv
+
+Batching:
+  - symbology_chunk_size:           250
+  - validate_chunk_size:            200
+  - eps_chunk_size:                 25
+=============================================================
