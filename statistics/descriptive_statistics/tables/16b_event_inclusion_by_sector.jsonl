@@ -1,0 +1,12 @@
+{"gics_sector":"Financials","n_universe":442,"n_in_sample":13,"share_in_sample":0.02941}
+{"gics_sector":"Industrials","n_universe":385,"n_in_sample":3,"share_in_sample":0.00779}
+{"gics_sector":"Consumer Discretionary","n_universe":272,"n_in_sample":15,"share_in_sample":0.05515}
+{"gics_sector":"Energy","n_universe":172,"n_in_sample":1,"share_in_sample":0.00581}
+{"gics_sector":"Materials","n_universe":167,"n_in_sample":0,"share_in_sample":0}
+{"gics_sector":"Real Estate","n_universe":157,"n_in_sample":1,"share_in_sample":0.00637}
+{"gics_sector":"Information Technology","n_universe":149,"n_in_sample":6,"share_in_sample":0.04027}
+{"gics_sector":"Health Care","n_universe":132,"n_in_sample":3,"share_in_sample":0.02273}
+{"n_universe":114,"n_in_sample":0,"share_in_sample":0}
+{"gics_sector":"Consumer Staples","n_universe":87,"n_in_sample":3,"share_in_sample":0.03448}
+{"gics_sector":"Communication Services","n_universe":76,"n_in_sample":7,"share_in_sample":0.09211}
+{"gics_sector":"Utilities","n_universe":71,"n_in_sample":1,"share_in_sample":0.01408}

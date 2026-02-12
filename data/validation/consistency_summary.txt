@@ -1,5 +1,5 @@
 ==================== CONSISTENCY SUMMARY ====================
-Timestamp (UTC):                    2026-02-04T13:53:03.998692Z
+Timestamp (UTC):                    2026-02-04T14:24:51.551849Z
 Markets JSONL updated:              C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.jsonl
 Markets CSV updated:                C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.csv
 
