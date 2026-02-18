@@ -1,0 +1,27 @@
+Brier analysis run started: 2026-02-16 13:20:47.667914Project root: C:/Users/lasts/Desktop/Polymarket/Polymarket-Earnings-StudyOutput dir:   C:/Users/lasts/Desktop/Polymarket/Polymarket-Earnings-Study/statistics/test_statistics/brier_analysis
+Reading inputs...
+
+[2] Preparing covariates...
+
+[3] Preparing analysis dataset from brier_scores...
+Usable observations: 3830Distinct markets:    450
+[4] Brier score summaries + Brier Skill Score...
+wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   wrote 423.00B in  0s, 22.46MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   wrote 157.00B in  0s, 9.68MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
+[5] Correlation matrix (market-level averages)...
+Correlation: dropping zero-variance variables:
+   log_poly_liquidity 
+
+wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   wrote 707.00B in  0s, 43.61MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   wrote 259.00B in  0s, 19.75MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
+[6] Regression analysis: determinants of Polymarket Brier loss...
+wrote 577.00B in  0s, 41.02MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   wrote 609.00B in  0s, 40.54MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
+[7] Logit + Probit: probability Polymarket prediction is correct...
+wrote 798.00B in  0s, 41.84MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
+[8] 5-bin analysis (width 0.2): P(YES | price-bin)...
+wrote 154.00B in  0s, 9.64MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   wrote 317.00B in  0s, 16.83MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
+[9] Calibration regression (optional scientific diagnostic)...
+wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
+[10] Writing manifest + README + session info...
+wrote 672.00B in  0s, 51.25MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
+==================== BRIER ANALYSIS COMPLETE ====================
+Log: C:/Users/lasts/Desktop/Polymarket/Polymarket-Earnings-Study/statistics/test_statistics/brier_analysis/logs/BS_analysis_run_20260216T132047.log.txtOut: C:/Users/lasts/Desktop/Polymarket/Polymarket-Earnings-Study/statistics/test_statistics/brier_analysis=================================================================
+

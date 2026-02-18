@@ -1,0 +1,29 @@
+<html><head><meta charset='utf-8'></head><body><pre>
+ . regress loss_polymarket volumeNum val_eikon_eps_stddev_estimate analysts_covering_asof turnover_6m_avg_daily_volume volatility_6m
+
+      Source |           SS       df           MS
+-------------+----------------------------------
+       Model |    .11669696         5   .023339391
+    Residual |  12.29100442       268   .045861957
+-------------+----------------------------------
+       Total |  12.40770137       273   .045449456
+
+  Number of obs = 274
+        F(5, 268) = 0.51
+   Prob > F = 0.7695
+   R-squared = 0.0094
+Adj R-squared = -0.0091
+    Root MSE = .21415
+Corr(resid, y) = 0.9953
+Snapshot (horizon) = 1w
+
+      loss_polymarket | Coefficient   Std. err.       t   P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       _cons |     .1876230     .0378144     4.96    0.000     .1131719     .2620742
+   volumeNum |     2.32e-07     1.82e-07     1.27    0.204    -1.27e-07     5.90e-07
+val_eikon_eps_stddev_estimate |    -.0001011     .0590690    -0.00    0.999    -.1163993     .1161972
+analysts_covering_asof |    -.0014339     .0011138    -1.29    0.199    -.0036269     .0007591
+turnover_6m_avg_daily_volume |     1.36e-10     1.73e-09     0.08    0.937    -3.27e-09     3.54e-09
+volatility_6m |    -.0223627     .8903775    -0.03    0.980   -1.7753871    1.7306616
+
+</pre></body></html>

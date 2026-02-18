@@ -1,0 +1,27 @@
+{"horizon":"1w","model":"Coinflip (0.5)","N":277,"n_markets":277,"mean":0.25,"sd":0,"se":0,"ci_low_95":0.25,"ci_high_95":0.25,"brier_mean_ci_95":"0.2500 [0.2500, 0.2500]"}
+{"horizon":"1w","model":"Historical base rate","N":277,"n_markets":277,"mean":0.1875,"sd":0.2413,"se":0.0145,"ci_low_95":0.15896,"ci_high_95":0.21604,"brier_mean_ci_95":"0.1875 [0.1590, 0.2160]"}
+{"horizon":"1w","model":"Polymarket","N":277,"n_markets":277,"mean":0.1625,"sd":0.21263,"se":0.01278,"ci_low_95":0.13735,"ci_high_95":0.18765,"brier_mean_ci_95":"0.1625 [0.1373, 0.1876]"}
+{"horizon":"6d","model":"Coinflip (0.5)","N":362,"n_markets":362,"mean":0.25,"sd":0,"se":0,"ci_low_95":0.25,"ci_high_95":0.25,"brier_mean_ci_95":"0.2500 [0.2500, 0.2500]"}
+{"horizon":"6d","model":"Historical base rate","N":362,"n_markets":362,"mean":0.18231,"sd":0.23713,"se":0.01246,"ci_low_95":0.1578,"ci_high_95":0.20682,"brier_mean_ci_95":"0.1823 [0.1578, 0.2068]"}
+{"horizon":"6d","model":"Polymarket","N":362,"n_markets":362,"mean":0.16519,"sd":0.20657,"se":0.01086,"ci_low_95":0.14384,"ci_high_95":0.18654,"brier_mean_ci_95":"0.1652 [0.1438, 0.1865]"}
+{"horizon":"5d","model":"Coinflip (0.5)","N":409,"n_markets":409,"mean":0.25,"sd":0,"se":0,"ci_low_95":0.25,"ci_high_95":0.25,"brier_mean_ci_95":"0.2500 [0.2500, 0.2500]"}
+{"horizon":"5d","model":"Historical base rate","N":409,"n_markets":409,"mean":0.18912,"sd":0.24298,"se":0.01201,"ci_low_95":0.16551,"ci_high_95":0.21274,"brier_mean_ci_95":"0.1891 [0.1655, 0.2127]"}
+{"horizon":"5d","model":"Polymarket","N":409,"n_markets":409,"mean":0.15816,"sd":0.2054,"se":0.01016,"ci_low_95":0.13819,"ci_high_95":0.17813,"brier_mean_ci_95":"0.1582 [0.1382, 0.1781]"}
+{"horizon":"4d","model":"Coinflip (0.5)","N":426,"n_markets":426,"mean":0.25,"sd":0,"se":0,"ci_low_95":0.25,"ci_high_95":0.25,"brier_mean_ci_95":"0.2500 [0.2500, 0.2500]"}
+{"horizon":"4d","model":"Historical base rate","N":426,"n_markets":426,"mean":0.18839,"sd":0.24241,"se":0.01174,"ci_low_95":0.1653,"ci_high_95":0.21147,"brier_mean_ci_95":"0.1884 [0.1653, 0.2115]"}
+{"horizon":"4d","model":"Polymarket","N":426,"n_markets":426,"mean":0.15723,"sd":0.21369,"se":0.01035,"ci_low_95":0.13688,"ci_high_95":0.17758,"brier_mean_ci_95":"0.1572 [0.1369, 0.1776]"}
+{"horizon":"3d","model":"Coinflip (0.5)","N":439,"n_markets":439,"mean":0.25,"sd":0,"se":0,"ci_low_95":0.25,"ci_high_95":0.25,"brier_mean_ci_95":"0.2500 [0.2500, 0.2500]"}
+{"horizon":"3d","model":"Historical base rate","N":439,"n_markets":439,"mean":0.18735,"sd":0.24372,"se":0.01163,"ci_low_95":0.16449,"ci_high_95":0.21021,"brier_mean_ci_95":"0.1874 [0.1645, 0.2102]"}
+{"horizon":"3d","model":"Polymarket","N":439,"n_markets":439,"mean":0.15406,"sd":0.20912,"se":0.00998,"ci_low_95":0.13445,"ci_high_95":0.17368,"brier_mean_ci_95":"0.1541 [0.1344, 0.1737]"}
+{"horizon":"2d","model":"Coinflip (0.5)","N":448,"n_markets":448,"mean":0.25,"sd":0,"se":0,"ci_low_95":0.25,"ci_high_95":0.25,"brier_mean_ci_95":"0.2500 [0.2500, 0.2500]"}
+{"horizon":"2d","model":"Historical base rate","N":448,"n_markets":448,"mean":0.18715,"sd":0.24318,"se":0.01149,"ci_low_95":0.16457,"ci_high_95":0.20973,"brier_mean_ci_95":"0.1872 [0.1646, 0.2097]"}
+{"horizon":"2d","model":"Polymarket","N":448,"n_markets":448,"mean":0.15522,"sd":0.21249,"se":0.01004,"ci_low_95":0.13549,"ci_high_95":0.17495,"brier_mean_ci_95":"0.1552 [0.1355, 0.1750]"}
+{"horizon":"1d","model":"Coinflip (0.5)","N":449,"n_markets":449,"mean":0.25,"sd":0,"se":0,"ci_low_95":0.25,"ci_high_95":0.25,"brier_mean_ci_95":"0.2500 [0.2500, 0.2500]"}
+{"horizon":"1d","model":"Historical base rate","N":449,"n_markets":449,"mean":0.18684,"sd":0.243,"se":0.01147,"ci_low_95":0.1643,"ci_high_95":0.20938,"brier_mean_ci_95":"0.1868 [0.1643, 0.2094]"}
+{"horizon":"1d","model":"Polymarket","N":449,"n_markets":449,"mean":0.15336,"sd":0.21546,"se":0.01017,"ci_low_95":0.13337,"ci_high_95":0.17334,"brier_mean_ci_95":"0.1534 [0.1334, 0.1733]"}
+{"horizon":"12h","model":"Coinflip (0.5)","N":449,"n_markets":449,"mean":0.25,"sd":0,"se":0,"ci_low_95":0.25,"ci_high_95":0.25,"brier_mean_ci_95":"0.2500 [0.2500, 0.2500]"}
+{"horizon":"12h","model":"Historical base rate","N":449,"n_markets":449,"mean":0.18684,"sd":0.243,"se":0.01147,"ci_low_95":0.1643,"ci_high_95":0.20938,"brier_mean_ci_95":"0.1868 [0.1643, 0.2094]"}
+{"horizon":"12h","model":"Polymarket","N":449,"n_markets":449,"mean":0.14835,"sd":0.22332,"se":0.01054,"ci_low_95":0.12763,"ci_high_95":0.16906,"brier_mean_ci_95":"0.1483 [0.1276, 0.1691]"}
+{"horizon":"6h","model":"Coinflip (0.5)","N":450,"n_markets":450,"mean":0.25,"sd":0,"se":0,"ci_low_95":0.25,"ci_high_95":0.25,"brier_mean_ci_95":"0.2500 [0.2500, 0.2500]"}
+{"horizon":"6h","model":"Historical base rate","N":450,"n_markets":450,"mean":0.1877,"sd":0.24342,"se":0.01147,"ci_low_95":0.16515,"ci_high_95":0.21025,"brier_mean_ci_95":"0.1877 [0.1652, 0.2103]"}
+{"horizon":"6h","model":"Polymarket","N":450,"n_markets":450,"mean":0.12558,"sd":0.20494,"se":0.00966,"ci_low_95":0.10659,"ci_high_95":0.14457,"brier_mean_ci_95":"0.1256 [0.1066, 0.1446]"}

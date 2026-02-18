@@ -2,45 +2,41 @@
 # -*- coding: utf-8 -*-
 
 """
-05_fetch_stock_prices.py (FAST + THREAD-SAFE)
+05_fetch_stock_prices.py (FAST, BATCHED, THREAD-SAFE)
 
-Key change vs the threaded version:
-- DO NOT parallelize Eikon calls. The eikon SDK is not thread-safe.
-- Use ek.get_data() in batches (like your 03_fetch_corp_info.py), which is much faster.
+Key updates (to match the new per-market corporate info)
+--------------------------------------------------------
+- Input is now:
+    data/corporate_info/corporate_info_by_market.jsonl
+  (one JSON object per Polymarket market)
 
-What this script does
----------------------
-1) Read corporate_info.jsonl
-2) Flatten to per-event rows (ric, market_id, slug, anchor_date, ...)
-3) Group events into date buckets (default: month buckets) to avoid huge date ranges per request
-4) For each bucket:
-   - Fetch daily close for all RICs in that bucket using batched ek.get_data calls
-5) For each event:
-   - Find event trading date (anchor date if trading day else next trading day)
-   - Slice trading-day window: [-pre_td, +post_td]
-   - Emit long rows for CSV/JSONL and nested JSON per event
-6) Write outputs + summary txt.
+- Each Polymarket market is treated as an independent observation.
+  (No company-level aggregation; no "markets[]" flattening needed anymore.)
 
-Outputs
--------
+- For each market we fetch *daily close* stock prices for the market's RIC
+  from:
+      [umaEndDate - 250 days,  umaEndDate + 10 days]
+  (calendar-day window; trading days only appear in the output.)
+
+- We also fetch S&P 500 (RIC: .SPX) daily close prices from:
+      2025-01-01  through  today's date
+  regardless of the event windows.
+
+- Only daily close prices are used (TR.PriceClose, Frq='D').
+
+Outputs (relative to project root)
+---------------------------------
 data/stock_prices/
   - stock_prices_daily.csv
   - stock_prices_daily.jsonl
-  - stock_prices_daily.json
+  - stock_prices_daily.json            (nested per-market JSON, optional but kept)
   - stock_prices_summary.txt
 
-Speed knobs
+Performance
 -----------
-- --chunk-size (default 50): instruments per get_data call
-- --bucket-mode (default month): reduce date span per call
-- --no-earnings-time: skip BMO/AMC lookup (recommended for speed)
-
-Earnings time (BMO/AMC)
------------------------
-Historical “exact release time” is often not reliably available via simple TR fields.
-This script keeps a BEST-EFFORT per-event lookup, but it is slow and may return TNS.
-For speed runs, use --no-earnings-time (recommended), then optionally run a separate
-enrichment pass later.
+- Uses ek.get_data in batches (chunked instruments) — fast and thread-safe.
+- Buckets markets by close month/quarter to keep date ranges reasonable per request.
+- tqdm progress bars.
 
 Requirements
 ------------
@@ -54,7 +50,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import os
 import sys
 import time
@@ -76,9 +71,10 @@ try:
 except Exception:
     tqdm = None  # type: ignore
 
-# -----------------------------------------------------------------------------
-# Suppress noisy warnings from eikon/pandas (requested)
-# -----------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------
+# Suppress noisy warnings from eikon/pandas
+# ---------------------------------------------------------------------
 warnings.filterwarnings(
     "ignore",
     message=r".*errors='ignore'.*deprecated.*to_numeric.*",
@@ -88,9 +84,9 @@ warnings.filterwarnings(
 warnings.filterwarnings("ignore", category=FutureWarning, module=r"eikon\.data_grid")
 
 
-# -----------------------------------------------------------------------------
-# Retry settings (borrow the idea from 03_fetch_corp_info.py)
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# Retry settings (same idea as 03_fetch_corp_info.py)
+# ---------------------------------------------------------------------
 EIKON_RETRIES = 5
 EIKON_RETRY_BASE_SLEEP = 0.7
 
@@ -121,39 +117,46 @@ def eikon_retry_get_data(
             return None, err
         except Exception as exc:
             last_exc = exc
-            sleep_s = EIKON_RETRY_BASE_SLEEP * (2 ** attempt)
-            time.sleep(sleep_s)
+            time.sleep(EIKON_RETRY_BASE_SLEEP * (2 ** attempt))
 
     return None, last_exc
 
 
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Data structures
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
 @dataclass(frozen=True)
-class EarningsEvent:
+class MarketEvent:
+    """
+    One row per Polymarket market (independent observation).
+    """
     ric: str
     ticker: str
     company_name: str
     market_id: str
     slug: str
-    anchor_date: str  # YYYY-MM-DD
 
-# ------------------------------------------------------------------
+    uma_end_date: str   # original timestamp string
+    close_date: str     # YYYY-MM-DD (derived from uma_end_date)
+
+
+# ---------------------------------------------------------------------
 # Path helpers (deterministic relative paths)
-# ------------------------------------------------------------------
-PROJECT_ROOT = Path(__file__).resolve().parent.parent  # Corporate_Earnings/
+# ---------------------------------------------------------------------
+PROJECT_ROOT = Path(__file__).resolve().parent.parent  # Polymarket-Earnings-Study/
+
 
 def default_input_path() -> Path:
-    return PROJECT_ROOT / "data" / "corporate_info" / "corporate_info.jsonl"
+    return PROJECT_ROOT / "data" / "corporate_info" / "corporate_info_by_market.jsonl"
+
 
 def default_output_dir() -> Path:
     return PROJECT_ROOT / "data" / "stock_prices"
 
 
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # IO helpers
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
 def read_jsonl(path: Path) -> List[Dict[str, Any]]:
     rows: List[Dict[str, Any]] = []
     with path.open("r", encoding="utf-8") as f:
@@ -188,60 +191,83 @@ def write_text(path: Path, s: str) -> None:
         f.write(s)
 
 
-# -----------------------------------------------------------------------------
-# Parsing corporate_info.jsonl
-# -----------------------------------------------------------------------------
-def extract_events(corporate_rows: List[Dict[str, Any]]) -> Tuple[List[EarningsEvent], List[str]]:
-    events: List[EarningsEvent] = []
+# ---------------------------------------------------------------------
+# Date parsing helpers
+# ---------------------------------------------------------------------
+def parse_iso_date(s: Any) -> Optional[date]:
+    """
+    Parse YYYY-MM-DD from an ISO-like string (timestamps OK).
+    """
+    if s is None:
+        return None
+    try:
+        return date.fromisoformat(str(s).strip()[0:10])
+    except Exception:
+        return None
+
+
+def safe_date_ymd(s: str) -> date:
+    return datetime.strptime(s, "%Y-%m-%d").date()
+
+
+# ---------------------------------------------------------------------
+# Parsing corporate_info_by_market.jsonl
+# ---------------------------------------------------------------------
+def extract_events_by_market(corporate_rows: List[Dict[str, Any]]) -> Tuple[List[MarketEvent], List[str]]:
+    """
+    Input rows are already per-market (one JSON per market).
+    We simply validate + construct MarketEvent objects.
+    """
+    events: List[MarketEvent] = []
     warnings_out: List[str] = []
 
     for idx, row in enumerate(corporate_rows, start=1):
-        ric = (row.get("ric") or "").strip()
-        ticker = (row.get("ticker") or "").strip()
-        company_name = (row.get("company_name") or "").strip()
+        ric = str(row.get("ric") or "").strip()
+        ticker = str(row.get("ticker") or "").strip()
+        company_name = str(row.get("company_name") or "").strip()
+        market_id = str(row.get("market_id") or "").strip()
+        slug = str(row.get("slug") or "").strip()
+        uma_end = str(row.get("uma_end_date") or row.get("umaEndDate") or "").strip()
 
         if not ric:
-            warnings_out.append(f"Line {idx}: missing ric for ticker={ticker} (skipping all its events).")
+            warnings_out.append(f"Line {idx}: missing ric (skipping).")
+            continue
+        if not market_id:
+            warnings_out.append(f"Line {idx}: missing market_id for ric={ric} (skipping).")
+            continue
+        if not uma_end:
+            warnings_out.append(f"Line {idx}: missing uma_end_date for ric={ric}, market_id={market_id} (skipping).")
             continue
 
-        markets = row.get("markets") or []
-        if not isinstance(markets, list) or not markets:
-            warnings_out.append(f"Line {idx}: no markets list for ric={ric} (nothing to fetch).")
+        close_dt = parse_iso_date(uma_end)
+        if close_dt is None:
+            warnings_out.append(f"Line {idx}: bad uma_end_date='{uma_end}' for market_id={market_id} (skipping).")
             continue
 
-        for m in markets:
-            market_id = str(m.get("market_id") or "").strip()
-            slug = str(m.get("slug") or "").strip()
-            anchor_date = str(m.get("anchor_date") or "").strip()
-
-            if not market_id or not anchor_date:
-                warnings_out.append(
-                    f"Line {idx}: missing market_id/anchor_date for ric={ric}, ticker={ticker} (skipping one market)."
-                )
-                continue
-
-            events.append(
-                EarningsEvent(
-                    ric=ric,
-                    ticker=ticker,
-                    company_name=company_name,
-                    market_id=market_id,
-                    slug=slug,
-                    anchor_date=anchor_date,
-                )
+        # ticker/company_name can be empty; keep them as empty strings (consistent schema)
+        events.append(
+            MarketEvent(
+                ric=ric,
+                ticker=ticker,
+                company_name=company_name,
+                market_id=market_id,
+                slug=slug,
+                uma_end_date=uma_end,
+                close_date=close_dt.isoformat(),
             )
+        )
 
-    # Deduplicate
-    uniq: Dict[Tuple[str, str, str], EarningsEvent] = {}
+    # Hard dedupe on (market_id) if duplicates exist in file
+    uniq: Dict[str, MarketEvent] = {}
     for e in events:
-        uniq[(e.ric, e.market_id, e.anchor_date)] = e
+        uniq[e.market_id] = e
 
     return list(uniq.values()), warnings_out
 
 
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Eikon init
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
 def set_eikon_app_key(app_key: Optional[str]) -> None:
     if ek is None:
         raise RuntimeError("Python package 'eikon' is not available. Install it first (pip install eikon).")
@@ -259,47 +285,32 @@ def set_eikon_app_key(app_key: Optional[str]) -> None:
         pass
 
 
-# -----------------------------------------------------------------------------
-# Date / window helpers
-# -----------------------------------------------------------------------------
-def safe_date(s: str) -> date:
-    return datetime.strptime(s, "%Y-%m-%d").date()
-
-
-def calendar_span_for_trading_days(pre_td: int, post_td: int, holiday_buffer_days: int = 10) -> Tuple[int, int]:
-    """
-    Convert trading-day target window into approximate calendar-day request window.
-    With +-30 td you usually only need ~ +/- 55 calendar days; buffer helps holidays.
-    """
-    lookback = int(math.ceil(pre_td * 7 / 5)) + holiday_buffer_days
-    lookahead = int(math.ceil(post_td * 7 / 5)) + holiday_buffer_days
-    return lookback, lookahead
-
-
+# ---------------------------------------------------------------------
+# Bucketing helpers
+# ---------------------------------------------------------------------
 def chunked(xs: List[str], n: int) -> Iterable[List[str]]:
     for i in range(0, len(xs), n):
         yield xs[i : i + n]
 
 
-def _bucket_key(anchor: date, mode: str) -> str:
+def _bucket_key(close_d: date, mode: str) -> str:
     """
-    Bucket mode reduces the range per request.
-    - month: YYYY-MM
+    Bucket mode reduces date span per request.
+    - month:   YYYY-MM
     - quarter: YYYY-Qn
-    - all: single bucket
+    - all:     single bucket
     """
     if mode == "all":
         return "ALL"
     if mode == "quarter":
-        q = (anchor.month - 1) // 3 + 1
-        return f"{anchor.year}-Q{q}"
-    # default month
-    return f"{anchor.year}-{anchor.month:02d}"
+        q = (close_d.month - 1) // 3 + 1
+        return f"{close_d.year}-Q{q}"
+    return f"{close_d.year}-{close_d.month:02d}"
 
 
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Column detection (robust vs display headers)
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
 def find_col_by_substrings(columns: List[str], substrings: List[str]) -> Optional[str]:
     low_cols = [c.lower() for c in columns]
     for sub in substrings:
@@ -320,9 +331,9 @@ def get_first_present_column(columns: List[str], preferred_exact: List[str], fal
     return None
 
 
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # FAST price fetch via ek.get_data (batched)
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
 def fetch_close_batch(
     rics: List[str],
     start_d: date,
@@ -353,7 +364,6 @@ def fetch_close_batch(
         return pd.DataFrame(columns=["ric", "date", "close"]), str(err)
 
     cols = list(df.columns)
-
     inst_col = "Instrument" if "Instrument" in cols else cols[0]
     date_col = get_first_present_column(cols, preferred_exact=["Date"], fallback_substrings=["date"])
     close_col = get_first_present_column(cols, preferred_exact=[], fallback_substrings=["price close", "close"])
@@ -373,229 +383,91 @@ def fetch_close_batch(
     return out, None
 
 
-# -----------------------------------------------------------------------------
-# Event slicing
-# -----------------------------------------------------------------------------
-def find_event_trading_date(ts_dates: List[date], anchor_d: date) -> Optional[date]:
-    """
-    If anchor date in dates -> use it
-    else -> next date after anchor
-    """
-    if not ts_dates:
-        return None
-    if anchor_d in ts_dates:
-        return anchor_d
-    # next available
-    for d in ts_dates:
-        if d > anchor_d:
-            return d
-    return None
-
-
-def slice_trading_window_dates(ts_dates: List[date], event_d: date, pre_td: int, post_td: int) -> Tuple[List[date], Dict[str, Any]]:
-    """
-    Slice list of trading dates around event_d by index.
-    Returns the window dates and truncation metadata.
-    """
-    try:
-        pos = ts_dates.index(event_d)
-    except ValueError:
-        return [], {"event_trading_date": None, "truncated_left": True, "truncated_right": True, "available_rows": 0}
-
-    start_pos = pos - pre_td
-    end_pos = pos + post_td
-
-    truncated_left = start_pos < 0
-    truncated_right = end_pos >= len(ts_dates)
-
-    start_pos = max(0, start_pos)
-    end_pos = min(len(ts_dates) - 1, end_pos)
-
-    window = ts_dates[start_pos : end_pos + 1]
-    meta = {
-        "event_trading_date": event_d.isoformat(),
-        "requested_pre_td": pre_td,
-        "requested_post_td": post_td,
-        "truncated_left": bool(truncated_left),
-        "truncated_right": bool(truncated_right),
-        "available_rows": int(len(window)),
-        "expected_rows": int(pre_td + post_td + 1),
-    }
-    return window, meta
-
-
-# -----------------------------------------------------------------------------
-# Earnings time best-effort (kept, but slow)
-# -----------------------------------------------------------------------------
-EARN_TIME_FIELDS = [
-    "TR.EarningsAnnouncementDateTime",
-    "TR.EarningsAnnouncementTime",
-    "TR.EarningsAnnouncementTimeCode",
-    "TR.EarningsReleaseTime",
-]
-
-
-def parse_bmo_amc(value: Any) -> Tuple[str, Optional[str]]:
-    if value is None:
-        return "TNS", None
-    s = str(value).strip()
-    if not s or s.lower() in {"nan", "none"}:
-        return "TNS", None
-
-    u = s.upper()
-    if u in {"BMO", "BEFORE MARKET OPEN", "PRE-MARKET", "PRE MARKET", "PREOPEN", "PRE-OPEN"}:
-        return "BMO", s
-    if u in {"AMC", "AFTER MARKET CLOSE", "POST-MARKET", "POST MARKET", "AFTER HOURS", "AFTER-HOURS"}:
-        return "AMC", s
-    if "BEFORE" in u and "OPEN" in u:
-        return "BMO", s
-    if "AFTER" in u and ("CLOSE" in u or "MARKET" in u or "HOURS" in u):
-        return "AMC", s
-    if any(ch.isdigit() for ch in u) and ":" in u:
-        return "TNS", s
-    return "TNS", s
-
-
-def fetch_earnings_time_best_effort(ric: str, anchor_date_str: str) -> Dict[str, Any]:
-    """
-    Slow, best-effort. Many accounts/fields won't provide reliable historical times.
-    """
-    assert ek is not None
-    anchor_d = safe_date(anchor_date_str)
-
-    out = {
-        "bmo_amc_tag": "TNS",
-        "earnings_time_raw": None,
-        "earnings_time_field_used": None,
-        "earnings_time_note": None,
-    }
-
-    # Try dated query first
-    for fld in EARN_TIME_FIELDS:
-        try:
-            df, err = ek.get_data([ric], [fld], parameters={"SDate": anchor_d.isoformat(), "EDate": anchor_d.isoformat()})
-            if df is None or len(df) == 0:
-                continue
-            v = df.iloc[0].get(fld)
-            tag, raw = parse_bmo_amc(v)
-            if raw is not None:
-                out.update(
-                    {
-                        "bmo_amc_tag": tag,
-                        "earnings_time_raw": raw,
-                        "earnings_time_field_used": fld,
-                        "earnings_time_note": "Fetched with SDate/EDate params.",
-                    }
-                )
-                return out
-        except Exception:
-            continue
-
-    # Fallback: undated (often upcoming)
-    for fld in EARN_TIME_FIELDS:
-        try:
-            df, err = ek.get_data([ric], [fld])
-            if df is None or len(df) == 0:
-                continue
-            v = df.iloc[0].get(fld)
-            tag, raw = parse_bmo_amc(v)
-            if raw is not None:
-                out.update(
-                    {
-                        "bmo_amc_tag": tag,
-                        "earnings_time_raw": raw,
-                        "earnings_time_field_used": fld,
-                        "earnings_time_note": "Fetched without date params (may be upcoming, not historical).",
-                    }
-                )
-                return out
-        except Exception:
-            continue
-
-    out["earnings_time_note"] = "No usable earnings time fields returned from Eikon API for this event."
-    return out
-
-
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Main runner (importable)
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
 def run_fetch_stock_prices(
     input_path: Path,
     out_dir: Path,
     app_key: Optional[str] = None,
-    pre_trading_days: int = 30,
-    post_trading_days: int = 30,
-    holiday_buffer_days: int = 10,
+    pre_days: int = 250,
+    post_days: int = 10,
     chunk_size: int = 50,
     bucket_mode: str = "month",  # month | quarter | all
-    throttle_s: float = 0.0,      # sleep after each ek.get_data batch
-    include_earnings_time: bool = False,
+    throttle_s: float = 0.0,     # sleep after each ek.get_data batch
     show_progress: bool = True,
 ) -> Dict[str, Any]:
     """
-    Thread-safe fast runner using batched ek.get_data calls.
+    Fast runner using batched ek.get_data calls.
+
+    Window definition (calendar days):
+      per market:
+        [close_date - pre_days, close_date + post_days]
+      (trading days only appear in output, because that's what Eikon returns for daily closes)
+
+    Benchmark:
+      S&P500 (.SPX) from 2025-01-01 through date.today()
     """
     if tqdm is None and show_progress:
         show_progress = False
-    
+
     BENCHMARK_RIC = ".SPX"
+    SPX_START = date(2025, 1, 1)
+    SPX_END = date.today()  # "today" is whatever day this script is run
 
     set_eikon_app_key(app_key)
     ensure_dir(out_dir)
 
     corporate_rows = read_jsonl(input_path)
-    events, parse_warnings = extract_events(corporate_rows)
+    events, parse_warnings = extract_events_by_market(corporate_rows)
 
-    # Group events into buckets to avoid huge date spans per request
-    buckets: Dict[str, List[EarningsEvent]] = {}
+    # Bucket markets by close date
+    buckets: Dict[str, List[MarketEvent]] = {}
     for e in events:
-        k = _bucket_key(safe_date(e.anchor_date), bucket_mode)
+        close_d = safe_date_ymd(e.close_date)
+        k = _bucket_key(close_d, bucket_mode)
         buckets.setdefault(k, []).append(e)
 
-    lookback_days, lookahead_days = calendar_span_for_trading_days(
-        pre_td=pre_trading_days,
-        post_td=post_trading_days,
-        holiday_buffer_days=holiday_buffer_days,
-    )
-
-    # Overall calendar span across all events (for benchmark)
-    all_anchors = [safe_date(e.anchor_date) for e in events]
-    overall_start = min(all_anchors) - timedelta(days=lookback_days)
-    overall_end   = max(all_anchors) + timedelta(days=lookahead_days)
-
-    # Storage for fetched CLOSE by RIC
+    # Storage for fetched closes by RIC (merged across buckets)
     close_by_ric: Dict[str, pd.DataFrame] = {}
-
     failures_fetch: List[str] = []
     failures_window: List[str] = []
-    failures_time: List[str] = []
-    
-    # Fetch benchmark once
-    df_spx, err_spx = fetch_close_batch([BENCHMARK_RIC], overall_start, overall_end, throttle_s=throttle_s)
+
+    # -----------------------------------------------------------------
+    # Fetch benchmark SPX once (2025-01-01 -> today), independent of events
+    # -----------------------------------------------------------------
+    df_spx, err_spx = fetch_close_batch([BENCHMARK_RIC], SPX_START, SPX_END, throttle_s=throttle_s)
     if err_spx:
         failures_fetch.append(f"Benchmark {BENCHMARK_RIC}: {err_spx}")
     else:
         close_by_ric[BENCHMARK_RIC] = df_spx[["date", "close"]].sort_values("date")
 
-    # ---- Fetch close per bucket in batches ----
+    spx_ts = close_by_ric.get(BENCHMARK_RIC)
+    spx_map: Dict[date, float] = {}
+    if spx_ts is not None and not spx_ts.empty:
+        spx_map = dict(zip(spx_ts["date"].tolist(), spx_ts["close"].tolist()))
+
+    # -----------------------------------------------------------------
+    # Fetch closes for market RICs, bucketed for efficiency
+    # -----------------------------------------------------------------
     bucket_items = sorted(buckets.items(), key=lambda kv: kv[0])
     bucket_iter = bucket_items
     if show_progress:
         bucket_iter = tqdm(bucket_items, desc=f"Buckets ({bucket_mode})", unit="bucket")  # type: ignore
 
     for bkey, bevents in bucket_iter:  # type: ignore
-        anchors = [safe_date(e.anchor_date) for e in bevents]
-        start_cal = min(anchors) - timedelta(days=lookback_days)
-        end_cal = max(anchors) + timedelta(days=lookahead_days)
+        close_dates = [safe_date_ymd(e.close_date) for e in bevents]
+        start_cal = min(close_dates) - timedelta(days=int(pre_days))
+        end_cal = max(close_dates) + timedelta(days=int(post_days))
 
         rics = sorted({e.ric for e in bevents if e.ric})
         if not rics:
             continue
 
-        # Fetch in chunks
-        chunk_iter = list(chunked(rics, max(1, int(chunk_size))))
+        ric_chunks = list(chunked(rics, max(1, int(chunk_size))))
+        chunk_iter = ric_chunks
         if show_progress:
-            chunk_iter = tqdm(chunk_iter, desc=f"close {bkey}", unit="chunk", leave=False)  # type: ignore
+            chunk_iter = tqdm(ric_chunks, desc=f"close {bkey}", unit="chunk", leave=False)  # type: ignore
 
         for ric_chunk in chunk_iter:  # type: ignore
             df_batch, err = fetch_close_batch(ric_chunk, start_cal, end_cal, throttle_s=throttle_s)
@@ -603,7 +475,6 @@ def run_fetch_stock_prices(
                 failures_fetch.append(f"Bucket {bkey} chunk size={len(ric_chunk)}: {err}")
                 continue
 
-            # Merge batch into per-ric dict
             for ric, g in df_batch.groupby("ric"):
                 g2 = g[["date", "close"]].sort_values("date").copy()
                 if ric in close_by_ric:
@@ -613,92 +484,69 @@ def run_fetch_stock_prices(
                 else:
                     close_by_ric[ric] = g2
 
-    spx_ts = close_by_ric.get(BENCHMARK_RIC)
-    spx_map = {}
-    if spx_ts is not None and not spx_ts.empty:
-        spx_map = dict(zip(spx_ts["date"].tolist(), spx_ts["close"].tolist()))
-
-    # ---- Build outputs per event ----
+    # -----------------------------------------------------------------
+    # Build outputs per market (calendar-window slicing)
+    # -----------------------------------------------------------------
     all_rows: List[Dict[str, Any]] = []
     nested_events: List[Dict[str, Any]] = []
 
     ev_iter = events
     if show_progress:
-        ev_iter = tqdm(events, desc="Slicing events", unit="evt")  # type: ignore
+        ev_iter = tqdm(events, desc="Slicing markets", unit="mkt")  # type: ignore
 
     for e in ev_iter:  # type: ignore
         ts = close_by_ric.get(e.ric)
         if ts is None or ts.empty:
-            failures_window.append(f"RIC {e.ric} event market_id={e.market_id} anchor_date={e.anchor_date}: NO_TS_DATA")
+            failures_window.append(f"RIC {e.ric} market_id={e.market_id}: NO_TS_DATA")
             continue
 
-        ts_dates = list(ts["date"].tolist())
-        anchor_d = safe_date(e.anchor_date)
-        event_d = find_event_trading_date(ts_dates, anchor_d)
-        if event_d is None:
+        close_d = safe_date_ymd(e.close_date)
+        start_d = close_d - timedelta(days=int(pre_days))
+        end_d = close_d + timedelta(days=int(post_days))
+
+        # Filter to window (trading days only)
+        ts_win = ts[(ts["date"] >= start_d) & (ts["date"] <= end_d)].copy()
+        if ts_win.empty:
             failures_window.append(
-                f"RIC {e.ric} event market_id={e.market_id} anchor_date={e.anchor_date}: could not find event trading date"
+                f"RIC {e.ric} market_id={e.market_id}: empty window after filtering [{start_d}..{end_d}]"
             )
             continue
 
-        window_dates, wmeta = slice_trading_window_dates(ts_dates, event_d, pre_trading_days, post_trading_days)
-        if not window_dates:
-            failures_window.append(
-                f"RIC {e.ric} event market_id={e.market_id} anchor_date={e.anchor_date}: empty window after slicing"
-            )
-            continue
-
-        # Earnings time (optional, slow)
-        tmeta = {
-            "bmo_amc_tag": "TNS",
-            "earnings_time_raw": None,
-            "earnings_time_field_used": None,
-            "earnings_time_note": "Skipped by config.",
-        }
-        if include_earnings_time:
-            tmeta = fetch_earnings_time_best_effort(e.ric, e.anchor_date)
-            if tmeta.get("bmo_amc_tag") == "TNS":
-                failures_time.append(
-                    f"RIC {e.ric} event market_id={e.market_id} anchor_date={e.anchor_date}: "
-                    f"BMO/AMC unknown ({tmeta.get('earnings_time_note')})"
-                )
-
-        # Build window rows with offsets
-        # create a lookup for fast access
-        ts_map = {d: row for d, row in ts.set_index("date").iterrows()}
-
-        event_pos = ts_dates.index(event_d)
+        # Records: one per trading day in the calendar window
         records: List[Dict[str, Any]] = []
-        for d in window_dates:
-            pos = ts_dates.index(d)
-            offset_td = pos - event_pos
-            row = ts_map.get(d)
+        for _, row in ts_win.iterrows():
+            d: date = row["date"]
+            offset_day = (d - close_d).days  # calendar-day offset relative to umaEndDate date
             records.append(
                 {
                     "date": d.isoformat(),
-                    "offset_td": int(offset_td),
-                    "CLOSE": float(row["close"]) if row is not None and pd.notna(row["close"]) else None,
-                    "SPX_CLOSE": float(spx_map[d]) if d in spx_map and pd.notna(spx_map[d]) else None,
+                    "offset_day": int(offset_day),
+                    "close": float(row["close"]) if pd.notna(row["close"]) else None,
+                    "spx_close": float(spx_map[d]) if d in spx_map and pd.notna(spx_map[d]) else None,
                 }
             )
 
+        # Nested per-market object (kept for convenience)
         event_obj: Dict[str, Any] = {
             "market_id": e.market_id,
             "slug": e.slug,
             "ric": e.ric,
             "ticker": e.ticker,
             "company_name": e.company_name,
-            "anchor_date": e.anchor_date,
-            "event_trading_date": wmeta["event_trading_date"],
-            "bmo_amc_tag": tmeta.get("bmo_amc_tag"),
-            "earnings_time_raw": tmeta.get("earnings_time_raw"),
-            "earnings_time_field_used": tmeta.get("earnings_time_field_used"),
-            "earnings_time_note": tmeta.get("earnings_time_note"),
-            "window_meta": wmeta,
+            "uma_end_date": e.uma_end_date,
+            "close_date": e.close_date,
+            "window": {
+                "pre_days": int(pre_days),
+                "post_days": int(post_days),
+                "start_date": start_d.isoformat(),
+                "end_date": end_d.isoformat(),
+                "n_trading_days_returned": int(len(records)),
+            },
             "prices": records,
         }
         nested_events.append(event_obj)
 
+        # Long rows (CSV/JSONL)
         for r in records:
             all_rows.append(
                 {
@@ -707,28 +555,20 @@ def run_fetch_stock_prices(
                     "company_name": e.company_name,
                     "market_id": e.market_id,
                     "slug": e.slug,
-                    "anchor_date": e.anchor_date,
-                    "event_trading_date": wmeta["event_trading_date"],
-                    "bmo_amc_tag": tmeta.get("bmo_amc_tag"),
-                    "earnings_time_raw": tmeta.get("earnings_time_raw"),
-                    "earnings_time_field_used": tmeta.get("earnings_time_field_used"),
+                    "uma_end_date": e.uma_end_date,
+                    "close_date": e.close_date,
+                    "window_start_date": start_d.isoformat(),
+                    "window_end_date": end_d.isoformat(),
                     "date": r.get("date"),
-                    "offset_td": r.get("offset_td"),
-                    "close": r.get("CLOSE"),
-                    "spx_close": r.get("SPX_CLOSE"),
-                    "truncated_left": wmeta.get("truncated_left"),
-                    "truncated_right": wmeta.get("truncated_right"),
+                    "offset_day": r.get("offset_day"),
+                    "close": r.get("close"),
+                    "spx_close": r.get("spx_close"),
                 }
             )
 
-        if wmeta.get("truncated_left") or wmeta.get("truncated_right"):
-            failures_window.append(
-                f"RIC {e.ric} event market_id={e.market_id} anchor_date={e.anchor_date}: "
-                f"TRUNCATED (left={wmeta.get('truncated_left')}, right={wmeta.get('truncated_right')}, "
-                f"available_rows={wmeta.get('available_rows')}/{wmeta.get('expected_rows')})"
-            )
-
-    # ---- Write outputs ----
+    # -----------------------------------------------------------------
+    # Write outputs
+    # -----------------------------------------------------------------
     csv_path = out_dir / "stock_prices_daily.csv"
     jsonl_path = out_dir / "stock_prices_daily.jsonl"
     json_path = out_dir / "stock_prices_daily.json"
@@ -736,35 +576,51 @@ def run_fetch_stock_prices(
 
     df_out = pd.DataFrame(all_rows)
     if not df_out.empty:
-        df_out.sort_values(["ric", "anchor_date", "market_id", "offset_td"], inplace=True)
+        df_out.sort_values(["ric", "close_date", "market_id", "offset_day", "date"], inplace=True)
         df_out.to_csv(csv_path, index=False, encoding="utf-8")
 
     write_jsonl(jsonl_path, all_rows)
-    write_json(json_path, {"generated_at_utc": datetime.utcnow().isoformat() + "Z", "events": nested_events})
+    write_json(
+        json_path,
+        {
+            "generated_at_utc": datetime.utcnow().isoformat() + "Z",
+            "benchmark": {"ric": BENCHMARK_RIC, "start": SPX_START.isoformat(), "end": SPX_END.isoformat()},
+            "markets": nested_events,
+        },
+    )
 
-    # ---- Summary ----
+    # -----------------------------------------------------------------
+    # Summary
+    # -----------------------------------------------------------------
     lines: List[str] = []
-    lines.append("Polymarket Corporate Earnings — Stock Prices Fetch Summary (FAST MODE)")
+    lines.append("Polymarket Corporate Earnings — Stock Prices Fetch Summary (PER-MARKET, FAST MODE)")
     lines.append(f"Generated at (UTC): {datetime.utcnow().isoformat()}Z")
     lines.append("")
     lines.append(f"Input:  {input_path}")
     lines.append(f"Output: {out_dir}")
     lines.append("")
-    lines.append(f"Corporate rows: {len(corporate_rows)}")
-    lines.append(f"Events parsed:  {len(events)}")
-    lines.append(f"RICs fetched:   {len(close_by_ric)}")
-    lines.append(f"Output rows:    {len(all_rows)}")
+    lines.append(f"Input rows:       {len(corporate_rows)}")
+    lines.append(f"Markets parsed:   {len(events)}")
+    lines.append(f"Unique RICs seen: {len({e.ric for e in events})}")
+    lines.append(f"RICs in cache:    {len(close_by_ric)} (includes benchmark if fetched)")
+    lines.append(f"Output rows:      {len(all_rows)}")
     lines.append("")
-    lines.append(f"Trading-day window: pre={pre_trading_days}, post={post_trading_days}")
+    lines.append(f"Per-market calendar window: pre_days={pre_days}, post_days={post_days}")
     lines.append(f"Bucket mode: {bucket_mode}")
-    lines.append(f"Chunk size: {chunk_size}")
+    lines.append(f"Chunk size:  {chunk_size}")
     lines.append(f"Throttle after batch: {throttle_s}s")
-    lines.append(f"Earnings time included: {include_earnings_time}")
+    lines.append("")
+    lines.append("Benchmark (S&P500):")
+    lines.append(f"  RIC:   {BENCHMARK_RIC}")
+    lines.append(f"  Start: {SPX_START.isoformat()}")
+    lines.append(f"  End:   {SPX_END.isoformat()} (today at runtime)")
     lines.append("")
 
     if parse_warnings:
         lines.append("PARSE WARNINGS")
-        lines.extend([f"- {w}" for w in parse_warnings])
+        lines.extend([f"- {w}" for w in parse_warnings[:200]])
+        if len(parse_warnings) > 200:
+            lines.append(f"... {len(parse_warnings) - 200} more omitted")
         lines.append("")
 
     if failures_fetch:
@@ -775,18 +631,10 @@ def run_fetch_stock_prices(
         lines.append("")
 
     if failures_window:
-        lines.append("WINDOW ISSUES / EVENT FAILURES")
+        lines.append("WINDOW / MARKET ISSUES")
         lines.extend([f"- {x}" for x in failures_window[:200]])
         if len(failures_window) > 200:
             lines.append(f"... {len(failures_window) - 200} more omitted")
-        lines.append("")
-
-    if include_earnings_time:
-        lines.append("BMO/AMC CLASSIFICATION ISSUES (best effort)")
-        lines.append(f"- Events with missing/unknown time tag: {len(failures_time)}")
-        lines.extend([f"  * {x}" for x in failures_time[:200]])
-        if len(failures_time) > 200:
-            lines.append(f"  ... {len(failures_time) - 200} more omitted")
         lines.append("")
 
     write_text(summary_path, "\n".join(lines) + "\n")
@@ -796,34 +644,46 @@ def run_fetch_stock_prices(
         "jsonl_path": str(jsonl_path),
         "json_path": str(json_path),
         "summary_path": str(summary_path),
-        "events_total": len(events),
+        "markets_total": len(events),
         "rows_total": len(all_rows),
-        "rics_total": len(close_by_ric),
+        "rics_in_cache": len(close_by_ric),
         "bucket_mode": bucket_mode,
         "chunk_size": chunk_size,
-        "include_earnings_time": include_earnings_time,
+        "pre_days": int(pre_days),
+        "post_days": int(post_days),
+        "spx_start": SPX_START.isoformat(),
+        "spx_end": SPX_END.isoformat(),
     }
 
 
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # CLI
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
 def build_arg_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="Fetch daily stock prices around earnings anchor_date from Eikon (FAST, batched).")
-    p.add_argument("--input", type=str, default=str(default_input_path()), help="Path to corporate_info.jsonl")
-    p.add_argument("--outdir", type=str, default=str(default_output_dir()), help="Output directory")
-    p.add_argument("--app-key", type=str, default=None, help="Eikon App Key (or set env EIKON_APP_KEY)")
+    p = argparse.ArgumentParser(
+        description="Fetch daily close stock prices around uma_end_date from Eikon (PER-MARKET, FAST, batched)."
+    )
+    p.add_argument("--input", type=str, default=str(default_input_path()),
+                   help="Path to corporate_info_by_market.jsonl")
+    p.add_argument("--outdir", type=str, default=str(default_output_dir()),
+                   help="Output directory")
+    p.add_argument("--app-key", type=str, default=None,
+                   help="Eikon App Key (or set env EIKON_APP_KEY)")
 
-    p.add_argument("--pre-td", type=int, default=250, help="Trading days before anchor")
-    p.add_argument("--post-td", type=int, default=30, help="Trading days after anchor")
-    p.add_argument("--holiday-buffer", type=int, default=10, help="Extra calendar-day buffer for holidays/weekends")
+    p.add_argument("--pre-days", type=int, default=250,
+                   help="Calendar days before close_date (umaEndDate date)")
+    p.add_argument("--post-days", type=int, default=10,
+                   help="Calendar days after close_date (umaEndDate date)")
 
-    p.add_argument("--chunk-size", type=int, default=50, help="RICs per ek.get_data call (50 is a good start)")
-    p.add_argument("--bucket-mode", type=str, default="month", choices=["month", "quarter", "all"], help="Bucket events to reduce date span")
-    p.add_argument("--throttle", type=float, default=0.0, help="Sleep after each batch call (seconds)")
-
-    p.add_argument("--earnings-time", action="store_true", help="Enable slow best-effort BMO/AMC lookup")
-    p.add_argument("--no-progress", action="store_true", help="Disable tqdm progress bars")
+    p.add_argument("--chunk-size", type=int, default=50,
+                   help="RICs per ek.get_data call (50 is a good start)")
+    p.add_argument("--bucket-mode", type=str, default="month",
+                   choices=["month", "quarter", "all"],
+                   help="Bucket markets to reduce date span per request")
+    p.add_argument("--throttle", type=float, default=0.0,
+                   help="Sleep after each batch call (seconds)")
+    p.add_argument("--no-progress", action="store_true",
+                   help="Disable tqdm progress bars")
     return p
 
 
@@ -841,13 +701,11 @@ def main(argv: Optional[List[str]] = None) -> int:
         input_path=input_path,
         out_dir=out_dir,
         app_key=args.app_key,
-        pre_trading_days=int(args.pre_td),
-        post_trading_days=int(args.post_td),
-        holiday_buffer_days=int(args.holiday_buffer),
+        pre_days=int(args.pre_days),
+        post_days=int(args.post_days),
         chunk_size=int(args.chunk_size),
         bucket_mode=str(args.bucket_mode),
         throttle_s=float(args.throttle),
-        include_earnings_time=bool(args.earnings_time),
         show_progress=not bool(args.no_progress),
     )
 

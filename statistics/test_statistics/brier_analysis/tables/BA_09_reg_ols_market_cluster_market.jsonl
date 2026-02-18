@@ -1,0 +1,24 @@
+{"model":"OLS_market_M1","term":"(Intercept)","estimate":0.17872,"std_error":0.16032,"statistic":1.11477,"p_value":0.26495,"conf_low_95":-0.13551,"conf_high_95":0.49295,"sig":""}
+{"model":"OLS_market_M1","term":"log_mkt_cap","estimate":-0.01224,"std_error":0.00556,"statistic":-2.20069,"p_value":0.02776,"conf_low_95":-0.02313,"conf_high_95":-0.00134,"sig":"*"}
+{"model":"OLS_market_M1","term":"analysts","estimate":-0.00028,"std_error":0.00108,"statistic":-0.25885,"p_value":0.79575,"conf_low_95":-0.00239,"conf_high_95":0.00183,"sig":""}
+{"model":"OLS_market_M1","term":"log_poly_volume","estimate":0.03152,"std_error":0.01293,"statistic":2.43756,"p_value":0.01479,"conf_low_95":0.00618,"conf_high_95":0.05686,"sig":"*"}
+{"model":"OLS_market_M1","term":"market_open_days","estimate":-0.0031,"std_error":0.00135,"statistic":-2.29093,"p_value":0.02197,"conf_low_95":-0.00575,"conf_high_95":-0.00045,"sig":"*"}
+{"model":"OLS_market_M2","term":"(Intercept)","estimate":45.67383,"std_error":0,"p_value":0,"conf_low_95":45.67383,"conf_high_95":45.67383,"sig":"***"}
+{"model":"OLS_market_M2","term":"log_mkt_cap","estimate":-1.91239,"std_error":0,"p_value":0,"conf_low_95":-1.91239,"conf_high_95":-1.91239,"sig":"***"}
+{"model":"OLS_market_M2","term":"analysts","sig":""}
+{"model":"OLS_market_M2","term":"log_poly_volume","sig":""}
+{"model":"OLS_market_M2","term":"log_poly_liquidity","sig":""}
+{"model":"OLS_market_M2","term":"log_stock_turnover_6m","sig":""}
+{"model":"OLS_market_M2","term":"stock_volatility_6m","sig":""}
+{"model":"OLS_market_M2","term":"market_open_days","sig":""}
+{"model":"OLS_market_M2","term":"abs_surprise","sig":""}
+{"model":"OLS_market_M3","term":"(Intercept)","estimate":45.67383,"std_error":0,"p_value":0,"conf_low_95":45.67383,"conf_high_95":45.67383,"sig":"***"}
+{"model":"OLS_market_M3","term":"log_mkt_cap","estimate":-1.91239,"std_error":0,"p_value":0,"conf_low_95":-1.91239,"conf_high_95":-1.91239,"sig":"***"}
+{"model":"OLS_market_M3","term":"analysts","sig":""}
+{"model":"OLS_market_M3","term":"log_poly_volume","sig":""}
+{"model":"OLS_market_M3","term":"log_poly_liquidity","sig":""}
+{"model":"OLS_market_M3","term":"log_stock_turnover_6m","sig":""}
+{"model":"OLS_market_M3","term":"stock_volatility_6m","sig":""}
+{"model":"OLS_market_M3","term":"market_open_days","sig":""}
+{"model":"OLS_market_M3","term":"abs_surprise","sig":""}
+{"model":"OLS_market_M3","term":"gics_sectorConsumer Staples","sig":""}

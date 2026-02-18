@@ -3,31 +3,32 @@
 """
 run_all.py
 
-Project orchestrator for the Corporate_Earnings pipeline.
+Project orchestrator for the Polymarket-Earnings-Study pipeline.
 
 Where it lives
 --------------
 Place this file in:
-  Corporate_Earnings/run_all.py
+  Polymarket-Earnings-Study/run_all.py
 
 Expected script location
 ------------------------
 All other Python scripts are expected in:
-  Corporate_Earnings/python/
+  Polymarket-Earnings-Study/python/
 
 Behavior (per your requirements)
 --------------------------------
 - Runs the pipeline scripts one-by-one (00 -> 07) via subprocess.
 - Prints a small amount of orchestration logging (the scripts themselves print more).
 - If --app-key is NOT provided:
-    * DO NOT run scripts: 02, 03, 04, 06 (Eikon-required)
+    * ONLY run steps: 02 -> 07
+    * SKIP steps: 00, 01
 - Prints a summary at the end (success/failed/skipped/missing + timings).
 
 Notes
 -----
 - Uses sys.executable to ensure the same virtualenv/interpreter is used.
 - When --app-key is provided, it is:
-    * passed as --app-key to the Eikon scripts, and
+    * passed as --app-key to scripts 00 and 01, and
     * injected into env as EIKON_APP_KEY and APP_KEY for compatibility.
 - This file is importable: call main([...]) from another script.
 """
@@ -58,24 +59,25 @@ class ScriptSpec:
     code : str
         Human-friendly step code (e.g., "00", "01").
     filename : str
-        Script filename under Corporate_Earnings/python/
-    needs_eikon : bool
+        Script filename under Polymarket-Earnings-Study/python/
+    needs_app_key : bool
         If True, this step is skipped unless --app-key is provided.
+        (Per your updated requirement: ONLY 00 and 01 require the key.)
     """
     code: str
     filename: str
-    needs_eikon: bool = False
+    needs_app_key: bool = False
 
 
 PIPELINE: List[ScriptSpec] = [
-    ScriptSpec("00", "00_fetch_closed_markets.py", needs_eikon=False),
-    ScriptSpec("01", "01_fetch_poly_prices.py", needs_eikon=False),
-    ScriptSpec("02", "02_check_consistency.py", needs_eikon=True),
-    ScriptSpec("03", "03_fetch_corp_info.py", needs_eikon=True),
-    ScriptSpec("04", "04_fetch_stock_prices.py", needs_eikon=True),
-    ScriptSpec("05", "05_descriptive_statistics.py", needs_eikon=False),
-    ScriptSpec("06", "06_heckman_selection_fetch_universe.py", needs_eikon=True),
-    ScriptSpec("07", "07_brier_scores.py", needs_eikon=False),
+    ScriptSpec("00", "00_fetch_closed_markets.py", needs_app_key=True),
+    ScriptSpec("01", "01_fetch_poly_prices.py", needs_app_key=True),
+    ScriptSpec("02", "02_check_consistency.py", needs_app_key=False),
+    ScriptSpec("03", "03_fetch_corp_info.py", needs_app_key=False),
+    ScriptSpec("04", "04_fetch_stock_prices.py", needs_app_key=False),
+    ScriptSpec("05", "05_heckman_selection_fetch_universe.py", needs_app_key=False),
+    ScriptSpec("06", "06_brier_scores.py", needs_app_key=False),
+    ScriptSpec("07", "07_create_dataset.py", needs_app_key=False),
 ]
 
 
@@ -84,18 +86,17 @@ PIPELINE: List[ScriptSpec] = [
 # ----------------------------
 
 def _project_root() -> Path:
-    """Return the directory containing this run_all.py (Corporate_Earnings/)."""
+    """Return the directory containing this run_all.py (Polymarket-Earnings-Study/)."""
     return Path(__file__).resolve().parent
 
 
 def _scripts_dir() -> Path:
-    """Return Corporate_Earnings/python/."""
+    """Return Polymarket-Earnings-Study/python/."""
     return _project_root() / "python"
 
 
 def _now_utc_compact() -> str:
     """Simple timestamp for logs (no external deps)."""
-    # Using time.gmtime keeps it dependency-free and stable across machines.
     return time.strftime("%Y-%m-%d %H:%M:%SZ", time.gmtime())
 
 
@@ -122,7 +123,7 @@ def _run_subprocess(
     proc = subprocess.run(
         [sys.executable, str(script_path), *args],
         env=env,
-        cwd=str(_project_root()),   # ensure relative paths in scripts resolve from project root
+        cwd=str(_project_root()),  # ensure relative paths resolve from project root
     )
     dt = time.time() - t0
     return int(proc.returncode), float(dt)
@@ -134,13 +135,13 @@ def _run_subprocess(
 
 def build_arg_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        description="Run all Corporate_Earnings pipeline scripts sequentially.",
+        description="Run all Polymarket-Earnings-Study pipeline scripts sequentially.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     p.add_argument(
         "--app-key",
         default=None,
-        help="Refinitiv Eikon/Workspace App Key. If omitted, steps 02/03/04/06 will be skipped.",
+        help="App key used by steps 00 and 01. If omitted, steps 00/01 will be skipped.",
     )
     p.add_argument(
         "--stop-on-failure",
@@ -161,76 +162,53 @@ def main(argv: Optional[List[str]] = None) -> int:
     root = _project_root()
     py_dir = _scripts_dir()
 
-    print(f"[run_all] { _now_utc_compact() }  Starting pipeline")
+    print(f"[run_all] {_now_utc_compact()}  Starting pipeline")
     print(f"[run_all] Project root: {root}")
     print(f"[run_all] Scripts dir : {py_dir}")
 
     if args.app_key is None:
-        print("[run_all] NOTE: --app-key not provided. Will SKIP Eikon-required steps: 02, 03, 04, 06.")
-        print("[run_all] NOTE: Downstream steps (e.g., 05/07) may fail if their inputs were never generated.")
+        print("[run_all] NOTE: --app-key not provided. Will SKIP steps 00 and 01.")
+    else:
+        print("[run_all] NOTE: --app-key provided. Will run steps 00 and 01 with --app-key.")
 
     # Base environment inherited from current process
     env = dict(os.environ)
 
-    # Inject key into env for scripts that read env vars
+    # Inject key into env for scripts that read env vars (harmless for others)
     if args.app_key:
         env["EIKON_APP_KEY"] = args.app_key
         env["APP_KEY"] = args.app_key
 
-    results = []  # list of dicts for summary
+    results = []
     pipeline_t0 = time.time()
-
     n_total = len(PIPELINE)
+
     for i, spec in enumerate(PIPELINE, start=1):
         script_path = py_dir / spec.filename
 
         # Missing file => skip (but record it)
         if not script_path.exists():
-            msg = f"[run_all] ({i}/{n_total}) MISSING {spec.code} {spec.filename} (expected at {script_path})"
-            print(msg)
-            results.append(
-                {
-                    "code": spec.code,
-                    "name": spec.filename,
-                    "status": "MISSING",
-                    "rc": None,
-                    "seconds": 0.0,
-                }
-            )
+            print(f"[run_all] ({i}/{n_total}) MISSING {spec.code} {spec.filename} (expected at {script_path})")
+            results.append({"code": spec.code, "name": spec.filename, "status": "MISSING", "rc": None, "seconds": 0.0})
             continue
 
-        # Eikon gate
-        if spec.needs_eikon and not args.app_key:
+        # Gate: steps that require --app-key
+        if spec.needs_app_key and not args.app_key:
             print(f"[run_all] ({i}/{n_total}) SKIP    {spec.code} {spec.filename} (needs --app-key)")
             results.append(
-                {
-                    "code": spec.code,
-                    "name": spec.filename,
-                    "status": "SKIPPED_NO_APP_KEY",
-                    "rc": None,
-                    "seconds": 0.0,
-                }
+                {"code": spec.code, "name": spec.filename, "status": "SKIPPED_NO_APP_KEY", "rc": None, "seconds": 0.0}
             )
             continue
 
-        # Build args for the subprocess call
+        # Build args for subprocess
         sub_args: List[str] = []
-        if spec.needs_eikon and args.app_key:
-            # Standardize on passing the key explicitly, even though env is also set.
+        if spec.needs_app_key and args.app_key:
             sub_args += ["--app-key", args.app_key]
 
         print(f"[run_all] ({i}/{n_total}) RUN     {spec.code} {spec.filename}")
 
         if args.dry_run:
-            results.append(
-                {
-                    "code": spec.code,
-                    "name": spec.filename,
-                    "status": "DRY_RUN",
-                    "rc": 0,
-                    "seconds": 0.0,
-                }
-            )
+            results.append({"code": spec.code, "name": spec.filename, "status": "DRY_RUN", "rc": 0, "seconds": 0.0})
             continue
 
         rc, dt = _run_subprocess(script_path, sub_args, env)
@@ -269,7 +247,6 @@ def main(argv: Optional[List[str]] = None) -> int:
     print(f"[run_all] Total elapsed      : {_fmt_secs(pipeline_dt)}")
     print("[run_all] ----------------------------------------------------")
 
-    # Minimal per-step line items
     for r in results:
         code = r["code"]
         name = r["name"]
@@ -282,7 +259,7 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     print("[run_all] ====================================================\n")
 
-    # Exit code: 0 if no failures, else 1 (even if some were skipped/missing)
+    # Exit code: 0 if no failures, else 1
     return 0 if fail_n == 0 else 1
 
 

@@ -1,0 +1,2 @@
+{"model":"LOGIT_y_on_logitp_cluster_market","term":"(Intercept)","estimate":0.35235,"std_error":0.14323,"statistic":2.46011,"p_value":0.01389,"conf_low_95":0.07163,"conf_high_95":0.63308,"sig":"*"}
+{"model":"LOGIT_y_on_logitp_cluster_market","term":"logit_p","estimate":0.84752,"std_error":0.1015,"statistic":8.3498,"p_value":6.83799e-17,"conf_low_95":0.64858,"conf_high_95":1.04647,"sig":"***"}

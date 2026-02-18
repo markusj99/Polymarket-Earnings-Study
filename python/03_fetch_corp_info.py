@@ -3,24 +3,25 @@
 r"""
 03_fetch_corp_info.py
 
-Fetch corporate characteristics from Refinitiv Eikon / Workspace for thesis analysis.
+Fetch *per-market* corporate characteristics from Refinitiv Eikon / Workspace
+for the Polymarket Corporate Earnings Study.
 
-IMPORTANT FIX (HQ country)
---------------------------
-Eikon returns *display column names* (e.g. "Country of Headquarters") rather than TR.* codes.
-Your test confirms these exact headers exist. This script now maps fields using those headers
-(with additional robust substring fallbacks).
+Key change (per-market as-of logic)
+-----------------------------------
+- We treat **each Polymarket market as a separate observation** (no company-level aggregation).
+- We use **umaEndDate as the market close time**.
+- For every market, we fetch / compute corporate characteristics **as of (umaEndDate - 2 days)**.
+  Example: umaEndDate = 2025-12-10 -> as-of date = 2025-12-08.
 
-INPUT (relative paths)
-----------------------
-data/validation/correct.jsonl
-data/validation/incorrectly_resolved.jsonl
+Inputs (relative to project root)
+---------------------------------
+data/markets/markets.jsonl
 
-OUTPUTS (relative paths)
-------------------------
-data/corporate_info/corporate_info.jsonl
-data/corporate_info/missing_summary.json
-data/corporate_info/missing_summary.txt
+Outputs (relative to project root)
+----------------------------------
+data/corporate_info/corporate_info_by_market.jsonl
+data/corporate_info/corporate_info_by_market.csv
+data/corporate_info/corporate_info_by_market_summary.txt
 
 Run:
   python 03_fetch_corp_info.py --app-key <KEY>
@@ -31,6 +32,13 @@ Test mode:
 Importable:
   from 03_fetch_corp_info import main
   main(["--app-key","...","--max-markets","10"])
+
+Notes on performance
+--------------------
+- Uses batching for Eikon calls (chunk size configurable).
+- Uses tqdm progress bars.
+- Pulls time-series for the full required window once (global min/max), then does per-market
+  snapshotting & window calculations locally.
 """
 
 from __future__ import annotations
@@ -43,7 +51,7 @@ import sys
 import time
 import urllib.request
 import warnings
-from dataclasses import dataclass, asdict, fields as dataclass_fields
+from dataclasses import dataclass, asdict
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
@@ -70,16 +78,14 @@ def project_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
-DEFAULT_CORRECT_JSONL = project_root() / "data" / "validation" / "correct.jsonl"
-DEFAULT_INCORRECT_JSONL = project_root() / "data" / "validation" / "incorrectly_resolved.jsonl"
-DEFAULT_OUT_JSONL = project_root() / "data" / "corporate_info" / "corporate_info.jsonl"
-DEFAULT_SUMMARY_JSON = project_root() / "data" / "corporate_info" / "missing_summary.json"
-DEFAULT_SUMMARY_TXT = project_root() / "data" / "corporate_info" / "missing_summary.txt"
-DEFAULT_OUT_CSV = project_root() / "data" / "corporate_info" / "corporate_info.csv"
-DEFAULT_OUT_MARKETS_CSV = project_root() / "data" / "corporate_info" / "corporate_info_markets.csv"
+DEFAULT_MARKETS_JSONL = project_root() / "data" / "markets" / "markets.jsonl"
 
+DEFAULT_OUT_JSONL = project_root() / "data" / "corporate_info" / "corporate_info_by_market.jsonl"
+DEFAULT_OUT_CSV = project_root() / "data" / "corporate_info" / "corporate_info_by_market.csv"
+DEFAULT_SUMMARY_TXT = project_root() / "data" / "corporate_info" / "corporate_info_by_market_summary.txt"
 
 DEFAULT_LOOKBACK_DAYS = 183  # ~6 months
+DEFAULT_ASOF_LAG_DAYS = 2    # as-of = umaEndDate - 2 days
 
 
 # =========================
@@ -150,9 +156,7 @@ def setup_logging_quiet() -> None:
 
 
 def setup_warnings_suppression() -> None:
-    """
-    Suppress noisy eikon/pandas FutureWarnings (like the one you saw in test.py).
-    """
+    """Suppress noisy eikon/pandas warnings."""
     warnings.filterwarnings("ignore", category=FutureWarning, module=r"eikon\.data_grid")
     warnings.filterwarnings("ignore", category=FutureWarning, module=r"eikon(\..*)?")
 
@@ -192,6 +196,7 @@ def _safe_str(x: Any) -> Optional[str]:
 
 
 def parse_iso_date(s: Any) -> Optional[date]:
+    """Parse YYYY-MM-DD from an ISO-like string (timestamps OK)."""
     if s is None:
         return None
     try:
@@ -211,24 +216,13 @@ def _is_missing_value(v: Any) -> bool:
         return False
 
 
-def median(xs: List[float]) -> Optional[float]:
-    if not xs:
-        return None
-    ys = sorted(xs)
-    n = len(ys)
-    mid = n // 2
-    return float(ys[mid]) if n % 2 == 1 else float(0.5 * (ys[mid - 1] + ys[mid]))
-
-
 def chunked(xs: List[str], n: int) -> Iterable[List[str]]:
     for i in range(0, len(xs), n):
         yield xs[i : i + n]
 
 
 def find_col_by_substrings(columns: List[str], substrings: List[str]) -> Optional[str]:
-    """
-    Find a column whose lower-cased name contains ANY of the provided substrings.
-    """
+    """Find a column whose lower-cased name contains ANY of the provided substrings."""
     low_cols = [c.lower() for c in columns]
     for sub in substrings:
         s = sub.lower()
@@ -240,8 +234,7 @@ def find_col_by_substrings(columns: List[str], substrings: List[str]) -> Optiona
 
 def get_first_present_column(columns: List[str], preferred_exact: List[str], fallback_substrings: List[str]) -> Optional[str]:
     """
-    Prefer exact header matches first (since your output shows exact display names),
-    then fallback to substring-based matching.
+    Prefer exact header matches first, then fallback to substring-based matching.
     """
     colset = set(columns)
     for name in preferred_exact:
@@ -389,31 +382,39 @@ def eikon_retry_get_data(
 # =========================
 
 @dataclass
-class MarketRef:
-    market_id: Optional[str]
+class MarketObs:
+    market_id: str
     slug: Optional[str]
     ticker: Optional[str]
     ric: str
-    anchor_date: Optional[str]
-    bucket: str  # "correct" or "incorrect"
-    status: Optional[str]
-    polymarket_resolved_outcome: Optional[str]
-    expected_resolution: Optional[str]
-    label: Optional[str]
+
+    uma_end_date_raw: str       # original umaEndDate string
+    close_date: str             # YYYY-MM-DD
+    asof_date: str              # YYYY-MM-DD (close_date - 2 days)
 
 
 @dataclass
-class CorporateInfoRecord:
-    ric: str
+class CorporateInfoByMarket:
+    # Market identifiers
+    market_id: str
+    slug: Optional[str]
     ticker: Optional[str]
+    ric: str
+
+    uma_end_date: str
+    close_date: str
+    asof_date: str
+
+    # Corporate characteristics (as-of asof_date where applicable)
     company_name: Optional[str]
 
-    market_cap_usd: Optional[float]
+    market_cap_usd_asof: Optional[float]
+    analysts_covering_asof: Optional[float]
+
     gics_sector: Optional[str]
     gics_industry: Optional[str]
     trbc_industry: Optional[str]
 
-    # Country fields (now correctly mapped to returned display headers)
     hq_country: Optional[str]
     hq_country_code: Optional[str]
     country_of_risk: Optional[str]
@@ -422,19 +423,12 @@ class CorporateInfoRecord:
 
     primary_exchange: Optional[str]
 
-    analysts_covering_latest: Optional[float]
-    analysts_covering_sample_mean: Optional[float]
-    analysts_covering_sample_median: Optional[float]
-
-    turnover_6m_sum_volume_mean: Optional[float]
-    turnover_6m_sum_volume_median: Optional[float]
-    volatility_6m_mean: Optional[float]
-    volatility_6m_median: Optional[float]
-
-    sample_markets_n: int
-    market_ids: List[str]
-    slugs: List[str]
-    markets: List[Dict[str, Any]]
+    # Market/stock-derived features (window ends at asof_date)
+    turnover_6m_window_start: Optional[str]
+    turnover_6m_window_end: Optional[str]
+    turnover_6m_sum_volume: Optional[float]
+    turnover_6m_avg_daily_volume: Optional[float]
+    volatility_6m: Optional[float]
 
     retrieved_at_utc: str
     notes: List[str]
@@ -457,122 +451,23 @@ def iter_jsonl(path: Path, max_lines: Optional[int]) -> Iterable[Dict[str, Any]]
             except Exception:
                 continue
 
-def load_grouped_by_ric(
-    correct_jsonl: Path,
-    incorrect_jsonl: Path,
-    max_markets: Optional[int],
-) -> Dict[str, List[MarketRef]]:
-    grouped: Dict[str, List[MarketRef]] = {}
-    seen: set[tuple[str, str]] = set()  # (ric, market_id) dedupe
-    total = 0
 
-    def ingest(path: Path, bucket: str) -> None:
-        nonlocal total
-        if not path.exists():
-            return
-
-        for obj in iter_jsonl(path, None):
-            if max_markets is not None and total >= max_markets:
-                return
-
-            ric = _safe_str(obj.get("ric"))
-            if not ric:
-                continue
-
-            market_id = _safe_str(obj.get("market_id"))
-            if market_id:
-                key = (ric, market_id)
-                if key in seen:
-                    continue
-                seen.add(key)
-
-            m = MarketRef(
-                market_id=market_id,
-                slug=_safe_str(obj.get("slug")),
-                ticker=_safe_str(obj.get("ticker")),
-                ric=ric,
-                anchor_date=_safe_str(obj.get("anchor_date")),
-                bucket=bucket,
-                status=_safe_str(obj.get("status")),
-                polymarket_resolved_outcome=_safe_str(obj.get("polymarket_resolved_outcome")),
-                expected_resolution=_safe_str(obj.get("expected_resolution")),
-                label=_safe_str(obj.get("label")),
-            )
-            grouped.setdefault(ric, []).append(m)
-            total += 1
-
-    ingest(correct_jsonl, "correct")
-    ingest(incorrect_jsonl, "incorrect")
-    return grouped
-
-
-def write_jsonl(path: Path, records: List[CorporateInfoRecord]) -> None:
+def write_jsonl(path: Path, records: List[CorporateInfoByMarket]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
         for r in records:
             f.write(json.dumps(asdict(r), ensure_ascii=False) + "\n")
 
-def _to_json_str(x: Any) -> Optional[str]:
-    """
-    For CSV: store lists/dicts as compact JSON strings.
-    """
-    if x is None:
-        return None
-    try:
-        return json.dumps(x, ensure_ascii=False)
-    except Exception:
-        return str(x)
 
+def write_csv(path: Path, records: List[CorporateInfoByMarket]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df = pd.DataFrame([asdict(r) for r in records])
 
-def write_csvs(company_csv: Path, markets_csv: Path, records: List[CorporateInfoRecord]) -> None:
-    """
-    Write:
-      1) Company-level CSV (1 row per CorporateInfoRecord)
-      2) Market-level CSV (1 row per entry in record.markets)
-    """
-    company_csv.parent.mkdir(parents=True, exist_ok=True)
-    markets_csv.parent.mkdir(parents=True, exist_ok=True)
+    # Store notes list as compact JSON string for CSV safety
+    if "notes" in df.columns:
+        df["notes"] = df["notes"].apply(lambda x: json.dumps(x, ensure_ascii=False) if isinstance(x, list) else x)
 
-    # ---- Company-level ----
-    company_rows: List[Dict[str, Any]] = []
-    for r in records:
-        d = asdict(r)
-
-        # Convert nested/list fields to JSON strings for safe CSV storage
-        for k in ["market_ids", "slugs", "markets", "notes"]:
-            d[k] = _to_json_str(d.get(k))
-
-        company_rows.append(d)
-
-    pd.DataFrame(company_rows).to_csv(company_csv, index=False, encoding="utf-8")
-
-    # ---- Market-level (normalized) ----
-    market_rows: List[Dict[str, Any]] = []
-    for r in records:
-        base = {
-            "ric": r.ric,
-            "ticker": r.ticker,
-            "company_name": r.company_name,
-            "hq_country": r.hq_country,
-            "hq_country_code": r.hq_country_code,
-            "country_of_risk": r.country_of_risk,
-            "exchange_country": r.exchange_country,
-            "primary_exchange": r.primary_exchange,
-            "retrieved_at_utc": r.retrieved_at_utc,
-        }
-        for m in (r.markets or []):
-            row = dict(base)
-            row.update(m)
-
-            # If anything inside per-market rows is nested in the future, guard it:
-            for kk, vv in list(row.items()):
-                if isinstance(vv, (list, dict)):
-                    row[kk] = _to_json_str(vv)
-
-            market_rows.append(row)
-
-    pd.DataFrame(market_rows).to_csv(markets_csv, index=False, encoding="utf-8")
-
+    df.to_csv(path, index=False, encoding="utf-8")
 
 
 def write_text(path: Path, text: str) -> None:
@@ -581,83 +476,71 @@ def write_text(path: Path, text: str) -> None:
 
 
 # =========================
-# Missing summary
+# Market loading (from markets.jsonl)
 # =========================
 
-def build_missing_summary(records: List[CorporateInfoRecord]) -> Dict[str, Any]:
-    n_companies = len(records)
-    per_market_rows: List[Dict[str, Any]] = []
-    for r in records:
-        per_market_rows.extend(r.markets or [])
-    n_markets = len(per_market_rows)
+def load_markets_marketsjsonl(
+    markets_jsonl: Path,
+    *,
+    max_markets: Optional[int],
+    asof_lag_days: int,
+) -> Tuple[List[MarketObs], Dict[str, int]]:
+    """
+    Load Polymarket markets from data/markets/markets.jsonl.
 
-    exclude_top = {"market_ids", "slugs", "markets", "notes", "retrieved_at_utc"}
-    top_field_names = [f.name for f in dataclass_fields(CorporateInfoRecord) if f.name not in exclude_top]
-
-    top_stats: Dict[str, Dict[str, Any]] = {}
-    for name in top_field_names:
-        total = n_companies
-        missing = 0
-        for r in records:
-            if _is_missing_value(getattr(r, name)):
-                missing += 1
-        top_stats[name] = {
-            "missing": missing,
-            "total": total,
-            "missing_pct": (missing / total * 100.0) if total else None,
-        }
-
-    key_union: List[str] = sorted({k for row in per_market_rows for k in row.keys()})
-    per_market_stats: Dict[str, Dict[str, Any]] = {}
-    for k in key_union:
-        total = n_markets
-        missing = 0
-        for row in per_market_rows:
-            if k not in row or _is_missing_value(row.get(k)):
-                missing += 1
-        per_market_stats[k] = {
-            "missing": missing,
-            "total": total,
-            "missing_pct": (missing / total * 100.0) if total else None,
-        }
-
-    return {
-        "generated_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "companies": n_companies,
-        "per_market_rows": n_markets,
-        "top_level": top_stats,
-        "per_market": per_market_stats,
+    We require:
+      - a market id (val_market_id or id)
+      - a RIC (val_ric or ric)
+      - umaEndDate (used as market close time)
+    """
+    skipped: Dict[str, int] = {
+        "missing_market_id": 0,
+        "missing_ric": 0,
+        "missing_umaEndDate": 0,
+        "bad_umaEndDate": 0,
     }
 
+    out: List[MarketObs] = []
+    for obj in iter_jsonl(markets_jsonl, max_markets):
+        market_id = _safe_str(obj.get("val_market_id")) or _safe_str(obj.get("market_id")) or _safe_str(obj.get("id"))
+        if not market_id:
+            skipped["missing_market_id"] += 1
+            continue
 
-def format_missing_summary_txt(summary: Dict[str, Any]) -> str:
-    def block(title: str, stats: Dict[str, Dict[str, Any]], top_n: int = 120) -> str:
-        items = sorted(stats.items(), key=lambda kv: (-kv[1]["missing"], kv[0]))
-        lines = [title, "-" * len(title)]
-        for i, (k, v) in enumerate(items[:top_n], start=1):
-            miss = v["missing"]
-            tot = v["total"]
-            pct = v["missing_pct"]
-            pct_s = f"{pct:6.2f}%" if pct is not None else "  n/a "
-            lines.append(f"{i:>3}. {k:<42} missing={miss:>6} / {tot:<6} ({pct_s})")
-        if len(items) > top_n:
-            lines.append(f"... ({len(items) - top_n} more omitted)")
-        return "\n".join(lines)
+        ric = _safe_str(obj.get("val_ric")) or _safe_str(obj.get("ric"))
+        if not ric:
+            skipped["missing_ric"] += 1
+            continue
 
-    header = (
-        "==================== MISSING SUMMARY ====================\n"
-        f"Generated at (UTC): {summary.get('generated_at_utc')}\n"
-        f"Companies:          {summary.get('companies')}\n"
-        f"Per-market rows:    {summary.get('per_market_rows')}\n"
-        "=========================================================\n"
-    )
-    top_block = block("Top-level variables (company)", summary.get("top_level", {}))
-    pm_block = block("Per-market variables (markets[])", summary.get("per_market", {}))
-    return header + "\n\n" + top_block + "\n\n" + pm_block + "\n"
+        uma_end = _safe_str(obj.get("umaEndDate"))
+        if not uma_end:
+            skipped["missing_umaEndDate"] += 1
+            continue
+
+        close_dt = parse_iso_date(uma_end)
+        if not close_dt:
+            skipped["bad_umaEndDate"] += 1
+            continue
+
+        asof_dt = close_dt - timedelta(days=int(asof_lag_days))
+
+        out.append(
+            MarketObs(
+                market_id=market_id,
+                slug=_safe_str(obj.get("val_slug")) or _safe_str(obj.get("slug")),
+                ticker=_safe_str(obj.get("val_ticker")) or _safe_str(obj.get("ticker")),
+                ric=ric,
+                uma_end_date_raw=uma_end,
+                close_date=close_dt.isoformat(),
+                asof_date=asof_dt.isoformat(),
+            )
+        )
+
+    return out, skipped
 
 
 # =========================
-# Eikon data fetchers
+# Eikon field helpers
 # =========================
 
 def _tr_field(name: str, params: Optional[Dict[str, Any]] = None) -> Any:
@@ -680,7 +563,9 @@ def _tr_field(name: str, params: Optional[Dict[str, Any]] = None) -> Any:
 def fetch_static_metadata(rics: List[str], *, fail_fast: bool) -> pd.DataFrame:
     """
     STATIC request (no SDate/EDate) => one row per instrument.
-    This is required for stable retrieval of HQ country fields.
+
+    We keep the HQ/country fields here because they are stable and historically
+    the "display header" mapping is easiest to handle with a single static snapshot.
     """
     fields: List[Any] = [
         # name + classification
@@ -688,18 +573,10 @@ def fetch_static_metadata(rics: List[str], *, fail_fast: bool) -> pd.DataFrame:
         "TR.GICSSector",
         "TR.GICSIndustry",
         "TR.TRBCIndustry",
-
         # primary exchange
         "TR.PrimaryExchangeName",
         "TR.ExchangeName",
-
-        # market cap
-        _tr_field("TR.CompanyMarketCap", {"Curn": "USD"}),
-
-        # analysts
-        "TR.NumberOfAnalysts",
-
-        # country fields (your test proves these return as display headers)
+        # country fields (often returned as display headers)
         "TR.HeadquartersCountry",
         "TR.HQCountryCode",
         "TR.CoRPrimaryCountry",
@@ -711,71 +588,38 @@ def fetch_static_metadata(rics: List[str], *, fail_fast: bool) -> pd.DataFrame:
     return df
 
 
-def fetch_daily_price_volume(ric: str, start: date, end: date, *, fail_fast: bool) -> pd.DataFrame:
-    fields = ["TR.PriceClose", "TR.Volume", "TR.PriceClose.date"]
+def fetch_timeseries_batch(
+    rics: List[str],
+    fields: List[Any],
+    start: date,
+    end: date,
+    *,
+    fail_fast: bool,
+) -> pd.DataFrame:
+    """
+    Generic daily time series fetch for a batch of instruments.
+    Returns the raw Eikon DataFrame (instrument + date + value columns).
+    """
     params = {"SDate": start.isoformat(), "EDate": end.isoformat(), "Frq": "D"}
-    df, _err = eikon_retry_get_data([ric], fields, params, retries=EIKON_RETRIES, fail_fast=fail_fast)
+    df, _err = eikon_retry_get_data(rics, fields, params, retries=EIKON_RETRIES, fail_fast=fail_fast)
     if df is None or df.empty:
-        return pd.DataFrame(columns=["date", "price", "volume"])
+        return pd.DataFrame()
+    return df
 
+
+def _instrument_col(df: pd.DataFrame) -> str:
+    return "Instrument" if "Instrument" in df.columns else df.columns[0]
+
+
+def _date_col(df: pd.DataFrame) -> Optional[str]:
     cols = list(df.columns)
-    col_date = get_first_present_column(cols, preferred_exact=["Date"], fallback_substrings=["date"])
-    col_price = get_first_present_column(cols, preferred_exact=[], fallback_substrings=["price close", "priceclose", "close"])
-    col_vol = get_first_present_column(cols, preferred_exact=[], fallback_substrings=["volume"])
-
-    rows: List[Tuple[date, float, float]] = []
-    for _, r in df.iterrows():
-        d = parse_iso_date(r[col_date]) if col_date else None
-        if not d:
-            continue
-        px = pd.to_numeric(pd.Series([r[col_price]]), errors="coerce").iloc[0] if col_price else np.nan
-        vol = pd.to_numeric(pd.Series([r[col_vol]]), errors="coerce").iloc[0] if col_vol else np.nan
-        rows.append((d, float(px) if not pd.isna(px) else np.nan, float(vol) if not pd.isna(vol) else np.nan))
-
-    out = pd.DataFrame(rows, columns=["date", "price", "volume"]).drop_duplicates(subset=["date"])
-    out.sort_values("date", inplace=True)
-    return out
-
-
-def fetch_daily_analyst_coverage(ric: str, start: date, end: date, *, fail_fast: bool) -> pd.DataFrame:
-    fields = ["TR.NumberOfAnalysts", "TR.NumberOfAnalysts.date"]
-    params = {"SDate": start.isoformat(), "EDate": end.isoformat(), "Frq": "D"}
-    df, _err = eikon_retry_get_data([ric], fields, params, retries=EIKON_RETRIES, fail_fast=fail_fast)
-    if df is None or df.empty:
-        return pd.DataFrame(columns=["date", "analysts"])
-
-    cols = list(df.columns)
-    col_date = get_first_present_column(cols, preferred_exact=["Date"], fallback_substrings=["date"])
-    col_val = get_first_present_column(cols, preferred_exact=[], fallback_substrings=["number of analysts", "analysts"])
-
-    rows: List[Tuple[date, float]] = []
-    for _, r in df.iterrows():
-        d = parse_iso_date(r[col_date]) if col_date else None
-        if not d:
-            continue
-        v = pd.to_numeric(pd.Series([r[col_val]]), errors="coerce").iloc[0] if col_val else np.nan
-        if pd.isna(v):
-            continue
-        rows.append((d, float(v)))
-
-    out = pd.DataFrame(rows, columns=["date", "analysts"]).drop_duplicates(subset=["date"])
-    out.sort_values("date", inplace=True)
-    return out
-
-
-def snapshot_asof(df: pd.DataFrame, asof: date, value_col: str) -> Optional[float]:
-    if df.empty:
-        return None
-    sub = df[df["date"] <= asof]
-    if sub.empty:
-        return None
-    try:
-        return float(sub.iloc[-1][value_col])
-    except Exception:
-        return None
+    return get_first_present_column(cols, preferred_exact=["Date"], fallback_substrings=[".date", " date", "date"])
 
 
 def compute_window_features(pv: pd.DataFrame, window_start: date, window_end: date) -> Dict[str, Optional[float]]:
+    """
+    pv must have columns: date, price, volume
+    """
     if pv.empty:
         return {"sum_volume": None, "avg_daily_volume": None, "volatility": None}
 
@@ -800,20 +644,91 @@ def compute_window_features(pv: pd.DataFrame, window_start: date, window_end: da
     return {"sum_volume": sum_volume, "avg_daily_volume": avg_daily_volume, "volatility": volatility}
 
 
+def snapshot_asof(df: pd.DataFrame, asof: date, value_col: str) -> Optional[float]:
+    """
+    df must have columns: date, <value_col>
+    Returns last observation on or before asof.
+    """
+    if df.empty:
+        return None
+    sub = df[df["date"] <= asof]
+    if sub.empty:
+        return None
+    try:
+        v = sub.iloc[-1][value_col]
+        if pd.isna(v):
+            return None
+        return float(v)
+    except Exception:
+        return None
+
+
+# =========================
+# Missing summary (TXT only)
+# =========================
+
+def build_missing_summary_txt(
+    records: List[CorporateInfoByMarket],
+    *,
+    skipped_counts: Dict[str, int],
+    markets_input_path: Path,
+) -> str:
+    """
+    Human-readable missingness summary for the final per-market dataset.
+    """
+    n = len(records)
+    header = [
+        "==================== CORPORATE INFO (PER-MARKET) SUMMARY ====================",
+        f"Generated at (UTC): {datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}",
+        f"Input markets.jsonl: {markets_input_path}",
+        f"Output rows (markets): {n}",
+        "",
+        "Skipped input rows:",
+    ]
+    for k, v in skipped_counts.items():
+        header.append(f"  - {k}: {v}")
+    header.append("=============================================================================")
+    header.append("")
+
+    if n == 0:
+        return "\n".join(header + ["No output records generated (n=0)."])
+
+    # Compute missing counts per field
+    field_names = list(asdict(records[0]).keys())
+    stats: List[Tuple[str, int, float]] = []
+    for f in field_names:
+        miss = 0
+        for r in records:
+            v = getattr(r, f)
+            if f == "notes":
+                # notes is allowed to be empty list; not "missing"
+                continue
+            if _is_missing_value(v):
+                miss += 1
+        pct = (miss / n * 100.0) if n else 0.0
+        stats.append((f, miss, pct))
+
+    stats.sort(key=lambda x: (-x[1], x[0]))
+
+    lines = header + ["Missingness by variable (sorted by missing count):", "-" * 72]
+    for i, (f, miss, pct) in enumerate(stats, start=1):
+        lines.append(f"{i:>3}. {f:<35} missing={miss:>6} / {n:<6} ({pct:6.2f}%)")
+    lines.append("")
+    return "\n".join(lines)
+
+
 # =========================
 # Args / Main
 # =========================
 
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Fetch corporate info from Eikon for Polymarket earnings thesis.")
-    p.add_argument("--correct-jsonl", type=str, default=str(DEFAULT_CORRECT_JSONL))
+    p = argparse.ArgumentParser(description="Fetch per-market corporate info (as-of umaEndDate-2d) from Eikon.")
+    p.add_argument("--markets-jsonl", type=str, default=str(DEFAULT_MARKETS_JSONL))
     p.add_argument("--out-jsonl", type=str, default=str(DEFAULT_OUT_JSONL))
     p.add_argument("--out-csv", type=str, default=str(DEFAULT_OUT_CSV))
-    p.add_argument("--out-markets-csv", type=str, default=str(DEFAULT_OUT_MARKETS_CSV))
-    p.add_argument("--summary-json", type=str, default=str(DEFAULT_SUMMARY_JSON))
     p.add_argument("--summary-txt", type=str, default=str(DEFAULT_SUMMARY_TXT))
-    p.add_argument("--max-markets", type=int, default=None, help="TEST MODE: only first X lines of correct.jsonl")
-    p.add_argument("--incorrect-jsonl", type=str, default=str(DEFAULT_INCORRECT_JSONL))
+
+    p.add_argument("--max-markets", type=int, default=None, help="TEST MODE: only first X lines of markets.jsonl")
 
     p.add_argument(
         "--app-key",
@@ -827,6 +742,9 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     p.add_argument("--no-fail-fast", action="store_true")
 
     p.add_argument("--lookback-days", type=int, default=DEFAULT_LOOKBACK_DAYS)
+    p.add_argument("--asof-lag-days", type=int, default=DEFAULT_ASOF_LAG_DAYS)
+    p.add_argument("--batch-size", type=int, default=50, help="Eikon instrument batch size (typical 25-100).")
+
     return p.parse_args(argv)
 
 
@@ -838,24 +756,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = parse_args(argv)
     fail_fast = (not args.no_fail_fast)
 
-    correct_jsonl = Path(args.correct_jsonl)
-    incorrect_jsonl = Path(getattr(args, "incorrect_jsonl", "")) if hasattr(args, "incorrect_jsonl") else None
-
+    markets_jsonl = Path(args.markets_jsonl)
     out_jsonl = Path(args.out_jsonl)
     out_csv = Path(args.out_csv)
-    out_markets_csv = Path(args.out_markets_csv)
-    summary_json = Path(args.summary_json)
     summary_txt = Path(args.summary_txt)
 
-    # Require at least one input file to exist
-    have_correct = correct_jsonl.exists()
-    have_incorrect = bool(incorrect_jsonl and incorrect_jsonl.exists())
-    if not have_correct and not have_incorrect:
-        LOG.error(
-            "No inputs found. Expected at least one of:\n  %s\n  %s",
-            str(correct_jsonl),
-            str(incorrect_jsonl) if incorrect_jsonl else "(missing --incorrect-jsonl arg)",
-        )
+    if not markets_jsonl.exists():
+        LOG.error("Input file not found: %s", markets_jsonl)
         return 2
 
     # Resolve app key
@@ -877,32 +784,47 @@ def main(argv: Optional[List[str]] = None) -> int:
         LOG.error("Eikon initialization failed: %s", exc)
         return 2
 
-    # Load markets from BOTH correct + incorrect
-    grouped = load_grouped_by_ric(
-        correct_jsonl=correct_jsonl,
-        incorrect_jsonl=incorrect_jsonl if incorrect_jsonl is not None else Path(""),
+    # Load markets (1 obs per market)
+    markets, skipped_counts = load_markets_marketsjsonl(
+        markets_jsonl,
         max_markets=args.max_markets,
+        asof_lag_days=int(args.asof_lag_days),
     )
-
-    rics = sorted(grouped.keys())
-    if not rics:
-        LOG.error("No RICs found across inputs.")
+    if not markets:
+        LOG.error("No usable markets loaded from %s", markets_jsonl)
+        write_text(summary_txt, build_missing_summary_txt([], skipped_counts=skipped_counts, markets_input_path=markets_jsonl))
         return 2
 
-    # ---- STATIC METADATA (HQ COUNTRY FIX) ----
+    # Unique RICs + global date window (for time series)
+    rics = sorted({m.ric for m in markets})
+    asof_dates = [parse_iso_date(m.asof_date) for m in markets]
+    asof_dates = [d for d in asof_dates if d is not None]
+    if not asof_dates:
+        LOG.error("No parsable asof_date values found.")
+        return 2
+
+    global_end = max(asof_dates)
+    global_start = min(asof_dates) - timedelta(days=int(args.lookback_days) + 5)
+
+    batch_size = int(args.batch_size)
+    lookback_days = int(args.lookback_days)
+
+    # -------------------------
+    # 1) Static metadata (batched)
+    # -------------------------
     static_parts: List[pd.DataFrame] = []
-    for batch in chunked(rics, 50):
-        static_parts.append(fetch_static_metadata(batch, fail_fast=fail_fast))
+    with tqdm(total=len(rics), desc="Eikon static metadata", unit="ric") as pbar:
+        for batch in chunked(rics, batch_size):
+            static_parts.append(fetch_static_metadata(batch, fail_fast=fail_fast))
+            pbar.update(len(batch))
     static_df = pd.concat(static_parts, ignore_index=True) if static_parts else pd.DataFrame()
     if static_df.empty:
         LOG.error("Static metadata fetch returned empty DataFrame.")
         return 2
 
-    # Instrument column
-    inst_col = "Instrument" if "Instrument" in static_df.columns else static_df.columns[0]
+    inst_col = _instrument_col(static_df)
     static_df["_RIC_"] = static_df[inst_col].astype(str)
 
-    # Map static columns using YOUR confirmed headers first.
     cols = list(static_df.columns)
 
     COL_COMPANY_NAME = get_first_present_column(
@@ -910,30 +832,16 @@ def main(argv: Optional[List[str]] = None) -> int:
         preferred_exact=["Company Common Name", "Company Name", "Common Name"],
         fallback_substrings=["company common name", "common name"],
     )
-    COL_MARKET_CAP = get_first_present_column(
-        cols,
-        preferred_exact=[],
-        fallback_substrings=["company market cap", "market cap"],
-    )
-    COL_GICS_SECTOR = get_first_present_column(
-        cols, preferred_exact=[], fallback_substrings=["gics sector"]
-    )
-    COL_GICS_INDUSTRY = get_first_present_column(
-        cols, preferred_exact=[], fallback_substrings=["gics industry"]
-    )
-    COL_TRBC_INDUSTRY = get_first_present_column(
-        cols, preferred_exact=[], fallback_substrings=["trbc industry"]
-    )
+    COL_GICS_SECTOR = get_first_present_column(cols, preferred_exact=[], fallback_substrings=["gics sector"])
+    COL_GICS_INDUSTRY = get_first_present_column(cols, preferred_exact=[], fallback_substrings=["gics industry"])
+    COL_TRBC_INDUSTRY = get_first_present_column(cols, preferred_exact=[], fallback_substrings=["trbc industry"])
     COL_PRIMARY_EXCH = get_first_present_column(
         cols,
         preferred_exact=["Primary Exchange Name"],
         fallback_substrings=["primary exchange", "exchange name"],
     )
-    COL_ANALYSTS = get_first_present_column(
-        cols, preferred_exact=[], fallback_substrings=["number of analysts"]
-    )
 
-    # Country columns: use exact names from your test output first.
+    # Country columns: prefer exact display names (robust to Eikon headers)
     COL_HQ_COUNTRY = get_first_present_column(
         cols,
         preferred_exact=["Country of Headquarters"],
@@ -964,40 +872,116 @@ def main(argv: Optional[List[str]] = None) -> int:
             return None
         return srow.get(col)
 
-    now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    results: List[CorporateInfoRecord] = []
+    # -------------------------
+    # 2) Time series (batched, global window)
+    # -------------------------
+    # Price + Volume (for turnover & volatility)
+    pv_raw_parts: List[pd.DataFrame] = []
+    pv_fields: List[Any] = ["TR.PriceClose", "TR.Volume", "TR.PriceClose.date"]
+    with tqdm(total=len(rics), desc="Eikon price+volume (daily)", unit="ric") as pbar:
+        for batch in chunked(rics, batch_size):
+            pv_raw_parts.append(
+                fetch_timeseries_batch(batch, pv_fields, global_start, global_end, fail_fast=fail_fast)
+            )
+            pbar.update(len(batch))
+    pv_raw = pd.concat(pv_raw_parts, ignore_index=True) if pv_raw_parts else pd.DataFrame()
 
-    with tqdm(total=len(rics), desc="Fetching corporate info", unit="company") as pbar:
-        for ric in rics:
+    # Analysts (daily)
+    an_raw_parts: List[pd.DataFrame] = []
+    an_fields: List[Any] = ["TR.NumberOfAnalysts", "TR.NumberOfAnalysts.date"]
+    with tqdm(total=len(rics), desc="Eikon analysts (daily)", unit="ric") as pbar:
+        for batch in chunked(rics, batch_size):
+            an_raw_parts.append(
+                fetch_timeseries_batch(batch, an_fields, global_start, global_end, fail_fast=fail_fast)
+            )
+            pbar.update(len(batch))
+    an_raw = pd.concat(an_raw_parts, ignore_index=True) if an_raw_parts else pd.DataFrame()
+
+    # Market cap (daily, USD) — for as-of market cap per market
+    mc_raw_parts: List[pd.DataFrame] = []
+    mc_fields: List[Any] = [
+        _tr_field("TR.CompanyMarketCap", {"Curn": "USD"}),
+        "TR.CompanyMarketCap.date",
+    ]
+    with tqdm(total=len(rics), desc="Eikon market cap (daily, USD)", unit="ric") as pbar:
+        for batch in chunked(rics, batch_size):
+            mc_raw_parts.append(
+                fetch_timeseries_batch(batch, mc_fields, global_start, global_end, fail_fast=fail_fast)
+            )
+            pbar.update(len(batch))
+    mc_raw = pd.concat(mc_raw_parts, ignore_index=True) if mc_raw_parts else pd.DataFrame()
+
+    # -------------------------
+    # 3) Normalize time series to dict[ric] -> DataFrame(date, value)
+    # -------------------------
+    pv_by_ric: Dict[str, pd.DataFrame] = {}
+    if not pv_raw.empty:
+        inst = _instrument_col(pv_raw)
+        dcol = _date_col(pv_raw)
+        cols_pv = list(pv_raw.columns)
+        pcol = get_first_present_column(cols_pv, preferred_exact=[], fallback_substrings=["price close", "priceclose", "close"])
+        vcol = get_first_present_column(cols_pv, preferred_exact=[], fallback_substrings=["volume"])
+
+        if dcol and pcol and vcol:
+            tmp = pv_raw[[inst, dcol, pcol, vcol]].copy()
+            tmp["date"] = tmp[dcol].apply(parse_iso_date)
+            tmp["price"] = pd.to_numeric(tmp[pcol], errors="coerce")
+            tmp["volume"] = pd.to_numeric(tmp[vcol], errors="coerce")
+            tmp = tmp.dropna(subset=["date"])
+            for ric, g in tmp.groupby(inst, sort=False):
+                df = g[["date", "price", "volume"]].drop_duplicates(subset=["date"]).sort_values("date")
+                pv_by_ric[str(ric)] = df.reset_index(drop=True)
+
+    an_by_ric: Dict[str, pd.DataFrame] = {}
+    if not an_raw.empty:
+        inst = _instrument_col(an_raw)
+        dcol = _date_col(an_raw)
+        cols_an = list(an_raw.columns)
+        acol = get_first_present_column(cols_an, preferred_exact=[], fallback_substrings=["number of analysts", "analysts"])
+        if dcol and acol:
+            tmp = an_raw[[inst, dcol, acol]].copy()
+            tmp["date"] = tmp[dcol].apply(parse_iso_date)
+            tmp["analysts"] = pd.to_numeric(tmp[acol], errors="coerce")
+            tmp = tmp.dropna(subset=["date"])
+            for ric, g in tmp.groupby(inst, sort=False):
+                df = g[["date", "analysts"]].drop_duplicates(subset=["date"]).sort_values("date")
+                an_by_ric[str(ric)] = df.reset_index(drop=True)
+
+    mc_by_ric: Dict[str, pd.DataFrame] = {}
+    if not mc_raw.empty:
+        inst = _instrument_col(mc_raw)
+        dcol = _date_col(mc_raw)
+        cols_mc = list(mc_raw.columns)
+        mcol = get_first_present_column(cols_mc, preferred_exact=[], fallback_substrings=["company market cap", "market cap"])
+        if dcol and mcol:
+            tmp = mc_raw[[inst, dcol, mcol]].copy()
+            tmp["date"] = tmp[dcol].apply(parse_iso_date)
+            tmp["market_cap_usd"] = pd.to_numeric(tmp[mcol], errors="coerce")
+            tmp = tmp.dropna(subset=["date"])
+            for ric, g in tmp.groupby(inst, sort=False):
+                df = g[["date", "market_cap_usd"]].drop_duplicates(subset=["date"]).sort_values("date")
+                mc_by_ric[str(ric)] = df.reset_index(drop=True)
+
+    # -------------------------
+    # 4) Build per-market output rows
+    # -------------------------
+    now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    results: List[CorporateInfoByMarket] = []
+
+    with tqdm(total=len(markets), desc="Assembling per-market rows", unit="market") as pbar:
+        for m in markets:
             pbar.update(1)
-            markets = grouped[ric]
             notes: List[str] = []
 
-            srow = static_row(ric)
+            srow = static_row(m.ric)
 
             company_name = _safe_str(sget(srow, COL_COMPANY_NAME))
-
-            market_cap_usd = None
-            try:
-                v = sget(srow, COL_MARKET_CAP)
-                market_cap_usd = float(v) if v is not None and str(v).strip() and str(v).lower() != "nan" else None
-            except Exception:
-                market_cap_usd = None
-
             gics_sector = _safe_str(sget(srow, COL_GICS_SECTOR))
             gics_industry = _safe_str(sget(srow, COL_GICS_INDUSTRY))
             trbc_industry = _safe_str(sget(srow, COL_TRBC_INDUSTRY))
-
             primary_exchange = _safe_str(sget(srow, COL_PRIMARY_EXCH))
 
-            analysts_covering_latest = None
-            try:
-                v = sget(srow, COL_ANALYSTS)
-                analysts_covering_latest = float(v) if v is not None and str(v).strip() and str(v).lower() != "nan" else None
-            except Exception:
-                analysts_covering_latest = None
-
-            # ---- Country: now mapped to actual returned headers ----
+            # Country mapping (display-header aware)
             hq_country_name = _safe_str(sget(srow, COL_HQ_COUNTRY))
             hq_country_code = _safe_str(sget(srow, COL_HQ_CODE))
             country_of_risk = _safe_str(sget(srow, COL_RISK))
@@ -1014,92 +998,43 @@ def main(argv: Optional[List[str]] = None) -> int:
                 country_source = None
                 notes.append("hq_country_missing")
 
-            # Determine lookback window from anchors
-            anchor_dates = [parse_iso_date(m.anchor_date) for m in markets]
-            anchor_dates = [d for d in anchor_dates if d is not None]
-            if not anchor_dates:
-                notes.append("no_anchor_dates_in_group")
-                anchor_min = date.today()
-                anchor_max = date.today()
-            else:
-                anchor_min = min(anchor_dates)
-                anchor_max = max(anchor_dates)
+            asof_dt = parse_iso_date(m.asof_date)
+            if not asof_dt:
+                # should be rare (already validated when loading)
+                notes.append("bad_asof_date")
+                asof_dt = date.today()
 
-            ts_start = anchor_min - timedelta(days=args.lookback_days + 5)
-            ts_end = anchor_max
+            # As-of snapshots (market cap + analysts)
+            market_cap_asof = snapshot_asof(mc_by_ric.get(m.ric, pd.DataFrame()), asof_dt, "market_cap_usd")
+            if market_cap_asof is None:
+                notes.append("market_cap_missing_asof")
 
-            pv = fetch_daily_price_volume(ric, ts_start, ts_end, fail_fast=fail_fast)
-            an = fetch_daily_analyst_coverage(ric, ts_start, ts_end, fail_fast=fail_fast)
+            analysts_asof = snapshot_asof(an_by_ric.get(m.ric, pd.DataFrame()), asof_dt, "analysts")
+            if analysts_asof is None:
+                notes.append("analysts_missing_asof")
 
-            per_market: List[Dict[str, Any]] = []
-            sum_vols: List[float] = []
-            vols: List[float] = []
-            analysts_asof_vals: List[float] = []
-
-            for m in markets:
-                ad = parse_iso_date(m.anchor_date)
-
-                # include match bucket/info if present on MarketRef
-                row: Dict[str, Any] = {
-                    "market_id": m.market_id,
-                    "slug": m.slug,
-                    "ticker": m.ticker,
-                    "anchor_date": m.anchor_date,
-                    "bucket": getattr(m, "bucket", None),
-                    "status": getattr(m, "status", None),
-                    "polymarket_resolved_outcome": getattr(m, "polymarket_resolved_outcome", None),
-                    "expected_resolution": getattr(m, "expected_resolution", None),
-                    "label": getattr(m, "label", None),
-                }
-
-                if ad:
-                    w0 = ad - timedelta(days=args.lookback_days)
-                    w1 = ad
-                    feats = compute_window_features(pv, w0, w1)
-                    row.update({
-                        "turnover_6m_window_start": w0.isoformat(),
-                        "turnover_6m_window_end": w1.isoformat(),
-                        "turnover_6m_sum_volume": feats["sum_volume"],
-                        "turnover_6m_avg_daily_volume": feats["avg_daily_volume"],
-                        "volatility_6m": feats["volatility"],
-                    })
-                    if feats["sum_volume"] is not None:
-                        sum_vols.append(float(feats["sum_volume"]))
-                    if feats["volatility"] is not None:
-                        vols.append(float(feats["volatility"]))
-
-                    a_asof = snapshot_asof(an, ad, "analysts")
-                    row["analysts_covering_asof_anchor"] = a_asof
-                    if a_asof is not None:
-                        analysts_asof_vals.append(float(a_asof))
-                else:
-                    row["turnover_6m_sum_volume"] = None
-                    row["turnover_6m_avg_daily_volume"] = None
-                    row["volatility_6m"] = None
-                    row["analysts_covering_asof_anchor"] = None
-
-                per_market.append(row)
-
-            analysts_mean = float(np.mean(analysts_asof_vals)) if analysts_asof_vals else None
-            analysts_med = median(analysts_asof_vals) if analysts_asof_vals else None
-
-            sum_vol_mean = float(np.mean(sum_vols)) if sum_vols else None
-            sum_vol_med = median(sum_vols) if sum_vols else None
-            vol_mean = float(np.mean(vols)) if vols else None
-            vol_med = median(vols) if vols else None
-
-            tickers = [m.ticker for m in markets if m.ticker]
-            ticker = tickers[0] if tickers else None
-
-            market_ids = [m.market_id for m in markets if m.market_id]
-            slugs = [m.slug for m in markets if m.slug]
+            # Window features from price+volume (ends at asof_dt)
+            w0 = asof_dt - timedelta(days=lookback_days)
+            w1 = asof_dt
+            pv = pv_by_ric.get(m.ric, pd.DataFrame())
+            feats = compute_window_features(pv, w0, w1)
+            if feats["sum_volume"] is None:
+                notes.append("turnover_missing_window")
+            if feats["volatility"] is None:
+                notes.append("volatility_missing_window")
 
             results.append(
-                CorporateInfoRecord(
-                    ric=ric,
-                    ticker=ticker,
+                CorporateInfoByMarket(
+                    market_id=m.market_id,
+                    slug=m.slug,
+                    ticker=m.ticker,
+                    ric=m.ric,
+                    uma_end_date=m.uma_end_date_raw,
+                    close_date=m.close_date,
+                    asof_date=m.asof_date,
                     company_name=company_name,
-                    market_cap_usd=market_cap_usd,
+                    market_cap_usd_asof=market_cap_asof,
+                    analysts_covering_asof=analysts_asof,
                     gics_sector=gics_sector,
                     gics_industry=gics_industry,
                     trbc_industry=trbc_industry,
@@ -1109,43 +1044,39 @@ def main(argv: Optional[List[str]] = None) -> int:
                     exchange_country=exchange_country,
                     country_source=country_source,
                     primary_exchange=primary_exchange,
-                    analysts_covering_latest=analysts_covering_latest,
-                    analysts_covering_sample_mean=analysts_mean,
-                    analysts_covering_sample_median=analysts_med,
-                    turnover_6m_sum_volume_mean=sum_vol_mean,
-                    turnover_6m_sum_volume_median=sum_vol_med,
-                    volatility_6m_mean=vol_mean,
-                    volatility_6m_median=vol_med,
-                    sample_markets_n=len(markets),
-                    market_ids=market_ids,
-                    slugs=slugs,
-                    markets=per_market,
+                    turnover_6m_window_start=w0.isoformat(),
+                    turnover_6m_window_end=w1.isoformat(),
+                    turnover_6m_sum_volume=feats["sum_volume"],
+                    turnover_6m_avg_daily_volume=feats["avg_daily_volume"],
+                    volatility_6m=feats["volatility"],
                     retrieved_at_utc=now_utc,
                     notes=notes,
                 )
             )
 
-    # Write outputs
+    # -------------------------
+    # 5) Write outputs (ONLY per-market files)
+    # -------------------------
     write_jsonl(out_jsonl, results)
-    write_csvs(out_csv, out_markets_csv, results)
+    write_csv(out_csv, results)
 
-    summary = build_missing_summary(results)
-    summary_json.parent.mkdir(parents=True, exist_ok=True)
-    summary_json.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
-    write_text(summary_txt, format_missing_summary_txt(summary))
+    summary_text = build_missing_summary_txt(
+        results,
+        skipped_counts=skipped_counts,
+        markets_input_path=markets_jsonl,
+    )
+    write_text(summary_txt, summary_text)
 
     msg = (
         "\n==================== DONE ====================\n"
-        f"Inputs:\n"
-        f"  - correct:   {correct_jsonl} ({'OK' if have_correct else 'MISSING'})\n"
-        f"  - incorrect: {incorrect_jsonl} ({'OK' if have_incorrect else 'MISSING'})\n"
-        f"Output:       {out_jsonl}\n"
-        f"Output JSONL:  {out_jsonl}\n"
-        f"Output CSV:    {out_csv}\n"
-        f"Markets CSV:   {out_markets_csv}\n"
-        f"Summary JSON: {summary_json}\n"
+        f"Input:        {markets_jsonl}\n"
+        f"Output JSONL: {out_jsonl}\n"
+        f"Output CSV:   {out_csv}\n"
         f"Summary TXT:  {summary_txt}\n"
-        f"RICs:         {len(rics)}\n"
+        f"Markets out:  {len(results)}\n"
+        f"RICs used:    {len(rics)}\n"
+        f"As-of lag:    {args.asof_lag_days} day(s) (asof = umaEndDate - lag)\n"
+        f"Lookback:     {lookback_days} day(s)\n"
         "=============================================\n"
     )
     tqdm.write(msg) if tqdm is not None else print(msg)

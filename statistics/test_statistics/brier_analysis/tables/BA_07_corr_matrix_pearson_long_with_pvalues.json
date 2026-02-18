@@ -1,0 +1,387 @@
+[
+  {
+    "var1": "abs_surprise",
+    "var2": "abs_surprise",
+    "n": 449,
+    "corr": 1,
+    "p_value": 0
+  },
+  {
+    "var1": "abs_surprise",
+    "var2": "accuracy",
+    "n": 449,
+    "corr": 0.0278,
+    "p_value": 0.5574
+  },
+  {
+    "var1": "abs_surprise",
+    "var2": "analysts",
+    "n": 449,
+    "corr": -0.0642,
+    "p_value": 0.1747
+  },
+  {
+    "var1": "abs_surprise",
+    "var2": "brier_polymarket",
+    "n": 449,
+    "corr": -0.0174,
+    "p_value": 0.7132
+  },
+  {
+    "var1": "abs_surprise",
+    "var2": "log_mkt_cap",
+    "n": 449,
+    "corr": 0.0859,
+    "p_value": 0.069
+  },
+  {
+    "var1": "abs_surprise",
+    "var2": "log_poly_liquidity",
+    "n": 2,
+    "corr": null,
+    "p_value": null
+  },
+  {
+    "var1": "abs_surprise",
+    "var2": "log_poly_volume",
+    "n": 449,
+    "corr": -0.1353,
+    "p_value": 0.0041
+  },
+  {
+    "var1": "abs_surprise",
+    "var2": "log_stock_turnover_6m",
+    "n": 448,
+    "corr": -0.1326,
+    "p_value": 0.0049
+  },
+  {
+    "var1": "abs_surprise",
+    "var2": "market_open_days",
+    "n": 449,
+    "corr": -0.0688,
+    "p_value": 0.1454
+  },
+  {
+    "var1": "abs_surprise",
+    "var2": "stock_volatility_6m",
+    "n": 448,
+    "corr": -0.0479,
+    "p_value": 0.3114
+  },
+  {
+    "var1": "accuracy",
+    "var2": "accuracy",
+    "n": 450,
+    "corr": 1,
+    "p_value": 0
+  },
+  {
+    "var1": "accuracy",
+    "var2": "analysts",
+    "n": 449,
+    "corr": 0.076,
+    "p_value": 0.1079
+  },
+  {
+    "var1": "accuracy",
+    "var2": "brier_polymarket",
+    "n": 450,
+    "corr": -0.9455,
+    "p_value": 2.068e-220
+  },
+  {
+    "var1": "accuracy",
+    "var2": "log_mkt_cap",
+    "n": 449,
+    "corr": 0.1227,
+    "p_value": 0.0092
+  },
+  {
+    "var1": "accuracy",
+    "var2": "log_poly_liquidity",
+    "n": 2,
+    "corr": null,
+    "p_value": null
+  },
+  {
+    "var1": "accuracy",
+    "var2": "log_poly_volume",
+    "n": 450,
+    "corr": -0.0612,
+    "p_value": 0.1953
+  },
+  {
+    "var1": "accuracy",
+    "var2": "log_stock_turnover_6m",
+    "n": 448,
+    "corr": 0.0166,
+    "p_value": 0.7254
+  },
+  {
+    "var1": "accuracy",
+    "var2": "market_open_days",
+    "n": 450,
+    "corr": 0.0557,
+    "p_value": 0.2379
+  },
+  {
+    "var1": "accuracy",
+    "var2": "stock_volatility_6m",
+    "n": 448,
+    "corr": -0.0968,
+    "p_value": 0.0406
+  },
+  {
+    "var1": "analysts",
+    "var2": "analysts",
+    "n": 449,
+    "corr": 1,
+    "p_value": 0
+  },
+  {
+    "var1": "analysts",
+    "var2": "brier_polymarket",
+    "n": 449,
+    "corr": -0.0697,
+    "p_value": 0.1401
+  },
+  {
+    "var1": "analysts",
+    "var2": "log_mkt_cap",
+    "n": 449,
+    "corr": 0.7392,
+    "p_value": 9.3204e-79
+  },
+  {
+    "var1": "analysts",
+    "var2": "log_poly_liquidity",
+    "n": 2,
+    "corr": null,
+    "p_value": null
+  },
+  {
+    "var1": "analysts",
+    "var2": "log_poly_volume",
+    "n": 449,
+    "corr": 0.3737,
+    "p_value": 2.5077e-16
+  },
+  {
+    "var1": "analysts",
+    "var2": "log_stock_turnover_6m",
+    "n": 448,
+    "corr": 0.2855,
+    "p_value": 7.5398e-10
+  },
+  {
+    "var1": "analysts",
+    "var2": "market_open_days",
+    "n": 449,
+    "corr": 0.0061,
+    "p_value": 0.8973
+  },
+  {
+    "var1": "analysts",
+    "var2": "stock_volatility_6m",
+    "n": 448,
+    "corr": -0.2641,
+    "p_value": 1.3892e-08
+  },
+  {
+    "var1": "brier_polymarket",
+    "var2": "brier_polymarket",
+    "n": 450,
+    "corr": 1,
+    "p_value": 0
+  },
+  {
+    "var1": "brier_polymarket",
+    "var2": "log_mkt_cap",
+    "n": 449,
+    "corr": -0.1048,
+    "p_value": 0.0264
+  },
+  {
+    "var1": "brier_polymarket",
+    "var2": "log_poly_liquidity",
+    "n": 2,
+    "corr": null,
+    "p_value": null
+  },
+  {
+    "var1": "brier_polymarket",
+    "var2": "log_poly_volume",
+    "n": 450,
+    "corr": 0.0482,
+    "p_value": 0.308
+  },
+  {
+    "var1": "brier_polymarket",
+    "var2": "log_stock_turnover_6m",
+    "n": 448,
+    "corr": -0.0055,
+    "p_value": 0.9078
+  },
+  {
+    "var1": "brier_polymarket",
+    "var2": "market_open_days",
+    "n": 450,
+    "corr": -0.0713,
+    "p_value": 0.1308
+  },
+  {
+    "var1": "brier_polymarket",
+    "var2": "stock_volatility_6m",
+    "n": 448,
+    "corr": 0.0707,
+    "p_value": 0.1353
+  },
+  {
+    "var1": "log_mkt_cap",
+    "var2": "log_mkt_cap",
+    "n": 449,
+    "corr": 1,
+    "p_value": 0
+  },
+  {
+    "var1": "log_mkt_cap",
+    "var2": "log_poly_liquidity",
+    "n": 2,
+    "corr": null,
+    "p_value": null
+  },
+  {
+    "var1": "log_mkt_cap",
+    "var2": "log_poly_volume",
+    "n": 449,
+    "corr": 0.4038,
+    "p_value": 4.8319e-19
+  },
+  {
+    "var1": "log_mkt_cap",
+    "var2": "log_stock_turnover_6m",
+    "n": 448,
+    "corr": 0.4491,
+    "p_value": 1.2768e-23
+  },
+  {
+    "var1": "log_mkt_cap",
+    "var2": "market_open_days",
+    "n": 449,
+    "corr": 0.0933,
+    "p_value": 0.0482
+  },
+  {
+    "var1": "log_mkt_cap",
+    "var2": "stock_volatility_6m",
+    "n": 448,
+    "corr": -0.536,
+    "p_value": 1.1178e-34
+  },
+  {
+    "var1": "log_poly_liquidity",
+    "var2": "log_poly_liquidity",
+    "n": 2,
+    "corr": null,
+    "p_value": null
+  },
+  {
+    "var1": "log_poly_liquidity",
+    "var2": "log_poly_volume",
+    "n": 2,
+    "corr": null,
+    "p_value": null
+  },
+  {
+    "var1": "log_poly_liquidity",
+    "var2": "log_stock_turnover_6m",
+    "n": 2,
+    "corr": null,
+    "p_value": null
+  },
+  {
+    "var1": "log_poly_liquidity",
+    "var2": "market_open_days",
+    "n": 2,
+    "corr": null,
+    "p_value": null
+  },
+  {
+    "var1": "log_poly_liquidity",
+    "var2": "stock_volatility_6m",
+    "n": 2,
+    "corr": null,
+    "p_value": null
+  },
+  {
+    "var1": "log_poly_volume",
+    "var2": "log_poly_volume",
+    "n": 450,
+    "corr": 1,
+    "p_value": 0
+  },
+  {
+    "var1": "log_poly_volume",
+    "var2": "log_stock_turnover_6m",
+    "n": 448,
+    "corr": 0.199,
+    "p_value": 0
+  },
+  {
+    "var1": "log_poly_volume",
+    "var2": "market_open_days",
+    "n": 450,
+    "corr": 0.2713,
+    "p_value": 4.957e-09
+  },
+  {
+    "var1": "log_poly_volume",
+    "var2": "stock_volatility_6m",
+    "n": 448,
+    "corr": -0.0632,
+    "p_value": 0.1817
+  },
+  {
+    "var1": "log_stock_turnover_6m",
+    "var2": "log_stock_turnover_6m",
+    "n": 448,
+    "corr": 1,
+    "p_value": 0
+  },
+  {
+    "var1": "log_stock_turnover_6m",
+    "var2": "market_open_days",
+    "n": 448,
+    "corr": 0.112,
+    "p_value": 0.0177
+  },
+  {
+    "var1": "log_stock_turnover_6m",
+    "var2": "stock_volatility_6m",
+    "n": 448,
+    "corr": -0.1986,
+    "p_value": 0
+  },
+  {
+    "var1": "market_open_days",
+    "var2": "market_open_days",
+    "n": 450,
+    "corr": 1,
+    "p_value": 0
+  },
+  {
+    "var1": "market_open_days",
+    "var2": "stock_volatility_6m",
+    "n": 448,
+    "corr": -0.1336,
+    "p_value": 0.0046
+  },
+  {
+    "var1": "stock_volatility_6m",
+    "var2": "stock_volatility_6m",
+    "n": 448,
+    "corr": 1,
+    "p_value": 0
+  }
+]

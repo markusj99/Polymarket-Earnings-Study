@@ -1,0 +1,1 @@
+Skipping horizon=4w because n=4 < 15 after filtering.

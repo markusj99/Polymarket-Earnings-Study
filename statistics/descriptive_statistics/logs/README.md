@@ -1,7 +1,7 @@
 # Descriptive Statistics Output
 
-- Run timestamp: **20260212T124834**
-- Generated at: **2026-02-12 12:48:53.998541**
+- Run timestamp: **20260216T104509**
+- Generated at: **2026-02-16 10:45:19.939113**
 - Script: `Corporate_Earnings/R/scripts/descriptive_stats.R`
 - Output directory: `Corporate_Earnings/statistics/descriptive_statistics/`
 
@@ -14,7 +14,7 @@ The script reads the following input files (relative to project root):
 - `data/poly_prices/poly_prices_long.csv`
 - `data/stock_prices/stock_prices_daily.csv`
 - `data/corporate_info/corporate_info.csv`
-- `data/heckman_selection_model/heckman_universe_companies.csv`
+- `data/heckman_selection_model/heckman_selection_companies.csv`
 - `data/heckman_selection_model/heckman_universe_events.csv`
 
 ## Key definitions / filters used

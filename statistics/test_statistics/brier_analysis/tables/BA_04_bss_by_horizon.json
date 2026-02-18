@@ -1,0 +1,47 @@
+[
+  {
+    "horizon": "1w",
+    "bss_vs_coinflip": 0.35,
+    "bss_vs_hist": 0.1333
+  },
+  {
+    "horizon": "6d",
+    "bss_vs_coinflip": 0.3392,
+    "bss_vs_hist": 0.0939
+  },
+  {
+    "horizon": "5d",
+    "bss_vs_coinflip": 0.3674,
+    "bss_vs_hist": 0.1637
+  },
+  {
+    "horizon": "4d",
+    "bss_vs_coinflip": 0.3711,
+    "bss_vs_hist": 0.1654
+  },
+  {
+    "horizon": "3d",
+    "bss_vs_coinflip": 0.3838,
+    "bss_vs_hist": 0.1777
+  },
+  {
+    "horizon": "2d",
+    "bss_vs_coinflip": 0.3791,
+    "bss_vs_hist": 0.1706
+  },
+  {
+    "horizon": "1d",
+    "bss_vs_coinflip": 0.3866,
+    "bss_vs_hist": 0.1792
+  },
+  {
+    "horizon": "12h",
+    "bss_vs_coinflip": 0.4066,
+    "bss_vs_hist": 0.206
+  },
+  {
+    "horizon": "6h",
+    "bss_vs_coinflip": 0.4977,
+    "bss_vs_hist": 0.331
+  }
+]

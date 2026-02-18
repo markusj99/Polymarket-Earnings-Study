@@ -1,0 +1,452 @@
+[
+  {
+    "horizon": "1w",
+    "p_bin": "0-0.2",
+    "n": 4,
+    "n_markets": 4,
+    "mean_p": 0.056,
+    "p_yes_empirical": 0,
+    "accuracy": 1,
+    "brier": 0.0096
+  },
+  {
+    "horizon": "1w",
+    "p_bin": "0.2-0.4",
+    "n": 17,
+    "n_markets": 17,
+    "mean_p": 0.3385,
+    "p_yes_empirical": 0.4118,
+    "accuracy": 0.5882,
+    "brier": 0.2644
+  },
+  {
+    "horizon": "1w",
+    "p_bin": "0.4-0.6",
+    "n": 35,
+    "n_markets": 35,
+    "mean_p": 0.5184,
+    "p_yes_empirical": 0.6571,
+    "accuracy": 0.5714,
+    "brier": 0.2432
+  },
+  {
+    "horizon": "1w",
+    "p_bin": "0.6-0.8",
+    "n": 90,
+    "n_markets": 90,
+    "mean_p": 0.7138,
+    "p_yes_empirical": 0.7222,
+    "accuracy": 0.7222,
+    "brier": 0.1975
+  },
+  {
+    "horizon": "1w",
+    "p_bin": "0.8-1",
+    "n": 131,
+    "n_markets": 131,
+    "mean_p": 0.8662,
+    "p_yes_empirical": 0.8779,
+    "accuracy": 0.8779,
+    "brier": 0.1083
+  },
+  {
+    "horizon": "6d",
+    "p_bin": "0-0.2",
+    "n": 5,
+    "n_markets": 5,
+    "mean_p": 0.0358,
+    "p_yes_empirical": 0,
+    "accuracy": 1,
+    "brier": 0.0048
+  },
+  {
+    "horizon": "6d",
+    "p_bin": "0.2-0.4",
+    "n": 29,
+    "n_markets": 29,
+    "mean_p": 0.3279,
+    "p_yes_empirical": 0.4483,
+    "accuracy": 0.5517,
+    "brier": 0.2717
+  },
+  {
+    "horizon": "6d",
+    "p_bin": "0.4-0.6",
+    "n": 57,
+    "n_markets": 57,
+    "mean_p": 0.5076,
+    "p_yes_empirical": 0.6667,
+    "accuracy": 0.5789,
+    "brier": 0.2413
+  },
+  {
+    "horizon": "6d",
+    "p_bin": "0.6-0.8",
+    "n": 120,
+    "n_markets": 120,
+    "mean_p": 0.7226,
+    "p_yes_empirical": 0.8,
+    "accuracy": 0.8,
+    "brier": 0.1684
+  },
+  {
+    "horizon": "6d",
+    "p_bin": "0.8-1",
+    "n": 151,
+    "n_markets": 151,
+    "mean_p": 0.8622,
+    "p_yes_empirical": 0.8609,
+    "accuracy": 0.8609,
+    "brier": 0.1188
+  },
+  {
+    "horizon": "5d",
+    "p_bin": "0-0.2",
+    "n": 6,
+    "n_markets": 6,
+    "mean_p": 0.0535,
+    "p_yes_empirical": 0,
+    "accuracy": 1,
+    "brier": 0.0082
+  },
+  {
+    "horizon": "5d",
+    "p_bin": "0.2-0.4",
+    "n": 31,
+    "n_markets": 31,
+    "mean_p": 0.3287,
+    "p_yes_empirical": 0.3871,
+    "accuracy": 0.6129,
+    "brier": 0.2514
+  },
+  {
+    "horizon": "5d",
+    "p_bin": "0.4-0.6",
+    "n": 55,
+    "n_markets": 55,
+    "mean_p": 0.5051,
+    "p_yes_empirical": 0.6182,
+    "accuracy": 0.5455,
+    "brier": 0.2503
+  },
+  {
+    "horizon": "5d",
+    "p_bin": "0.6-0.8",
+    "n": 129,
+    "n_markets": 129,
+    "mean_p": 0.7233,
+    "p_yes_empirical": 0.7209,
+    "accuracy": 0.7209,
+    "brier": 0.1998
+  },
+  {
+    "horizon": "5d",
+    "p_bin": "0.8-1",
+    "n": 188,
+    "n_markets": 188,
+    "mean_p": 0.8665,
+    "p_yes_empirical": 0.8989,
+    "accuracy": 0.8989,
+    "brier": 0.092
+  },
+  {
+    "horizon": "4d",
+    "p_bin": "0-0.2",
+    "n": 6,
+    "n_markets": 6,
+    "mean_p": 0.0928,
+    "p_yes_empirical": 0.1667,
+    "accuracy": 0.8333,
+    "brier": 0.1229
+  },
+  {
+    "horizon": "4d",
+    "p_bin": "0.2-0.4",
+    "n": 32,
+    "n_markets": 32,
+    "mean_p": 0.32,
+    "p_yes_empirical": 0.3438,
+    "accuracy": 0.6562,
+    "brier": 0.2372
+  },
+  {
+    "horizon": "4d",
+    "p_bin": "0.4-0.6",
+    "n": 49,
+    "n_markets": 49,
+    "mean_p": 0.4899,
+    "p_yes_empirical": 0.5714,
+    "accuracy": 0.5714,
+    "brier": 0.246
+  },
+  {
+    "horizon": "4d",
+    "p_bin": "0.6-0.8",
+    "n": 136,
+    "n_markets": 136,
+    "mean_p": 0.7189,
+    "p_yes_empirical": 0.7574,
+    "accuracy": 0.7574,
+    "brier": 0.1823
+  },
+  {
+    "horizon": "4d",
+    "p_bin": "0.8-1",
+    "n": 203,
+    "n_markets": 203,
+    "mean_p": 0.8743,
+    "p_yes_empirical": 0.8768,
+    "accuracy": 0.8768,
+    "brier": 0.1074
+  },
+  {
+    "horizon": "3d",
+    "p_bin": "0-0.2",
+    "n": 3,
+    "n_markets": 3,
+    "mean_p": 0.0053,
+    "p_yes_empirical": 0,
+    "accuracy": 1,
+    "brier": 0
+  },
+  {
+    "horizon": "3d",
+    "p_bin": "0.2-0.4",
+    "n": 40,
+    "n_markets": 40,
+    "mean_p": 0.3196,
+    "p_yes_empirical": 0.3,
+    "accuracy": 0.7,
+    "brier": 0.2202
+  },
+  {
+    "horizon": "3d",
+    "p_bin": "0.4-0.6",
+    "n": 56,
+    "n_markets": 56,
+    "mean_p": 0.5035,
+    "p_yes_empirical": 0.6607,
+    "accuracy": 0.5357,
+    "brier": 0.2435
+  },
+  {
+    "horizon": "3d",
+    "p_bin": "0.6-0.8",
+    "n": 126,
+    "n_markets": 126,
+    "mean_p": 0.7253,
+    "p_yes_empirical": 0.754,
+    "accuracy": 0.754,
+    "brier": 0.1799
+  },
+  {
+    "horizon": "3d",
+    "p_bin": "0.8-1",
+    "n": 214,
+    "n_markets": 214,
+    "mean_p": 0.8712,
+    "p_yes_empirical": 0.8785,
+    "accuracy": 0.8785,
+    "brier": 0.1052
+  },
+  {
+    "horizon": "2d",
+    "p_bin": "0-0.2",
+    "n": 6,
+    "n_markets": 6,
+    "mean_p": 0.0655,
+    "p_yes_empirical": 0,
+    "accuracy": 1,
+    "brier": 0.0112
+  },
+  {
+    "horizon": "2d",
+    "p_bin": "0.2-0.4",
+    "n": 37,
+    "n_markets": 37,
+    "mean_p": 0.3253,
+    "p_yes_empirical": 0.3514,
+    "accuracy": 0.6486,
+    "brier": 0.24
+  },
+  {
+    "horizon": "2d",
+    "p_bin": "0.4-0.6",
+    "n": 58,
+    "n_markets": 58,
+    "mean_p": 0.4983,
+    "p_yes_empirical": 0.569,
+    "accuracy": 0.569,
+    "brier": 0.2467
+  },
+  {
+    "horizon": "2d",
+    "p_bin": "0.6-0.8",
+    "n": 126,
+    "n_markets": 126,
+    "mean_p": 0.7203,
+    "p_yes_empirical": 0.8095,
+    "accuracy": 0.8095,
+    "brier": 0.1646
+  },
+  {
+    "horizon": "2d",
+    "p_bin": "0.8-1",
+    "n": 221,
+    "n_markets": 221,
+    "mean_p": 0.8711,
+    "p_yes_empirical": 0.8643,
+    "accuracy": 0.8643,
+    "brier": 0.1156
+  },
+  {
+    "horizon": "1d",
+    "p_bin": "0-0.2",
+    "n": 8,
+    "n_markets": 8,
+    "mean_p": 0.0394,
+    "p_yes_empirical": 0.125,
+    "accuracy": 0.875,
+    "brier": 0.094
+  },
+  {
+    "horizon": "1d",
+    "p_bin": "0.2-0.4",
+    "n": 40,
+    "n_markets": 40,
+    "mean_p": 0.3137,
+    "p_yes_empirical": 0.375,
+    "accuracy": 0.625,
+    "brier": 0.248
+  },
+  {
+    "horizon": "1d",
+    "p_bin": "0.4-0.6",
+    "n": 53,
+    "n_markets": 53,
+    "mean_p": 0.496,
+    "p_yes_empirical": 0.5849,
+    "accuracy": 0.717,
+    "brier": 0.2336
+  },
+  {
+    "horizon": "1d",
+    "p_bin": "0.6-0.8",
+    "n": 120,
+    "n_markets": 120,
+    "mean_p": 0.723,
+    "p_yes_empirical": 0.7833,
+    "accuracy": 0.7833,
+    "brier": 0.1768
+  },
+  {
+    "horizon": "1d",
+    "p_bin": "0.8-1",
+    "n": 228,
+    "n_markets": 228,
+    "mean_p": 0.8759,
+    "p_yes_empirical": 0.8728,
+    "accuracy": 0.8728,
+    "brier": 0.1078
+  },
+  {
+    "horizon": "12h",
+    "p_bin": "0-0.2",
+    "n": 24,
+    "n_markets": 24,
+    "mean_p": 0.0824,
+    "p_yes_empirical": 0.2917,
+    "accuracy": 0.7083,
+    "brier": 0.2087
+  },
+  {
+    "horizon": "12h",
+    "p_bin": "0.2-0.4",
+    "n": 40,
+    "n_markets": 40,
+    "mean_p": 0.3125,
+    "p_yes_empirical": 0.375,
+    "accuracy": 0.625,
+    "brier": 0.2531
+  },
+  {
+    "horizon": "12h",
+    "p_bin": "0.4-0.6",
+    "n": 47,
+    "n_markets": 47,
+    "mean_p": 0.4988,
+    "p_yes_empirical": 0.5532,
+    "accuracy": 0.617,
+    "brier": 0.2327
+  },
+  {
+    "horizon": "12h",
+    "p_bin": "0.6-0.8",
+    "n": 112,
+    "n_markets": 112,
+    "mean_p": 0.7209,
+    "p_yes_empirical": 0.8125,
+    "accuracy": 0.8125,
+    "brier": 0.1643
+  },
+  {
+    "horizon": "12h",
+    "p_bin": "0.8-1",
+    "n": 226,
+    "n_markets": 226,
+    "mean_p": 0.895,
+    "p_yes_empirical": 0.8894,
+    "accuracy": 0.8894,
+    "brier": 0.098
+  },
+  {
+    "horizon": "6h",
+    "p_bin": "0-0.2",
+    "n": 29,
+    "n_markets": 29,
+    "mean_p": 0.0439,
+    "p_yes_empirical": 0.1379,
+    "accuracy": 0.8621,
+    "brier": 0.1107
+  },
+  {
+    "horizon": "6h",
+    "p_bin": "0.2-0.4",
+    "n": 39,
+    "n_markets": 39,
+    "mean_p": 0.3237,
+    "p_yes_empirical": 0.3333,
+    "accuracy": 0.6667,
+    "brier": 0.2305
+  },
+  {
+    "horizon": "6h",
+    "p_bin": "0.4-0.6",
+    "n": 47,
+    "n_markets": 47,
+    "mean_p": 0.4887,
+    "p_yes_empirical": 0.5957,
+    "accuracy": 0.5532,
+    "brier": 0.245
+  },
+  {
+    "horizon": "6h",
+    "p_bin": "0.6-0.8",
+    "n": 91,
+    "n_markets": 91,
+    "mean_p": 0.7225,
+    "p_yes_empirical": 0.7582,
+    "accuracy": 0.7582,
+    "brier": 0.1833
+  },
+  {
+    "horizon": "6h",
+    "p_bin": "0.8-1",
+    "n": 244,
+    "n_markets": 244,
+    "mean_p": 0.9143,
+    "p_yes_empirical": 0.9262,
+    "accuracy": 0.9262,
+    "brier": 0.066
+  }
+]
