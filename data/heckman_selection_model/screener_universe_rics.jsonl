@@ -1,6 +1,5 @@
 {"ric": "A.N"}
 {"ric": "AA.N"}
-{"ric": "AAM.N"}
 {"ric": "AAMI.N"}
 {"ric": "AAP.N"}
 {"ric": "AAT.N"}
@@ -45,6 +44,7 @@
 {"ric": "AFG.N"}
 {"ric": "AFL.N"}
 {"ric": "AG.N"}
+{"ric": "AGBK.N"}
 {"ric": "AGCO.N"}
 {"ric": "AGD.N"}
 {"ric": "AGI.N"}
@@ -183,12 +183,12 @@
 {"ric": "AWP.N"}
 {"ric": "AWR.N"}
 {"ric": "AX.N"}
-{"ric": "AXL.N"}
 {"ric": "AXP.N"}
 {"ric": "AXR.N"}
 {"ric": "AXS.N"}
 {"ric": "AXTA.N"}
 {"ric": "AYI.N"}
+{"ric": "AZN.N"}
 {"ric": "AZO.N"}
 {"ric": "AZZ.N"}
 {"ric": "B.N"}
@@ -229,7 +229,7 @@
 {"ric": "BDN.N"}
 {"ric": "BDX.N"}
 {"ric": "BE.N"}
-{"ric": "BEBE_u.N"}
+{"ric": "BEBE.N"}
 {"ric": "BEN.N"}
 {"ric": "BEP.N"}
 {"ric": "BEPC.N"}
@@ -237,10 +237,8 @@
 {"ric": "BETA.N"}
 {"ric": "BFAM.N"}
 {"ric": "BFH.N"}
-{"ric": "BFK.N"}
 {"ric": "BFLY.N"}
 {"ric": "BFS.N"}
-{"ric": "BFZ.N"}
 {"ric": "BFb.N"}
 {"ric": "BG.N"}
 {"ric": "BGB.N"}
@@ -280,7 +278,6 @@
 {"ric": "BLCO.N"}
 {"ric": "BLD.N"}
 {"ric": "BLDR.N"}
-{"ric": "BLE.N"}
 {"ric": "BLK.N"}
 {"ric": "BLND.N"}
 {"ric": "BLSH.N"}
@@ -296,7 +293,7 @@
 {"ric": "BNL.N"}
 {"ric": "BNS.N"}
 {"ric": "BNT.N"}
-{"ric": "BNY.N"}
+{"ric": "BOBS.N"}
 {"ric": "BOC.N"}
 {"ric": "BOE.N"}
 {"ric": "BOH.N"}
@@ -349,7 +346,6 @@
 {"ric": "BXSL.N"}
 {"ric": "BY.N"}
 {"ric": "BYD.N"}
-{"ric": "BYM.N"}
 {"ric": "BZH.N"}
 {"ric": "C.N"}
 {"ric": "CAAP.N"}
@@ -417,6 +413,7 @@
 {"ric": "CION.N"}
 {"ric": "CL.N"}
 {"ric": "CLB.N"}
+{"ric": "CLBR_u.N"}
 {"ric": "CLDT.N"}
 {"ric": "CLF.N"}
 {"ric": "CLH.N"}
@@ -537,12 +534,12 @@
 {"ric": "DAO.N"}
 {"ric": "DAR.N"}
 {"ric": "DAVA.N"}
-{"ric": "DAY.N"}
 {"ric": "DB.N"}
 {"ric": "DBD.N"}
 {"ric": "DBI.N"}
 {"ric": "DBL.N"}
 {"ric": "DBRG.N"}
+{"ric": "DCH.N"}
 {"ric": "DCI.N"}
 {"ric": "DCO.N"}
 {"ric": "DD.N"}
@@ -779,6 +776,7 @@
 {"ric": "FPF.N"}
 {"ric": "FPH.N"}
 {"ric": "FPI.N"}
+{"ric": "FPS.N"}
 {"ric": "FR.N"}
 {"ric": "FRA.N"}
 {"ric": "FRGE.N"}
@@ -920,7 +918,6 @@
 {"ric": "HGTY.N"}
 {"ric": "HGV.N"}
 {"ric": "HHH.N"}
-{"ric": "HI.N"}
 {"ric": "HIG.N"}
 {"ric": "HII.N"}
 {"ric": "HIMS.N"}
@@ -1021,6 +1018,7 @@
 {"ric": "IQI.N"}
 {"ric": "IQV.N"}
 {"ric": "IR.N"}
+{"ric": "IRAB_u.N"}
 {"ric": "IRM.N"}
 {"ric": "IRT.N"}
 {"ric": "ISD.N"}
@@ -1183,6 +1181,7 @@
 {"ric": "MAGN.N"}
 {"ric": "MAIN.N"}
 {"ric": "MAN.N"}
+{"ric": "MANE.N"}
 {"ric": "MANU.N"}
 {"ric": "MAS.N"}
 {"ric": "MATV.N"}
@@ -1223,7 +1222,6 @@
 {"ric": "MHD.N"}
 {"ric": "MHF.N"}
 {"ric": "MHK.N"}
-{"ric": "MHN.N"}
 {"ric": "MHO.N"}
 {"ric": "MIAX.N"}
 {"ric": "MICC.N"}
@@ -1239,6 +1237,7 @@
 {"ric": "MLR.N"}
 {"ric": "MMD.N"}
 {"ric": "MMI.N"}
+{"ric": "MMK.N"}
 {"ric": "MMKT.N"}
 {"ric": "MMM.N"}
 {"ric": "MMS.N"}
@@ -1291,7 +1290,6 @@
 {"ric": "MTZ.N"}
 {"ric": "MUA.N"}
 {"ric": "MUC.N"}
-{"ric": "MUE.N"}
 {"ric": "MUJ.N"}
 {"ric": "MUR.N"}
 {"ric": "MUSA.N"}
@@ -1344,7 +1342,6 @@
 {"ric": "NIC.N"}
 {"ric": "NIE.N"}
 {"ric": "NIM.N"}
-{"ric": "NINE.N"}
 {"ric": "NIO.N"}
 {"ric": "NIQ.N"}
 {"ric": "NJR.N"}
@@ -1432,6 +1429,7 @@
 {"ric": "ODV.N"}
 {"ric": "OEC.N"}
 {"ric": "OFG.N"}
+{"ric": "OFRM.N"}
 {"ric": "OGE.N"}
 {"ric": "OGN.N"}
 {"ric": "OGS.N"}
@@ -1505,6 +1503,7 @@
 {"ric": "PDI.N"}
 {"ric": "PDM.N"}
 {"ric": "PDO.N"}
+{"ric": "PDS.N"}
 {"ric": "PDT.N"}
 {"ric": "PDX.N"}
 {"ric": "PEB.N"}
@@ -1590,7 +1589,6 @@
 {"ric": "PVH.N"}
 {"ric": "PVL.N"}
 {"ric": "PWR.N"}
-{"ric": "PX.N"}
 {"ric": "PXED.N"}
 {"ric": "Q.N"}
 {"ric": "QBTS.N"}
@@ -1620,7 +1618,6 @@
 {"ric": "RDW.N"}
 {"ric": "RERE.N"}
 {"ric": "RES.N"}
-{"ric": "REVG.N"}
 {"ric": "REX.N"}
 {"ric": "REXR.N"}
 {"ric": "REZI.N"}
@@ -1662,6 +1659,7 @@
 {"ric": "ROK.N"}
 {"ric": "ROL.N"}
 {"ric": "RONB.N"}
+{"ric": "RPC.N"}
 {"ric": "RPM.N"}
 {"ric": "RPT.N"}
 {"ric": "RQI.N"}
@@ -1879,7 +1877,6 @@
 {"ric": "THO.N"}
 {"ric": "THQ.N"}
 {"ric": "THR.N"}
-{"ric": "THS.N"}
 {"ric": "THW.N"}
 {"ric": "TIC.N"}
 {"ric": "TISI.N"}
@@ -2073,6 +2070,7 @@
 {"ric": "WNC.N"}
 {"ric": "WOLF.N"}
 {"ric": "WOR.N"}
+{"ric": "WPAC_u.N"}
 {"ric": "WPC.N"}
 {"ric": "WPM.N"}
 {"ric": "WRB.N"}
@@ -2092,6 +2090,7 @@
 {"ric": "WWW.N"}
 {"ric": "WY.N"}
 {"ric": "XCPCX.O"}
+{"ric": "XFLH_u.N"}
 {"ric": "XFLT.N"}
 {"ric": "XHR.N"}
 {"ric": "XIFR.N"}

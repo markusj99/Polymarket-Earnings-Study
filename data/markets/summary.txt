@@ -1,29 +1,29 @@
 Polymarket Earnings Resolved Markets — Summary
 ====================================================
-Generated (UTC): 2026-02-02 15:55:09Z
+Generated (UTC): 2026-02-18 12:56:55Z
 Mode: incremental
 write_csv: True
-Existing loaded: 450 (parse_errors=0)
+Existing loaded: 547 (parse_errors=0)
 New markets added this run: 0
 
 Outputs
-- Markets JSONL:     /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/markets.jsonl
-- Markets CSV:       /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/markets.csv
-- Discarded JSONL:   /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/discarded_markets.jsonl (this run)
-- Summary TXT:       /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/summary.txt
+- Markets JSONL:     C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.jsonl
+- Markets CSV:       C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.csv
+- Discarded JSONL:   C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\discarded_markets.jsonl (this run)
+- Summary TXT:       C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\summary.txt
 
 Resolution time range (based on endDate)
 - Earliest resolved: 2025-06-05 00:00:00Z
-- Latest resolved:   2026-02-02 14:00:00Z
+- Latest resolved:   2026-02-17 22:00:00Z
 
 Counts (overall output)
-- Total resolved markets saved: 450
-- Total Yes: 340
-- Total No:  110
+- Total resolved markets saved: 547
+- Total Yes: 405
+- Total No:  142
 
 This run (scan/fetch/build)
-- Scanned closed earnings-tag markets: 455
-- Skipped already-known markets:       450
+- Scanned closed earnings-tag markets: 552
+- Skipped already-known markets:       547
 - Candidates after filter:             0
 - Details fetched OK:                  0
 - Detail errors:                       0
@@ -34,15 +34,15 @@ Discard reasons (this run)
 - no_ticker_detected: 5
 
 volumeNum stats (overall output)
-- count:  450
+- count:  547
 - min:    1336.252219
 - max:    995129.929459
-- mean:   25406.11032243778
-- median: 15670.161474
+- mean:   24125.537236279706
+- median: 14537.831644
 
 Run metadata
 - Cancelled: False (stage=finalize)
-- Elapsed seconds: 1.54
+- Elapsed seconds: 2.9
 - Page limit: 200
 - Max workers: 15
 - END_DATE_MIN: None

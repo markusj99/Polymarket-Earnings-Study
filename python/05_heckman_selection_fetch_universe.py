@@ -1,32 +1,29 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 r"""
-heckman_selection.py
+05_heckman_selection_fetch_universe.py
 
 Heckman selection model data pull (NYSE + Nasdaq) using Refinitiv Eikon/Workspace.
 
-Fixes in this version
----------------------
-- Windows asyncio stability: forces WindowsSelectorEventLoopPolicy.
-- Eikon SDK thread safety: serializes ek.get_data() calls (no concurrent requests).
-- SCREEN bounded and stops when paging is ignored/repeats.
-- Handles duplicate 'Date' columns (Eikon often returns multiple columns named 'Date'):
-    - market cap uses date #0
-    - analysts uses date #1 (fallback to #0)
-  Snapshots computed separately and merged by ric.
-- 400 Bad Request resilience: splits failed batches to isolate bad instruments.
+UPDATED (2026-02-18)
+--------------------
+This version no longer depends on Python-generated descriptive statistics tables.
 
-Mid-date logic (as requested)
------------------------------
-- Read Corporate_Earnings/statistics/descriptive_statistics/tables/02b_market_end_dates_counts.csv
-- Exclude the first end date (outlier)
-- observed_start = min(remaining)
-- observed_end   = max(remaining)
-- mid_date       = observed_start + floor((observed_end - observed_start)/2)
+Instead, it:
+- Reads observed market window directly from:
+    Polymarket-Earnings-Study/data/markets/markets.jsonl
+- Uses the market fields:
+    startDate, umaEndDate
+- Disregards the FIRST market (outlier) and uses the SECOND earliest startDate
+  as the start of the observed window.
+- Uses the maximum umaEndDate as the end of the observed window.
+- Fetches all earnings events (Eikon RES events) between observed_start and observed_end.
+- Computes corporate metrics "as-of" 2 days before each earnings event.
+  (asof_date = event_date - 2 days)
 
-Outputs (relative)
-------------------
-Corporate_Earnings/statistics/heckman_selection_model/
+Outputs (relative to project root)
+----------------------------------
+data/heckman_selection_model/
   - screener_universe_rics.csv
   - screener_universe_rics.jsonl
   - heckman_universe_companies.csv
@@ -37,12 +34,9 @@ Corporate_Earnings/statistics/heckman_selection_model/
 
 Run
 ---
-python heckman_selection.py --app-key <KEY>
+python python/05_heckman_selection_fetch_universe.py --app-key <KEY>
 or (reads env EIKON_APP_KEY):
-python heckman_selection.py --app-key
-
-If proxy errors occur mid-run:
-  python heckman_selection.py --app-key --min-interval-s 0.6
+python python/05_heckman_selection_fetch_universe.py --app-key
 """
 
 from __future__ import annotations
@@ -89,13 +83,7 @@ def project_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
-DEFAULT_ENDDATES_CSV = (
-    project_root()
-    / "statistics"
-    / "descriptive_statistics"
-    / "tables"
-    / "02b_market_end_dates_counts.csv"
-)
+DEFAULT_MARKETS_JSONL = project_root() / "data" / "markets" / "markets.jsonl"
 
 OUT_DIR = project_root() / "data" / "heckman_selection_model"
 OUT_EVENTS_JSONL = OUT_DIR / "heckman_universe_events.jsonl"
@@ -209,54 +197,79 @@ def find_col(columns: List[str], *, exact: List[str] = None, contains_any: List[
 
 
 # =========================
-# Observed window -> mid_date
+# Markets.jsonl -> observed window
 # =========================
 
 @dataclass
 class ObservedWindow:
-    enddates_path: Path
-    excluded_outlier_date: Optional[date]
+    markets_path: Path
+    excluded_outlier_start: Optional[date]
     observed_start: date
     observed_end: date
-    mid_date: date
-    n_dates_total: int
-    n_dates_used: int
+    n_markets_total: int
+    n_markets_used: int
 
 
-def compute_observed_window_from_enddates(enddates_csv: Path) -> ObservedWindow:
-    if not enddates_csv.exists():
-        raise FileNotFoundError(f"End dates file not found: {enddates_csv}")
+def _parse_iso_dt(s: Any) -> Optional[datetime]:
+    if s is None:
+        return None
+    try:
+        return pd.to_datetime(str(s), errors="coerce", utc=True).to_pydatetime()
+    except Exception:
+        return None
 
-    df = pd.read_csv(enddates_csv)
-    if "end_date_utc" not in df.columns:
-        raise ValueError(f"CSV missing required column 'end_date_utc': {enddates_csv}")
 
-    df["end_date_utc"] = pd.to_datetime(df["end_date_utc"], errors="coerce").dt.date
-    df = df.dropna(subset=["end_date_utc"]).copy()
-    df = df.sort_values("end_date_utc")
+def compute_observed_window_from_markets(markets_jsonl: Path) -> ObservedWindow:
+    """
+    Uses markets.jsonl:
+      - observed_start = second earliest startDate (exclude the first market as outlier)
+      - observed_end   = max umaEndDate
+    """
+    if not markets_jsonl.exists():
+        raise FileNotFoundError(f"Markets file not found: {markets_jsonl}")
 
-    if len(df) < 2:
-        raise ValueError(f"Need at least 2 valid dates in {enddates_csv}.")
+    starts: List[date] = []
+    ends: List[date] = []
 
-    excluded = df.iloc[0]["end_date_utc"]
-    df2 = df.iloc[1:].copy()
-    if df2.empty:
-        raise ValueError("After excluding first end date, no dates remain.")
+    n = 0
+    with markets_jsonl.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            n += 1
+            obj = json.loads(line)
 
-    start = df2["end_date_utc"].min()
-    end = df2["end_date_utc"].max()
-    if start is None or end is None:
-        raise ValueError("Could not compute observed start/end from end dates file.")
+            sdt = _parse_iso_dt(obj.get("startDate"))
+            edt = _parse_iso_dt(obj.get("umaEndDate"))
 
-    mid = start + timedelta(days=(end - start).days // 2)
+            if sdt is not None:
+                starts.append(sdt.date())
+            if edt is not None:
+                ends.append(edt.date())
+
+    if n == 0:
+        raise ValueError(f"No rows found in {markets_jsonl}.")
+    if len(starts) < 2:
+        raise ValueError("Need at least 2 valid startDate values to exclude the first (outlier).")
+    if len(ends) < 1:
+        raise ValueError("Need at least 1 valid umaEndDate to compute observed_end.")
+
+    starts_sorted = sorted(starts)
+    excluded = starts_sorted[0]
+    observed_start = starts_sorted[1]  # second earliest (exclude first as outlier)
+    observed_end = max(ends)
+
+    if observed_end < observed_start:
+        raise ValueError(f"Observed end ({observed_end}) is earlier than observed start ({observed_start}).")
+
     return ObservedWindow(
-        enddates_path=enddates_csv,
-        excluded_outlier_date=excluded,
-        observed_start=start,
-        observed_end=end,
-        mid_date=mid,
-        n_dates_total=int(len(df)),
-        n_dates_used=int(len(df2)),
+        markets_path=markets_jsonl,
+        excluded_outlier_start=excluded,
+        observed_start=observed_start,
+        observed_end=observed_end,
+        n_markets_total=int(n),
+        n_markets_used=int(n - 1),
     )
 
 
@@ -267,11 +280,6 @@ def compute_observed_window_from_enddates(enddates_csv: Path) -> ObservedWindow:
 def _looks_like_proxy_down(exc: Exception) -> bool:
     s = str(exc).lower()
     return ("proxy not running" in s) or ("cannot be reached" in s) or ("no proxy address" in s)
-
-
-def _looks_like_400(exc: Exception) -> bool:
-    s = str(exc).lower()
-    return ("400" in s and "bad request" in s) or ("backend error" in s and "400" in s)
 
 
 class RateLimiter:
@@ -297,13 +305,6 @@ class EikonCallResult:
 
 
 class EikonClient:
-    """
-    Thread-safety note:
-    The Eikon SDK internally uses an async session. On Windows, calling ek.get_data()
-    concurrently can trigger asyncio task mismatch errors.
-
-    We enforce single-threaded ek.get_data usage via a lock.
-    """
     def __init__(self, app_key: str, *, min_interval_s: float = 0.35) -> None:
         require_eikon()
         ek.set_app_key(app_key)
@@ -361,10 +362,6 @@ def get_data_batched_split(
     *,
     max_split_depth: int = 4,
 ) -> Tuple[pd.DataFrame, List[str]]:
-    """
-    If a batch fails with 400 Bad Request, split it to isolate problematic instruments.
-    Returns concatenated DF + problems list.
-    """
     problems: List[str] = []
 
     def _call(batch: List[str], depth: int) -> pd.DataFrame:
@@ -378,8 +375,6 @@ def get_data_batched_split(
         if res.exc:
             problems.append(f"batch_failed size={len(batch)} exc={res.exc}")
 
-        # Split only when the failure smells like 400 (often caused by one bad instrument),
-        # and only when we have room to split further.
         if res.exc and "400" in res.exc and len(batch) > 1 and depth > 0:
             mid = len(batch) // 2
             left = _call(batch[:mid], depth - 1)
@@ -454,8 +449,6 @@ def screen_nyse_nasdaq_rics(
                 pbar.update(1)
                 pbar.set_postfix_str(f"rics={len(seen)} new={new_count} rows={len(dfp)}")
 
-            # Detect ignored paging: page_size=1000 but page has >1000 rows.
-            # In your run: rows=2132 on page 1 => we stop after page 1.
             if pages == 1 and len(dfp) > page_size:
                 stop_reason = "paging_ignored_returned_full_set_on_page1"
                 problems.append(
@@ -532,27 +525,27 @@ def fetch_static_metadata(client: EikonClient, rics: List[str]) -> Tuple[pd.Data
     return (pd.concat(parts, ignore_index=True) if parts else pd.DataFrame()), problems
 
 
-def fetch_asof_marketcap_and_analysts(
+def fetch_marketcap_and_analysts_series(
     client: EikonClient,
     rics: List[str],
-    asof_date: date,
-    *,
-    buffer_days: int,
+    start_date: date,
+    end_date: date,
 ) -> Tuple[pd.DataFrame, List[str]]:
+    """
+    Pull daily series of market cap and analyst counts for the whole window.
+    Later we take "last value as-of event_asof_date" per event.
+    """
     problems: List[str] = []
-    sdate = asof_date - timedelta(days=int(buffer_days))
-    edate = asof_date
-
     fields: List[Any] = [
         _tr_field("TR.CompanyMarketCap", {"Curn": "USD"}),
         "TR.CompanyMarketCap.date",
         "TR.NumberOfAnalysts",
         "TR.NumberOfAnalysts.date",
     ]
-    params = {"SDate": sdate.isoformat(), "EDate": edate.isoformat(), "Frq": "D"}
+    params = {"SDate": start_date.isoformat(), "EDate": end_date.isoformat(), "Frq": "D"}
 
     parts: List[pd.DataFrame] = []
-    pbar = tqdm(total=(len(rics) + BATCH_ASOF - 1) // BATCH_ASOF, desc="As-of mcap+analysts (batches)", unit="batch") if tqdm else None
+    pbar = tqdm(total=(len(rics) + BATCH_ASOF - 1) // BATCH_ASOF, desc="Mcap+analysts series (batches)", unit="batch") if tqdm else None
     try:
         for batch in chunked(rics, BATCH_ASOF):
             dfb, probs = get_data_batched_split(client, batch, fields, dict(params), max_split_depth=4)
@@ -616,27 +609,10 @@ def fetch_events_results(client: EikonClient, rics: List[str], start_date: date,
 # Normalization helpers
 # =========================
 
-def _as_series_or_first(df: pd.DataFrame, colname: str) -> pd.Series:
-    """
-    If df has duplicate columns with the same name, df[colname] returns a DataFrame (2D).
-    This returns the first column as a Series in that case.
-    """
-    x = df.loc[:, colname]
-    if isinstance(x, pd.DataFrame):
-        return x.iloc[:, 0]
-    return x
-
-
 def _extract_all_date_series(df: pd.DataFrame) -> List[pd.Series]:
-    """
-    Returns ALL date-like columns as Series, in column order.
-    Handles duplicated 'Date' columns (common in Eikon results).
-    """
     cols = list(df.columns)
-    # prioritize exact 'Date' (case-insensitive)
     date_names = [c for c in cols if str(c).strip().lower() == "date"]
     if not date_names:
-        # fallback to any column containing "date"
         date_names = [c for c in cols if "date" in str(c).lower()]
 
     out: List[pd.Series] = []
@@ -696,73 +672,48 @@ def _normalize_static(static_df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def normalize_asof_marketcap(asof_raw: pd.DataFrame) -> pd.DataFrame:
+def normalize_mcap_analysts_long(asof_raw: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Return long-form: ric, date, market_cap_usd
-    Uses date series #0 (first Date-like column) by convention.
+    Returns two long-form dataframes:
+      - mcap_long: ric, date, market_cap_usd
+      - an_long:   ric, date, analysts
+    Handles duplicate Date columns via _extract_all_date_series.
     """
     if asof_raw is None or asof_raw.empty:
-        return pd.DataFrame(columns=["ric", "date", "market_cap_usd"])
+        return (
+            pd.DataFrame(columns=["ric", "date", "market_cap_usd"]),
+            pd.DataFrame(columns=["ric", "date", "analysts"]),
+        )
 
     cols = list(asof_raw.columns)
     inst_col = "Instrument" if "Instrument" in cols else cols[0]
 
     col_mcap = find_col(cols, contains_any=["company market cap", "market cap"])
+    col_an = find_col(cols, contains_any=["number of analysts", "analysts"])
+
     date_series = _extract_all_date_series(asof_raw)
     ds0 = date_series[0] if date_series else pd.Series([None] * len(asof_raw))
+    ds1 = date_series[1] if len(date_series) >= 2 else ds0
 
-    out = pd.DataFrame({
+    mcap = pd.DataFrame({
         "ric": asof_raw[inst_col].astype(str),
         "date": ds0.astype(str).str.slice(0, 10),
         "market_cap_usd": asof_raw[col_mcap] if col_mcap else np.nan,
     })
+    mcap["date"] = pd.to_datetime(mcap["date"], errors="coerce").dt.date
+    mcap["market_cap_usd"] = pd.to_numeric(mcap["market_cap_usd"], errors="coerce")
+    mcap = mcap.dropna(subset=["ric", "date"]).sort_values(["ric", "date"]).drop_duplicates(subset=["ric", "date"])
 
-    out["date"] = pd.to_datetime(out["date"], errors="coerce").dt.date
-    out["market_cap_usd"] = pd.to_numeric(out["market_cap_usd"], errors="coerce")
-    out = out.dropna(subset=["ric", "date"]).sort_values(["ric", "date"]).drop_duplicates(subset=["ric", "date"])
-    return out
-
-
-def normalize_asof_analysts(asof_raw: pd.DataFrame) -> pd.DataFrame:
-    """
-    Return long-form: ric, date, analysts
-    Uses date series #1 if available, else falls back to #0.
-    """
-    if asof_raw is None or asof_raw.empty:
-        return pd.DataFrame(columns=["ric", "date", "analysts"])
-
-    cols = list(asof_raw.columns)
-    inst_col = "Instrument" if "Instrument" in cols else cols[0]
-
-    col_an = find_col(cols, contains_any=["number of analysts", "analysts"])
-    date_series = _extract_all_date_series(asof_raw)
-    if not date_series:
-        ds = pd.Series([None] * len(asof_raw))
-    else:
-        ds = date_series[1] if len(date_series) >= 2 else date_series[0]
-
-    out = pd.DataFrame({
+    an = pd.DataFrame({
         "ric": asof_raw[inst_col].astype(str),
-        "date": ds.astype(str).str.slice(0, 10),
+        "date": ds1.astype(str).str.slice(0, 10),
         "analysts": asof_raw[col_an] if col_an else np.nan,
     })
+    an["date"] = pd.to_datetime(an["date"], errors="coerce").dt.date
+    an["analysts"] = pd.to_numeric(an["analysts"], errors="coerce")
+    an = an.dropna(subset=["ric", "date"]).sort_values(["ric", "date"]).drop_duplicates(subset=["ric", "date"])
 
-    out["date"] = pd.to_datetime(out["date"], errors="coerce").dt.date
-    out["analysts"] = pd.to_numeric(out["analysts"], errors="coerce")
-    out = out.dropna(subset=["ric", "date"]).sort_values(["ric", "date"]).drop_duplicates(subset=["ric", "date"])
-    return out
-
-
-def snapshot_last_value_asof(df: pd.DataFrame, asof_date: date, value_col: str, out_col: str) -> pd.DataFrame:
-    if df.empty:
-        return pd.DataFrame(columns=["ric", out_col])
-    sub = df[df["date"] <= asof_date].copy()
-    if sub.empty:
-        return pd.DataFrame(columns=["ric", out_col])
-    sub = sub.sort_values(["ric", "date"])
-    last = sub.groupby("ric", sort=False).tail(1)
-    out = last[["ric", value_col]].copy().rename(columns={value_col: out_col})
-    return out
+    return mcap, an
 
 
 def _normalize_pv(pv_df: pd.DataFrame) -> pd.DataFrame:
@@ -775,17 +726,13 @@ def _normalize_pv(pv_df: pd.DataFrame) -> pd.DataFrame:
     col_price = find_col(cols, contains_any=["price close", "priceclose", "close"])
     col_vol = find_col(cols, contains_any=["volume"])
 
-    # If duplicate 'Date', take first
     if col_date is None:
         date_series = _extract_all_date_series(pv_df)
         ds0 = date_series[0] if date_series else pd.Series([None] * len(pv_df))
         date_str = ds0.astype(str)
     else:
         x = pv_df.loc[:, col_date]
-        if isinstance(x, pd.DataFrame):
-            date_str = x.iloc[:, 0].astype(str)
-        else:
-            date_str = x.astype(str)
+        date_str = x.iloc[:, 0].astype(str) if isinstance(x, pd.DataFrame) else x.astype(str)
 
     out = pd.DataFrame({
         "ric": pv_df[inst_col].astype(str),
@@ -832,57 +779,153 @@ def _normalize_events(ev_df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def compute_firm_features_asof(pv: pd.DataFrame, asof_date: date, lookback_days: int) -> pd.DataFrame:
-    if pv.empty:
-        return pd.DataFrame(columns=[
-            "ric",
-            "turnover_lookback_window_start_asof_mid",
-            "turnover_lookback_window_end_asof_mid",
-            "turnover_lookback_sum_volume_asof_mid",
-            "turnover_lookback_avg_daily_volume_asof_mid",
-            "volatility_lookback_asof_mid",
-        ])
+# =========================
+# Event-level as-of feature construction
+# =========================
 
-    w0 = asof_date - timedelta(days=int(lookback_days))
-    w1 = asof_date
-    w = pv[(pv["date"] >= w0) & (pv["date"] <= w1)].copy()
-    if w.empty:
-        return pd.DataFrame(columns=[
-            "ric",
-            "turnover_lookback_window_start_asof_mid",
-            "turnover_lookback_window_end_asof_mid",
-            "turnover_lookback_sum_volume_asof_mid",
-            "turnover_lookback_avg_daily_volume_asof_mid",
-            "volatility_lookback_asof_mid",
-        ])
+def _last_value_asof_per_event(
+    series_long: pd.DataFrame,
+    events: pd.DataFrame,
+    *,
+    value_col: str,
+    out_col: str,
+    asof_col: str = "asof_date",
+) -> pd.DataFrame:
+    """
+    For each event (ric, asof_date), attach last available value from series_long (ric, date, value_col)
+    where series_long.date <= asof_date.
 
-    w = w.sort_values(["ric", "date"])
+    Returns events with an additional column out_col.
+    """
+    if events.empty:
+        events[out_col] = np.nan
+        return events
 
-    agg = (
-        w.groupby("ric", sort=False)
-         .agg(
-             turnover_lookback_sum_volume_asof_mid=("volume", "sum"),
-             turnover_lookback_avg_daily_volume_asof_mid=("volume", "mean"),
-         )
-         .reset_index()
-    )
+    if series_long.empty:
+        events[out_col] = np.nan
+        return events
 
-    def vol_fun(g: pd.DataFrame) -> float:
-        px = pd.to_numeric(g["price"], errors="coerce").replace([np.inf, -np.inf], np.nan).dropna()
-        px = px[px > 0]
-        if len(px) < 3:
-            return np.nan
-        lr = np.log(px).diff().dropna()
-        if len(lr) < 2:
-            return np.nan
-        return float(lr.std(ddof=1))
+    series_long = series_long[["ric", "date", value_col]].copy()
+    series_long = series_long.dropna(subset=["ric", "date"]).sort_values(["ric", "date"])
 
-    vol = w.groupby("ric", sort=False).apply(vol_fun).rename("volatility_lookback_asof_mid").reset_index()
+    # merge_asof requires sorted keys; do per-ric for correctness
+    out_parts: List[pd.DataFrame] = []
+    for ric, ev in events.groupby("ric", sort=False):
+        ev2 = ev.sort_values(asof_col).copy()
+        s = series_long[series_long["ric"] == ric].copy()
+        if s.empty:
+            ev2[out_col] = np.nan
+            out_parts.append(ev2)
+            continue
 
-    out = agg.merge(vol, on="ric", how="left")
-    out["turnover_lookback_window_start_asof_mid"] = w0.isoformat()
-    out["turnover_lookback_window_end_asof_mid"] = w1.isoformat()
+        # convert dates to datetime64 for merge_asof
+        ev2["_asof_dt"] = pd.to_datetime(ev2[asof_col].astype(str), errors="coerce")
+        s["_dt"] = pd.to_datetime(s["date"].astype(str), errors="coerce")
+        s = s.dropna(subset=["_dt"]).sort_values("_dt")
+        ev2 = ev2.dropna(subset=["_asof_dt"]).sort_values("_asof_dt")
+
+        merged = pd.merge_asof(
+            ev2,
+            s[["_dt", value_col]].rename(columns={"_dt": "_asof_merge_key"}),
+            left_on="_asof_dt",
+            right_on="_asof_merge_key",
+            direction="backward",
+        )
+        merged[out_col] = merged[value_col]
+        merged = merged.drop(columns=[value_col, "_asof_dt", "_asof_merge_key"], errors="ignore")
+        out_parts.append(merged)
+
+    out = pd.concat(out_parts, ignore_index=True) if out_parts else events.copy()
     return out
+
+
+def _event_level_turnover_volatility(
+    pv: pd.DataFrame,
+    events: pd.DataFrame,
+    *,
+    lookback_days: int,
+    asof_col: str = "asof_date",
+) -> pd.DataFrame:
+    """
+    For each (ric, event), compute:
+      - turnover_lookback_sum_volume_asof_evt
+      - turnover_lookback_avg_daily_volume_asof_evt
+      - volatility_lookback_asof_evt
+    using window [asof_date - lookback_days, asof_date] inclusive.
+    """
+    if events.empty:
+        return events
+
+    pv = pv.dropna(subset=["ric", "date"]).copy()
+    pv = pv.sort_values(["ric", "date"])
+
+    out_parts: List[pd.DataFrame] = []
+
+    for ric, ev in events.groupby("ric", sort=False):
+        ev2 = ev.copy()
+        pv2 = pv[pv["ric"] == ric]
+        if pv2.empty:
+            ev2["turnover_lookback_sum_volume_asof_evt"] = np.nan
+            ev2["turnover_lookback_avg_daily_volume_asof_evt"] = np.nan
+            ev2["volatility_lookback_asof_evt"] = np.nan
+            out_parts.append(ev2)
+            continue
+
+        pv2 = pv2.sort_values("date")
+        pv2_price = pd.to_numeric(pv2["price"], errors="coerce")
+        pv2_vol = pd.to_numeric(pv2["volume"], errors="coerce")
+
+        # Precompute log returns series for volatility
+        px = pv2_price.copy()
+        px = px.where(px > 0, np.nan)
+        log_px = np.log(px)
+        lr = log_px.diff()
+
+        # Build a quick lookup by date position
+        dates = pv2["date"].tolist()
+
+        def _slice_mask(d0: date, d1: date) -> np.ndarray:
+            # boolean mask over pv2 for date range
+            # (vectorized compare on pandas series is fine here)
+            return (pv2["date"] >= d0) & (pv2["date"] <= d1)
+
+        sums: List[float] = []
+        means: List[float] = []
+        vols: List[float] = []
+
+        for _, row in ev2.iterrows():
+            asof = row.get(asof_col)
+            if pd.isna(asof):
+                sums.append(np.nan); means.append(np.nan); vols.append(np.nan)
+                continue
+            asof_d = asof if isinstance(asof, date) else pd.to_datetime(str(asof), errors="coerce").date()
+            w0 = asof_d - timedelta(days=int(lookback_days))
+            w1 = asof_d
+
+            m = _slice_mask(w0, w1)
+            if not bool(m.any()):
+                sums.append(np.nan); means.append(np.nan); vols.append(np.nan)
+                continue
+
+            vwin = pv2_vol[m]
+            sums.append(float(np.nansum(vwin.values)))
+            means.append(float(np.nanmean(vwin.values)))
+
+            lrwin = lr[m].replace([np.inf, -np.inf], np.nan).dropna()
+            vols.append(float(lrwin.std(ddof=1)) if len(lrwin) >= 2 else np.nan)
+
+        ev2["turnover_lookback_sum_volume_asof_evt"] = sums
+        ev2["turnover_lookback_avg_daily_volume_asof_evt"] = means
+        ev2["volatility_lookback_asof_evt"] = vols
+
+        ev2["turnover_lookback_window_start_asof_evt"] = (
+            pd.to_datetime(ev2[asof_col].astype(str), errors="coerce") - pd.to_timedelta(int(lookback_days), unit="D")
+        ).dt.date.astype(str)
+        ev2["turnover_lookback_window_end_asof_evt"] = pd.to_datetime(ev2[asof_col].astype(str), errors="coerce").dt.date.astype(str)
+
+        out_parts.append(ev2)
+
+    return pd.concat(out_parts, ignore_index=True) if out_parts else events
 
 
 # =========================
@@ -943,7 +986,9 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
 
     p.add_argument("--app-key", nargs="?", const="__ENV__", default=None,
                    help="Eikon app key. If provided with no value, reads env EIKON_APP_KEY.")
-    p.add_argument("--enddates-csv", type=str, default=str(DEFAULT_ENDDATES_CSV))
+
+    p.add_argument("--markets-jsonl", type=str, default=str(DEFAULT_MARKETS_JSONL),
+                   help="Path to markets.jsonl used to compute observed window.")
 
     p.add_argument("--lookback-days", type=int, default=DEFAULT_LOOKBACK_DAYS)
     p.add_argument("--buffer-days", type=int, default=DEFAULT_BUFFER_DAYS)
@@ -978,17 +1023,18 @@ def main(argv: Optional[List[str]] = None) -> int:
     else:
         app_key = args.app_key
 
-    # observed window + mid date
+    # observed window from markets.jsonl
     try:
-        window = compute_observed_window_from_enddates(Path(args.enddates_csv))
+        window = compute_observed_window_from_markets(Path(args.markets_jsonl))
     except Exception as exc:
         OUT_DIR.mkdir(parents=True, exist_ok=True)
-        write_report(OUT_REPORT_TXT, sections=[("Fatal", f"Failed to compute mid_date from enddates CSV: {exc}")])
+        write_report(OUT_REPORT_TXT, sections=[("Fatal", f"Failed to compute observed window from markets.jsonl: {exc}")])
+        print(f"FATAL: {exc}", file=sys.stderr)
+        print(f"See report: {OUT_REPORT_TXT}", file=sys.stderr)
         return 2
 
     observed_start = window.observed_start
     observed_end = window.observed_end
-    mid_date = window.mid_date
 
     lookback_days = int(args.lookback_days)
     buffer_days = int(args.buffer_days)
@@ -1010,11 +1056,11 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     if not rics:
         write_report(OUT_REPORT_TXT, sections=[
-            ("Observed window / midpoint", "\n".join([
-                f"Enddates CSV:              {window.enddates_path}",
-                f"Excluded outlier (first):  {window.excluded_outlier_date}",
+            ("Observed window from markets.jsonl", "\n".join([
+                f"Markets JSONL:             {window.markets_path}",
+                f"Excluded outlier start:    {window.excluded_outlier_start}",
                 f"Observed start / end:      {observed_start} .. {observed_end}",
-                f"Mid date (as-of):          {mid_date}",
+                f"Markets total / used:      {window.n_markets_total} / {window.n_markets_used}",
             ])),
             ("Fatal", "SCREEN returned zero instruments."),
             ("Screener problems", "\n".join(screen_problems) if screen_problems else "(none)"),
@@ -1024,42 +1070,69 @@ def main(argv: Optional[List[str]] = None) -> int:
     if args.max_rics is not None:
         rics = rics[: int(args.max_rics)]
 
-    # Do NOT fetch in parallel; batching provides safe speed.
-    pv_start = mid_date - timedelta(days=lookback_days + buffer_days)
-    pv_end = mid_date
-
-    static_raw, static_problems = fetch_static_metadata(client, rics)
-    asof_raw, asof_problems = fetch_asof_marketcap_and_analysts(client, rics, mid_date, buffer_days=asof_buffer_days)
-    pv_raw, pv_problems = fetch_daily_pv(client, rics, pv_start, pv_end)
+    # Fetch events in observed window
     ev_raw, ev_problems = fetch_events_results(client, rics, observed_start, observed_end)
-
-    # normalize
-    static_norm = _normalize_static(static_raw)
-    pv = _normalize_pv(pv_raw)
     events = _normalize_events(ev_raw)
 
-    # as-of normalization (FIXED: handles duplicate Date columns)
-    mcap_long = normalize_asof_marketcap(asof_raw)
-    an_long = normalize_asof_analysts(asof_raw)
+    if events.empty:
+        write_report(OUT_REPORT_TXT, sections=[
+            ("Observed window from markets.jsonl", "\n".join([
+                f"Markets JSONL:             {window.markets_path}",
+                f"Excluded outlier start:    {window.excluded_outlier_start}",
+                f"Observed start / end:      {observed_start} .. {observed_end}",
+                f"Markets total / used:      {window.n_markets_total} / {window.n_markets_used}",
+            ])),
+            ("Fatal", "No RES events returned by Eikon in observed window."),
+            ("Top problems / warnings", "\n".join(ev_problems) if ev_problems else "(none)"),
+        ])
+        return 2
 
-    mcap_snap = snapshot_last_value_asof(mcap_long, mid_date, "market_cap_usd", "market_cap_usd_asof_mid")
-    an_snap = snapshot_last_value_asof(an_long, mid_date, "analysts", "analysts_covering_asof_mid")
+    # As-of date = 2 days before earnings report
+    events["asof_date"] = events["event_date"].apply(lambda d: (d - timedelta(days=2)) if isinstance(d, date) else pd.NaT)
+    events["retrieved_at_utc"] = utc_now_iso()
+    events["observed_window_start_utc"] = observed_start.isoformat()
+    events["observed_window_end_utc"] = observed_end.isoformat()
 
-    asof_snap = mcap_snap.merge(an_snap, on="ric", how="outer")
+    # Wide enough PV range to compute lookbacks for ALL events
+    min_asof = events["asof_date"].min()
+    max_asof = events["asof_date"].max()
+    if isinstance(min_asof, date) and isinstance(max_asof, date):
+        pv_start = min_asof - timedelta(days=lookback_days + buffer_days)
+        pv_end = max_asof
+    else:
+        pv_start = observed_start - timedelta(days=lookback_days + buffer_days)
+        pv_end = observed_end
 
-    firm_feat = compute_firm_features_asof(pv, asof_date=mid_date, lookback_days=lookback_days)
+    # Fetch static metadata
+    static_raw, static_problems = fetch_static_metadata(client, rics)
+    static_norm = _normalize_static(static_raw)
 
-    # companies
-    companies = static_norm.merge(asof_snap, on="ric", how="left").merge(firm_feat, on="ric", how="left")
-    companies["asof_mid_date_utc"] = mid_date.isoformat()
-    companies["observed_window_start_utc"] = observed_start.isoformat()
-    companies["observed_window_end_utc"] = observed_end.isoformat()
+    # Fetch PV and normalize
+    pv_raw, pv_problems = fetch_daily_pv(client, rics, pv_start, pv_end)
+    pv = _normalize_pv(pv_raw)
+
+    # Fetch marketcap+analysts series over window (with buffer)
+    series_start = pv_start - timedelta(days=asof_buffer_days)
+    series_end = pv_end
+    asof_raw, asof_problems = fetch_marketcap_and_analysts_series(client, rics, series_start, series_end)
+    mcap_long, an_long = normalize_mcap_analysts_long(asof_raw)
+
+    # Attach market cap / analysts as-of each event's asof_date
+    events = _last_value_asof_per_event(mcap_long, events, value_col="market_cap_usd", out_col="market_cap_usd_asof_evt")
+    events = _last_value_asof_per_event(an_long, events, value_col="analysts", out_col="analysts_covering_asof_evt")
+
+    # Attach PV-based features as-of each event
+    events = _event_level_turnover_volatility(pv, events, lookback_days=lookback_days)
+
+    # Companies table: keep firm-level static info (no single as-of anymore)
+    companies = static_norm.copy()
     companies["retrieved_at_utc"] = utc_now_iso()
 
-    # events join
-    if not events.empty:
-        events = events.merge(companies, on="ric", how="left", suffixes=("", "_company"))
+    # Join static firm info onto events
+    events = events.merge(companies, on="ric", how="left", suffixes=("", "_company"))
 
+    # Write outputs
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
     companies.sort_values(["exchange_mic", "ric"]).to_csv(OUT_COMPANIES_CSV, index=False, encoding="utf-8")
     events.to_csv(OUT_EVENTS_CSV, index=False, encoding="utf-8")
     write_df_jsonl(OUT_EVENTS_JSONL, events)
@@ -1068,23 +1141,22 @@ def main(argv: Optional[List[str]] = None) -> int:
     OUT_MISSING_JSON.write_text(json.dumps(ms, ensure_ascii=False, indent=2), encoding="utf-8")
 
     missing_lines: List[str] = []
-    if not events.empty:
-        for c, s in sorted(ms["columns"].items(), key=lambda kv: (-kv[1]["missing"], kv[0]))[:60]:
-            pct = s["missing_pct"]
-            missing_lines.append(
-                f"{c:<38} missing={s['missing']:>8} / {s['total']:<8} ({pct:6.2f}%)"
-                if pct is not None else f"{c} missing={s['missing']}"
-            )
+    for c, s in sorted(ms["columns"].items(), key=lambda kv: (-kv[1]["missing"], kv[0]))[:60]:
+        pct = s["missing_pct"]
+        missing_lines.append(
+            f"{c:<45} missing={s['missing']:>8} / {s['total']:<8} ({pct:6.2f}%)"
+            if pct is not None else f"{c} missing={s['missing']}"
+        )
 
     sections: List[Tuple[str, str]] = []
     sections.append((
-        "Observed window / midpoint from end dates file",
+        "Observed window from markets.jsonl",
         "\n".join([
-            f"Enddates CSV:              {window.enddates_path}",
-            f"Excluded outlier (first):  {window.excluded_outlier_date}",
-            f"Dates total / used:        {window.n_dates_total} / {window.n_dates_used}",
+            f"Markets JSONL:             {window.markets_path}",
+            f"Excluded outlier start:    {window.excluded_outlier_start}",
+            f"Markets total / used:      {window.n_markets_total} / {window.n_markets_used}",
             f"Observed start / end:      {observed_start} .. {observed_end}",
-            f"Mid date (as-of):          {mid_date}",
+            f"As-of rule:               event_date - 2 days",
         ])
     ))
     sections.append((
@@ -1104,14 +1176,14 @@ def main(argv: Optional[List[str]] = None) -> int:
         "\n".join([
             *(screen_problems or ["(none from screener)"]),
             *(static_problems or ["(none from static fetch)"]),
-            *(asof_problems or ["(none from asof fetch)"]),
+            *(asof_problems or ["(none from mcap/analysts series fetch)"]),
             *(pv_problems or ["(none from pv fetch)"]),
             *(ev_problems or ["(none from events fetch)"]),
         ])
     ))
     sections.append((
         "Missing values (top 60 columns)",
-        "\n".join(missing_lines) if missing_lines else "(no events or no missingness computed)"
+        "\n".join(missing_lines) if missing_lines else "(no missingness computed)"
     ))
     write_report(OUT_REPORT_TXT, sections=sections)
 
@@ -1124,8 +1196,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         f"Events JSONL:     {OUT_EVENTS_JSONL}\n"
         f"Missing JSON:     {OUT_MISSING_JSON}\n"
         f"Report TXT:       {OUT_REPORT_TXT}\n"
-        f"As-of mid date:   {mid_date}\n"
         f"Observed window:  {observed_start} .. {observed_end}\n"
+        "As-of rule:       event_date - 2 days\n"
         "=============================================\n"
     )
     tqdm.write(msg) if tqdm is not None else print(msg)

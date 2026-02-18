@@ -15,22 +15,46 @@ Expected script location
 All other Python scripts are expected in:
   Polymarket-Earnings-Study/python/
 
-Behavior (per your requirements)
---------------------------------
+Behavior
+--------
 - Runs the pipeline scripts one-by-one (00 -> 07) via subprocess.
-- Prints a small amount of orchestration logging (the scripts themselves print more).
+- Uses sys.executable to ensure the same interpreter/venv is used.
+- Ensures scripts run with cwd set to the project root so relative paths work.
+
+App key handling (important)
+----------------------------
+Different scripts in this repo expect the app key in different ways:
+
+1) Steps 00 and 01:
+   - Do NOT accept a CLI argument '--app-key' (argparse "unrecognized arguments")
+   - They should read the key from environment variables instead.
+
+2) Steps 02 and 03 (per earlier error message):
+   - Expect '--app-key' with NO value as a *flag* meaning:
+     "read EIKON_APP_KEY from the environment".
+
+3) Step 04 (04_fetch_stock_prices.py):
+   - Requires '--app-key <value>' (argparse: expected one argument).
+
+4) Step 05 (05_heckman_selection_fetch_universe.py):
+   - In your logs it failed with rc=2 when run_all passed flag-only '--app-key'.
+   - In practice, this step typically needs the *value* form as well.
+   - Therefore we pass '--app-key <value>' for step 05.
+
+Therefore, when --app-key is provided to run_all.py:
+- It is always injected into the environment as EIKON_APP_KEY and APP_KEY.
+- For steps that require the *flag-only* form, run_all passes '--app-key' with NO value.
+- For steps that require the *value* form, run_all passes '--app-key <value>'.
+- For steps that do not need it, nothing is passed.
+
+Skip logic
+----------
 - If --app-key is NOT provided:
-    * ONLY run steps: 02 -> 07
-    * SKIP steps: 00, 01
+    * ONLY run steps that do not require the key (per ScriptSpec.needs_app_key)
+    * SKIP steps marked needs_app_key=True
 - Prints a summary at the end (success/failed/skipped/missing + timings).
 
-Notes
------
-- Uses sys.executable to ensure the same virtualenv/interpreter is used.
-- When --app-key is provided, it is:
-    * passed as --app-key to scripts 00 and 01, and
-    * injected into env as EIKON_APP_KEY and APP_KEY for compatibility.
-- This file is importable: call main([...]) from another script.
+This file is importable: call main([...]) from another script.
 """
 
 from __future__ import annotations
@@ -61,23 +85,35 @@ class ScriptSpec:
     filename : str
         Script filename under Polymarket-Earnings-Study/python/
     needs_app_key : bool
-        If True, this step is skipped unless --app-key is provided.
-        (Per your updated requirement: ONLY 00 and 01 require the key.)
+        If True, this step is skipped unless --app-key is provided to run_all.py.
+    app_key_cli_mode : str
+        How to pass key info on the CLI to this script (if at all):
+          - "none": do not pass any --app-key argument (script reads env if needed)
+          - "flag": pass '--app-key' with NO value (script uses env var for actual key)
+          - "value": pass '--app-key <value>' (only if a script truly supports it)
     """
     code: str
     filename: str
     needs_app_key: bool = False
+    app_key_cli_mode: str = "none"  # "none" | "flag" | "value"
 
 
 PIPELINE: List[ScriptSpec] = [
-    ScriptSpec("00", "00_fetch_closed_markets.py", needs_app_key=True),
-    ScriptSpec("01", "01_fetch_poly_prices.py", needs_app_key=True),
-    ScriptSpec("02", "02_check_consistency.py", needs_app_key=False),
-    ScriptSpec("03", "03_fetch_corp_info.py", needs_app_key=False),
-    ScriptSpec("04", "04_fetch_stock_prices.py", needs_app_key=False),
-    ScriptSpec("05", "05_heckman_selection_fetch_universe.py", needs_app_key=False),
-    ScriptSpec("06", "06_brier_scores.py", needs_app_key=False),
-    ScriptSpec("07", "07_create_dataset.py", needs_app_key=False),
+    # 00/01: DO NOT accept '--app-key' on CLI; use env injection only.
+    ScriptSpec("00", "00_fetch_closed_markets.py", needs_app_key=True, app_key_cli_mode="none"),
+    ScriptSpec("01", "01_fetch_poly_prices.py", needs_app_key=True, app_key_cli_mode="none"),
+
+    # 02-03: require '--app-key' flag-only to signal "read from env".
+    ScriptSpec("02", "02_check_consistency.py", needs_app_key=False, app_key_cli_mode="flag"),
+    ScriptSpec("03", "03_fetch_corp_info.py", needs_app_key=False, app_key_cli_mode="flag"),
+
+    # 04-05: require '--app-key <value>' (04 explicitly does; 05 failed with flag-only).
+    ScriptSpec("04", "04_fetch_stock_prices.py", needs_app_key=False, app_key_cli_mode="value"),
+    ScriptSpec("05", "05_heckman_selection_fetch_universe.py", needs_app_key=False, app_key_cli_mode="value"),
+
+    # 06/07: do not pass app key args by default (they should rely on produced files).
+    ScriptSpec("06", "06_brier_scores.py", needs_app_key=False, app_key_cli_mode="none"),
+    ScriptSpec("07", "07_create_dataset.py", needs_app_key=False, app_key_cli_mode="none"),
 ]
 
 
@@ -129,6 +165,24 @@ def _run_subprocess(
     return int(proc.returncode), float(dt)
 
 
+def _build_script_args(spec: ScriptSpec, app_key: Optional[str]) -> List[str]:
+    """
+    Build CLI args passed to each script based on its configured app_key_cli_mode.
+    """
+    if not app_key:
+        return []
+
+    if spec.app_key_cli_mode == "none":
+        return []
+    if spec.app_key_cli_mode == "flag":
+        return ["--app-key"]
+    if spec.app_key_cli_mode == "value":
+        return ["--app-key", app_key]
+
+    # Defensive fallback: do not pass anything if misconfigured
+    return []
+
+
 # ----------------------------
 # Main
 # ----------------------------
@@ -141,7 +195,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--app-key",
         default=None,
-        help="App key used by steps 00 and 01. If omitted, steps 00/01 will be skipped.",
+        help="App key used by scripts that require it. Injected into env as EIKON_APP_KEY/APP_KEY.",
     )
     p.add_argument(
         "--stop-on-failure",
@@ -167,9 +221,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     print(f"[run_all] Scripts dir : {py_dir}")
 
     if args.app_key is None:
-        print("[run_all] NOTE: --app-key not provided. Will SKIP steps 00 and 01.")
+        print("[run_all] NOTE: --app-key not provided. Will SKIP steps that require it.")
     else:
-        print("[run_all] NOTE: --app-key provided. Will run steps 00 and 01 with --app-key.")
+        print("[run_all] NOTE: --app-key provided. Will inject it into env and pass appropriate CLI args per step.")
 
     # Base environment inherited from current process
     env = dict(os.environ)
@@ -200,10 +254,8 @@ def main(argv: Optional[List[str]] = None) -> int:
             )
             continue
 
-        # Build args for subprocess
-        sub_args: List[str] = []
-        if spec.needs_app_key and args.app_key:
-            sub_args += ["--app-key", args.app_key]
+        # Build args for subprocess (per-script mode)
+        sub_args: List[str] = _build_script_args(spec, args.app_key)
 
         print(f"[run_all] ({i}/{n_total}) RUN     {spec.code} {spec.filename}")
 
