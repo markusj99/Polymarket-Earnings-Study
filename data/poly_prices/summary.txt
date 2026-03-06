@@ -1,66 +1,66 @@
 Polymarket Earnings — Historical Prices Fetch Summary
 ========================================================
-Run ID:            20260218T125656Z
-Generated (UTC):   2026-02-18 13:03:15Z
-Elapsed seconds:   379.503
+Run ID:            20260306T104602Z
+Generated (UTC):   2026-03-06 10:47:09Z
+Elapsed seconds:   66.487
 
 Mode
 - TEST:            False
 
 Inputs
-- Markets JSONL:   C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.jsonl
-- Markets in file: 547
-- Markets processed:547
+- Markets JSONL:   /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/markets.jsonl
+- Markets in file: 639
+- Markets processed:639
 
 Resolution window (based on OBSERVED first/last price timestamps)
 - Earliest first price (UTC): 2025-06-03 21:50:06Z
-- Latest last price (UTC):    2026-02-17 23:25:20Z
+- Latest last price (UTC):    2026-03-06 00:25:25Z
 
 Outputs
-- Historical prices JSONL: C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\poly_prices.jsonl
-- Failed markets JSONL:    C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\failed_poly_markets.jsonl
-- Prices WIDE CSV:        C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\poly_prices_wide.csv
-- Prices LONG CSV:        C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\poly_prices_long.csv
-- Failed markets CSV:     C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\failed_poly_markets.csv
-- Summary TXT:             C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\summary.txt
+- Historical prices JSONL: /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/poly_prices/poly_prices.jsonl
+- Failed markets JSONL:    /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/poly_prices/failed_poly_markets.jsonl
+- Prices WIDE CSV:        /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/poly_prices/poly_prices_wide.csv
+- Prices LONG CSV:        /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/poly_prices/poly_prices_long.csv
+- Failed markets CSV:     /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/poly_prices/failed_poly_markets.csv
+- Summary TXT:             /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/poly_prices/summary.txt
 
 Results
-- Successful markets written: 547
+- Successful markets written: 639
 - Failed markets:             0
 
 Failure reasons (hard failures only)
 - (none)
 
 Quality stats (not failures)
-- Markets with partial missing snapshots: 543
-- Markets with YES+NO complement violations: 37
+- Markets with partial missing snapshots: 635
+- Markets with YES+NO complement violations: 39
 - YES+NO complement tolerance: 0.05
 
 Missing snapshot counts (not failures)
 YES missing:
-- 4w: 543
-- 3w: 528
-- 2w: 432
-- 1w: 183
-- 6d: 99
-- 5d: 51
+- 4w: 635
+- 3w: 619
+- 2w: 496
+- 1w: 188
+- 6d: 100
+- 5d: 52
 - 4d: 32
 - 3d: 17
-- 2d: 2
+- 2d: 3
 - 1d: 1
 - 12h: 1
 - 6h: 0
 
 NO missing:
-- 4w: 543
-- 3w: 528
-- 2w: 432
-- 1w: 183
-- 6d: 99
-- 5d: 51
+- 4w: 635
+- 3w: 619
+- 2w: 496
+- 1w: 188
+- 6d: 100
+- 5d: 52
 - 4d: 32
 - 3d: 17
-- 2d: 2
+- 2d: 3
 - 1d: 1
 - 12h: 1
 - 6h: 0

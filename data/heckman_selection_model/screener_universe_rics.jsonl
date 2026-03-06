@@ -53,9 +53,8 @@
 {"ric": "AGO.N"}
 {"ric": "AGRO.N"}
 {"ric": "AGX.N"}
-{"ric": "AHH.N"}
-{"ric": "AHL.N"}
 {"ric": "AHR.N"}
+{"ric": "AHRT.N"}
 {"ric": "AHT.N"}
 {"ric": "AI.N"}
 {"ric": "AIG.N"}
@@ -136,6 +135,7 @@
 {"ric": "ARE.N"}
 {"ric": "ARES.N"}
 {"ric": "ARI.N"}
+{"ric": "ARIS.N"}
 {"ric": "ARL.N"}
 {"ric": "ARLO.N"}
 {"ric": "ARMK.N"}
@@ -156,7 +156,6 @@
 {"ric": "ASIX.N"}
 {"ric": "ASPN.N"}
 {"ric": "ATEN.N"}
-{"ric": "ATGE.N"}
 {"ric": "ATHM.N"}
 {"ric": "ATH_pa.N"}
 {"ric": "ATI.N"}
@@ -270,7 +269,6 @@
 {"ric": "BKE.N"}
 {"ric": "BKH.N"}
 {"ric": "BKKT.N"}
-{"ric": "BKN.N"}
 {"ric": "BKSY.N"}
 {"ric": "BKT.N"}
 {"ric": "BKU.N"}
@@ -320,7 +318,6 @@
 {"ric": "BST.N"}
 {"ric": "BSTZ.N"}
 {"ric": "BSX.N"}
-{"ric": "BTA.N"}
 {"ric": "BTE.N"}
 {"ric": "BTGO.N"}
 {"ric": "BTO.N"}
@@ -503,7 +500,6 @@
 {"ric": "CTVA.N"}
 {"ric": "CUBE.N"}
 {"ric": "CUBI.N"}
-{"ric": "CULP.N"}
 {"ric": "CURB.N"}
 {"ric": "CURV.N"}
 {"ric": "CUZ.N"}
@@ -513,6 +509,7 @@
 {"ric": "CVLG.N"}
 {"ric": "CVNA.N"}
 {"ric": "CVS.N"}
+{"ric": "CVSA.N"}
 {"ric": "CVX.N"}
 {"ric": "CW.N"}
 {"ric": "CWAN.N"}
@@ -779,7 +776,6 @@
 {"ric": "FPS.N"}
 {"ric": "FR.N"}
 {"ric": "FRA.N"}
-{"ric": "FRGE.N"}
 {"ric": "FRO.N"}
 {"ric": "FRT.N"}
 {"ric": "FSCO.N"}
@@ -842,6 +838,8 @@
 {"ric": "GIS.N"}
 {"ric": "GKOS.N"}
 {"ric": "GL.N"}
+{"ric": "GLED_u.N"}
+{"ric": "GLNK.N"}
 {"ric": "GLOB.N"}
 {"ric": "GLOP_pa.N"}
 {"ric": "GLP.N"}
@@ -849,7 +847,7 @@
 {"ric": "GM.N"}
 {"ric": "GME.N"}
 {"ric": "GMED.N"}
-{"ric": "GMRE.N"}
+{"ric": "GMMF.N"}
 {"ric": "GNE.N"}
 {"ric": "GNK.N"}
 {"ric": "GNL.N"}
@@ -1003,6 +1001,7 @@
 {"ric": "IIPR.N"}
 {"ric": "IMAX.N"}
 {"ric": "INFO.N"}
+{"ric": "INFQ.N"}
 {"ric": "INGM.N"}
 {"ric": "INGR.N"}
 {"ric": "INN.N"}
@@ -1018,7 +1017,7 @@
 {"ric": "IQI.N"}
 {"ric": "IQV.N"}
 {"ric": "IR.N"}
-{"ric": "IRAB_u.N"}
+{"ric": "IRAB.N"}
 {"ric": "IRM.N"}
 {"ric": "IRT.N"}
 {"ric": "ISD.N"}
@@ -1068,6 +1067,7 @@
 {"ric": "KBDC.N"}
 {"ric": "KBH.N"}
 {"ric": "KBR.N"}
+{"ric": "KCAC_u.N"}
 {"ric": "KD.N"}
 {"ric": "KEN.N"}
 {"ric": "KEX.N"}
@@ -1259,7 +1259,6 @@
 {"ric": "MPT.N"}
 {"ric": "MPV.N"}
 {"ric": "MPX.N"}
-{"ric": "MQT.N"}
 {"ric": "MQY.N"}
 {"ric": "MRK.N"}
 {"ric": "MRP.N"}
@@ -1295,17 +1294,15 @@
 {"ric": "MUSA.N"}
 {"ric": "MUSE.N"}
 {"ric": "MUX.N"}
-{"ric": "MVF.N"}
 {"ric": "MVO.N"}
-{"ric": "MVT.N"}
 {"ric": "MWA.N"}
 {"ric": "MX.N"}
 {"ric": "MXE.N"}
 {"ric": "MXF.N"}
-{"ric": "MYD.N"}
 {"ric": "MYE.N"}
 {"ric": "MYI.N"}
 {"ric": "MYN.N"}
+{"ric": "MZYX_u.N"}
 {"ric": "NABL.N"}
 {"ric": "NAC.N"}
 {"ric": "NAD.N"}
@@ -1547,6 +1544,7 @@
 {"ric": "PM.N"}
 {"ric": "PML.N"}
 {"ric": "PMM.N"}
+{"ric": "PMMF.N"}
 {"ric": "PMO.N"}
 {"ric": "PMT.N"}
 {"ric": "PNC.N"}
@@ -1606,7 +1604,6 @@
 {"ric": "RBA.N"}
 {"ric": "RBC.N"}
 {"ric": "RBLX.N"}
-{"ric": "RBOT.N"}
 {"ric": "RBRK.N"}
 {"ric": "RC.N"}
 {"ric": "RCI.N"}
@@ -1631,7 +1628,6 @@
 {"ric": "RGT.N"}
 {"ric": "RH.N"}
 {"ric": "RHI.N"}
-{"ric": "RHLD.N"}
 {"ric": "RHP.N"}
 {"ric": "RIG.N"}
 {"ric": "RITM.N"}
@@ -1670,6 +1666,7 @@
 {"ric": "RSI.N"}
 {"ric": "RSKD.N"}
 {"ric": "RTX.N"}
+{"ric": "RVI.N"}
 {"ric": "RVLV.N"}
 {"ric": "RVT.N"}
 {"ric": "RVTY.N"}
@@ -1678,8 +1675,8 @@
 {"ric": "RY.N"}
 {"ric": "RYAM.N"}
 {"ric": "RYAN.N"}
-{"ric": "RYI.N"}
 {"ric": "RYN.N"}
+{"ric": "RYZ.N"}
 {"ric": "S.N"}
 {"ric": "SA.N"}
 {"ric": "SABA.N"}
@@ -1722,9 +1719,11 @@
 {"ric": "SG.N"}
 {"ric": "SGHC.N"}
 {"ric": "SGI.N"}
+{"ric": "SGOV.N"}
 {"ric": "SGU.N"}
 {"ric": "SHAK.N"}
 {"ric": "SHO.N"}
+{"ric": "SHV.N"}
 {"ric": "SHW.N"}
 {"ric": "SI.N"}
 {"ric": "SIG.N"}
@@ -1821,6 +1820,7 @@
 {"ric": "SU.N"}
 {"ric": "SUI.N"}
 {"ric": "SUN.N"}
+{"ric": "SUNB.N"}
 {"ric": "SUNC.N"}
 {"ric": "SVV.N"}
 {"ric": "SW.N"}
@@ -1903,6 +1903,7 @@
 {"ric": "TPYP.N"}
 {"ric": "TPZ.N"}
 {"ric": "TR.N"}
+{"ric": "TRAD_u.N"}
 {"ric": "TRAK.N"}
 {"ric": "TRC.N"}
 {"ric": "TREX.N"}
@@ -1915,7 +1916,6 @@
 {"ric": "TRTX.N"}
 {"ric": "TRU.N"}
 {"ric": "TRV.N"}
-{"ric": "TSE.N"}
 {"ric": "TSI.N"}
 {"ric": "TSLX.N"}
 {"ric": "TSN.N"}
@@ -2070,7 +2070,7 @@
 {"ric": "WNC.N"}
 {"ric": "WOLF.N"}
 {"ric": "WOR.N"}
-{"ric": "WPAC_u.N"}
+{"ric": "WPAC.N"}
 {"ric": "WPC.N"}
 {"ric": "WPM.N"}
 {"ric": "WRB.N"}
@@ -2099,6 +2099,7 @@
 {"ric": "XPO.N"}
 {"ric": "XPOF.N"}
 {"ric": "XPRO.N"}
+{"ric": "XRN.N"}
 {"ric": "XXI.N"}
 {"ric": "XYF.N"}
 {"ric": "XYL.N"}

@@ -1,22 +1,22 @@
 ==================== CONSISTENCY SUMMARY ====================
-Timestamp (UTC):                    2026-02-18T13:13:51.643628Z
-Markets JSONL updated:              C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.jsonl
-Markets CSV updated:                C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.csv
+Timestamp (UTC):                    2026-03-06T11:39:22.605648Z
+Markets JSONL updated:              /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/markets.jsonl
+Markets CSV updated:                /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/markets.csv
 
-Lines scanned:                      547
-Markets parsed (valid JSON):        547
+Lines scanned:                      639
+Markets parsed (valid JSON):        639
 Ignored (non-earnings candidate):   0
-Considered (earnings-like):         547
-Matched (event+actual+estimate):    546
-  - Correctly resolved:             504
-  - Incorrectly resolved:           42
-Unmatched (skip_reason set):        1
+Considered (earnings-like):         639
+Matched (event+actual+estimate):    633
+  - Correctly resolved:             583
+  - Incorrectly resolved:           50
+Unmatched (skip_reason set):        6
 
-Markets updated with val_* fields:  547
+Markets updated with val_* fields:  639
 
 Manual investigation outputs:
-  - C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\validation\unmatched.jsonl
-  - C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\validation\unmatched.csv
+  - /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/validation/unmatched.jsonl
+  - /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/validation/unmatched.csv
 
 Batching:
   - symbology_chunk_size:           250

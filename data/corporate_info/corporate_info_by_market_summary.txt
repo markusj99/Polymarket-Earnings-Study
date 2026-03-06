@@ -1,7 +1,7 @@
 ==================== CORPORATE INFO (PER-MARKET) SUMMARY ====================
-Generated at (UTC): 2026-02-18T13:16:21Z
-Input markets.jsonl: C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.jsonl
-Output rows (markets): 547
+Generated at (UTC): 2026-03-06T11:48:00Z
+Input markets.jsonl: /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/markets.jsonl
+Output rows (markets): 639
 
 Skipped input rows:
   - missing_market_id: 0
@@ -12,29 +12,29 @@ Skipped input rows:
 
 Missingness by variable (sorted by missing count):
 ------------------------------------------------------------------------
-  1. turnover_6m_avg_daily_volume        missing=     2 / 547    (  0.37%)
-  2. turnover_6m_sum_volume              missing=     2 / 547    (  0.37%)
-  3. volatility_6m                       missing=     2 / 547    (  0.37%)
-  4. analysts_covering_asof              missing=     1 / 547    (  0.18%)
-  5. country_of_risk                     missing=     1 / 547    (  0.18%)
-  6. market_cap_usd_asof                 missing=     1 / 547    (  0.18%)
-  7. asof_date                           missing=     0 / 547    (  0.00%)
-  8. close_date                          missing=     0 / 547    (  0.00%)
-  9. company_name                        missing=     0 / 547    (  0.00%)
- 10. country_source                      missing=     0 / 547    (  0.00%)
- 11. exchange_country                    missing=     0 / 547    (  0.00%)
- 12. gics_industry                       missing=     0 / 547    (  0.00%)
- 13. gics_sector                         missing=     0 / 547    (  0.00%)
- 14. hq_country                          missing=     0 / 547    (  0.00%)
- 15. hq_country_code                     missing=     0 / 547    (  0.00%)
- 16. market_id                           missing=     0 / 547    (  0.00%)
- 17. notes                               missing=     0 / 547    (  0.00%)
- 18. primary_exchange                    missing=     0 / 547    (  0.00%)
- 19. retrieved_at_utc                    missing=     0 / 547    (  0.00%)
- 20. ric                                 missing=     0 / 547    (  0.00%)
- 21. slug                                missing=     0 / 547    (  0.00%)
- 22. ticker                              missing=     0 / 547    (  0.00%)
- 23. trbc_industry                       missing=     0 / 547    (  0.00%)
- 24. turnover_6m_window_end              missing=     0 / 547    (  0.00%)
- 25. turnover_6m_window_start            missing=     0 / 547    (  0.00%)
- 26. uma_end_date                        missing=     0 / 547    (  0.00%)
+  1. turnover_6m_avg_daily_volume        missing=     3 / 639    (  0.47%)
+  2. turnover_6m_sum_volume              missing=     3 / 639    (  0.47%)
+  3. volatility_6m                       missing=     3 / 639    (  0.47%)
+  4. analysts_covering_asof              missing=     2 / 639    (  0.31%)
+  5. market_cap_usd_asof                 missing=     2 / 639    (  0.31%)
+  6. country_of_risk                     missing=     1 / 639    (  0.16%)
+  7. asof_date                           missing=     0 / 639    (  0.00%)
+  8. close_date                          missing=     0 / 639    (  0.00%)
+  9. company_name                        missing=     0 / 639    (  0.00%)
+ 10. country_source                      missing=     0 / 639    (  0.00%)
+ 11. exchange_country                    missing=     0 / 639    (  0.00%)
+ 12. gics_industry                       missing=     0 / 639    (  0.00%)
+ 13. gics_sector                         missing=     0 / 639    (  0.00%)
+ 14. hq_country                          missing=     0 / 639    (  0.00%)
+ 15. hq_country_code                     missing=     0 / 639    (  0.00%)
+ 16. market_id                           missing=     0 / 639    (  0.00%)
+ 17. notes                               missing=     0 / 639    (  0.00%)
+ 18. primary_exchange                    missing=     0 / 639    (  0.00%)
+ 19. retrieved_at_utc                    missing=     0 / 639    (  0.00%)
+ 20. ric                                 missing=     0 / 639    (  0.00%)
+ 21. slug                                missing=     0 / 639    (  0.00%)
+ 22. ticker                              missing=     0 / 639    (  0.00%)
+ 23. trbc_industry                       missing=     0 / 639    (  0.00%)
+ 24. turnover_6m_window_end              missing=     0 / 639    (  0.00%)
+ 25. turnover_6m_window_start            missing=     0 / 639    (  0.00%)
+ 26. uma_end_date                        missing=     0 / 639    (  0.00%)

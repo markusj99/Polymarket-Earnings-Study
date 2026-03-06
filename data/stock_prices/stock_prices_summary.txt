@@ -1,14 +1,14 @@
 Polymarket Corporate Earnings — Stock Prices Fetch Summary (PER-MARKET, FAST MODE)
-Generated at (UTC): 2026-02-18T13:17:02.248269Z
+Generated at (UTC): 2026-03-06T11:12:46.879214Z
 
-Input:  C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\corporate_info\corporate_info_by_market.jsonl
-Output: C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\stock_prices
+Input:  /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/corporate_info/corporate_info_by_market.jsonl
+Output: /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/stock_prices
 
 Input rows:       547
 Markets parsed:   547
 Unique RICs seen: 406
-RICs in cache:    405 (includes benchmark if fetched)
-Output rows:      97040
+RICs in cache:    50 (includes benchmark if fetched)
+Output rows:      13899
 
 Per-market calendar window: pre_days=250, post_days=10
 Bucket mode: month
@@ -18,9 +18,226 @@ Throttle after batch: 0.0s
 Benchmark (S&P500):
   RIC:   .SPX
   Start: 2025-01-01
-  End:   2026-02-18 (today at runtime)
+  End:   2026-03-06 (today at runtime)
+
+BATCH FETCH FAILURES
+- Benchmark .SPX: Error code 500 | Server Error: {"code":500,"message":"Network Error"}
+- Bucket 2025-06 chunk size=1: Error code 500 | Server Error: {"code":500,"message":"Network Error"}
+- Bucket 2025-09 chunk size=14: Error code 500 | Server Error: {"code":500,"message":"Network Error"}
+- Bucket 2025-10 chunk size=50: Error code 500 | Server Error: {"code":500,"message":"Network Error"}
+- Bucket 2025-10 chunk size=50: Error code 500 | Server Error: {"code":500,"message":"Network Error"}
+- Bucket 2025-10 chunk size=50: Error code 500 | Server Error: {"code":500,"message":"Network Error"}
+- Bucket 2025-10 chunk size=2: Error code 500 | Server Error: {"code":500,"message":"Network Error"}
+- Bucket 2025-11 chunk size=50: Error code 500 | Server Error: {"code":500,"message":"Network Error"}
+- Bucket 2025-11 chunk size=50: Error code 500 | Server Error: {"code":500,"message":"Network Error"}
+- Bucket 2025-11 chunk size=50: Error code 500 | Server Error: {"code":500,"message":"Network Error"}
+- Bucket 2025-11 chunk size=22: Error code 500 | Server Error: {"code":500,"message":"Network Error"}
+- Bucket 2025-12 chunk size=50: Error code 500 | Server Error: {"code":500,"message":"Network Error"}
+- Bucket 2025-12 chunk size=4: Error code 500 | Server Error: {"code":500,"message":"Network Error"}
+- Bucket 2026-01 chunk size=50: Error code 500 | Server Error: {"code":500,"message":"Network Error"}
+- Bucket 2026-01 chunk size=4: Error code 500 | Server Error: {"code":500,"message":"Network Error"}
+- Bucket 2026-02 chunk size=50: Error code 500 | Server Error: {"code":500,"message":"Network Error"}
 
 WINDOW / MARKET ISSUES
-- RIC WMT.N market_id=675511: NO_TS_DATA
-- RIC MOG.A market_id=1160450: NO_TS_DATA
+- RIC AVGO.N market_id=549606: NO_TS_DATA
+- RIC GIS market_id=598104: NO_TS_DATA
+- RIC BLSH.N market_id=599915: NO_TS_DATA
+- RIC FDS market_id=598105: NO_TS_DATA
+- RIC FDX market_id=598106: NO_TS_DATA
+- RIC JEF market_id=613036: NO_TS_DATA
+- RIC CCL market_id=614619: NO_TS_DATA
+- RIC NKE market_id=613037: NO_TS_DATA
+- RIC LW market_id=614632: NO_TS_DATA
+- RIC UNFI.N market_id=614635: NO_TS_DATA
+- RIC MU.N market_id=598107: NO_TS_DATA
+- RIC MLKN.N market_id=599651: NO_TS_DATA
+- RIC ACN market_id=598110: NO_TS_DATA
+- RIC JBL market_id=598111: NO_TS_DATA
+- RIC KMX market_id=599654: NO_TS_DATA
+- RIC CNXC.N market_id=599653: NO_TS_DATA
+- RIC STZ market_id=614636: NO_TS_DATA
+- RIC PRGS.N market_id=599652: NO_TS_DATA
+- RIC MKC market_id=614637: NO_TS_DATA
+- RIC PENG.N market_id=619853: NO_TS_DATA
+- RIC AZZ market_id=619857: NO_TS_DATA
+- RIC RELL.N market_id=619980: NO_TS_DATA
+- RIC RGP.N market_id=619983: NO_TS_DATA
+- RIC LEVI.N market_id=613049: NO_TS_DATA
+- RIC DAL market_id=613051: NO_TS_DATA
+- RIC APLD.N market_id=619984: NO_TS_DATA
+- RIC HELE.N market_id=620021: NO_TS_DATA
+- RIC NEOG.N market_id=620023: NO_TS_DATA
+- RIC NRIX.N market_id=620032: NO_TS_DATA
+- RIC BYRN.N market_id=620038: NO_TS_DATA
+- RIC UNTY.N market_id=619852: NO_TS_DATA
+- RIC FAST.N market_id=620048: NO_TS_DATA
+- RIC JPM market_id=613052: NO_TS_DATA
+- RIC WFC market_id=613055: NO_TS_DATA
+- RIC GS market_id=613056: NO_TS_DATA
+- RIC C market_id=613057: NO_TS_DATA
+- RIC DPZ.N market_id=613066: NO_TS_DATA
+- RIC JNJ market_id=613067: NO_TS_DATA
+- RIC BLK market_id=619556: NO_TS_DATA
+- RIC BAC market_id=614613: NO_TS_DATA
+- RIC MS market_id=614614: NO_TS_DATA
+- RIC CFG market_id=614639: NO_TS_DATA
+- RIC ABT market_id=614644: NO_TS_DATA
+- RIC IBKR.N market_id=614609: NO_TS_DATA
+- RIC SCHW.N market_id=614616: NO_TS_DATA
+- RIC BK market_id=619465: NO_TS_DATA
+- RIC KEY market_id=619538: NO_TS_DATA
+- RIC USB market_id=619549: NO_TS_DATA
+- RIC GBCI.N market_id=620069: NO_TS_DATA
+- RIC STT market_id=619541: NO_TS_DATA
+- RIC TFC market_id=619557: NO_TS_DATA
+- RIC AXP market_id=627451: NO_TS_DATA
+- RIC SFBS.N market_id=620052: NO_TS_DATA
+- RIC OMC market_id=614638: NO_TS_DATA
+- RIC EFX market_id=619560: NO_TS_DATA
+- RIC KO market_id=627582: NO_TS_DATA
+- RIC GM market_id=627587: NO_TS_DATA
+- RIC HAL market_id=627639: NO_TS_DATA
+- RIC LMT market_id=627649: NO_TS_DATA
+- RIC NDAQ.N market_id=627653: NO_TS_DATA
+- RIC NOC market_id=627657: NO_TS_DATA
+- RIC PM market_id=627658: NO_TS_DATA
+- RIC PHM market_id=627659: NO_TS_DATA
+- RIC DGX market_id=627660: NO_TS_DATA
+- RIC MMM market_id=627752: NO_TS_DATA
+- RIC CB market_id=627454: NO_TS_DATA
+- RIC EWBC.N market_id=627585: NO_TS_DATA
+- RIC MAT.N market_id=627652: NO_TS_DATA
+- RIC NFLX.N market_id=627654: NO_TS_DATA
+- RIC TXN.N market_id=627663: NO_TS_DATA
+- RIC TSLA.N market_id=614615: NO_TS_DATA
+- RIC KMI market_id=614647: NO_TS_DATA
+- RIC MCO market_id=627671: NO_TS_DATA
+- RIC T market_id=627673: NO_TS_DATA
+- RIC CME.N market_id=627694: NO_TS_DATA
+- RIC HLT market_id=627735: NO_TS_DATA
+- RIC NTRS.N market_id=637819: NO_TS_DATA
+- RIC CASH.N market_id=599650: NO_TS_DATA
+- RIC CHDN.N market_id=627695: NO_TS_DATA
+- RIC IBM market_id=627736: NO_TS_DATA
+- RIC LVS market_id=627753: NO_TS_DATA
+- RIC RJF market_id=637847: NO_TS_DATA
+- RIC SEIC.N market_id=637848: NO_TS_DATA
+- RIC WDFC.N market_id=637859: NO_TS_DATA
+- RIC LUV market_id=637863: NO_TS_DATA
+- RIC AAL.N market_id=627739: NO_TS_DATA
+- RIC AB market_id=637864: NO_TS_DATA
+- RIC BX market_id=637865: NO_TS_DATA
+- RIC CBRE.N market_id=637868: NO_TS_DATA
+- RIC DOW market_id=637870: NO_TS_DATA
+- RIC FCN market_id=637874: NO_TS_DATA
+- RIC HAS.N market_id=637876: NO_TS_DATA
+- RIC HON.N market_id=637877: NO_TS_DATA
+- RIC PCG market_id=637879: NO_TS_DATA
+- RIC STBA.N market_id=637880: NO_TS_DATA
+- RIC TSCO.N market_id=637885: NO_TS_DATA
+- RIC UNP market_id=637886: NO_TS_DATA
+- RIC IMAX.N market_id=642133: NO_TS_DATA
+- RIC SAM market_id=627748: NO_TS_DATA
+- RIC COUR.N market_id=637869: NO_TS_DATA
+- RIC INTC.N market_id=637878: NO_TS_DATA
+- RIC SSNC.N market_id=637883: NO_TS_DATA
+- RIC PG market_id=642123: NO_TS_DATA
+- RIC GD market_id=642132: NO_TS_DATA
+- RIC F market_id=637871: NO_TS_DATA
+- RIC BBBY.N market_id=642137: NO_TS_DATA
+- RIC CFLT.N market_id=647803: NO_TS_DATA
+- RIC PIPR.N market_id=642125: NO_TS_DATA
+- RIC RCL market_id=642128: NO_TS_DATA
+- RIC ARCC.N market_id=642134: NO_TS_DATA
+- RIC IVZ market_id=643019: NO_TS_DATA
+- RIC JBLU.N market_id=643022: NO_TS_DATA
+- RIC LH market_id=643023: NO_TS_DATA
+- RIC MSCI.N market_id=643033: NO_TS_DATA
+- RIC SOFI.N market_id=643038: NO_TS_DATA
+- RIC SYY market_id=643046: NO_TS_DATA
+- RIC UPS market_id=643048: NO_TS_DATA
+- RIC UNH market_id=643051: NO_TS_DATA
+- RIC BKNG.N market_id=642139: NO_TS_DATA
+- RIC CSGP.N market_id=643016: NO_TS_DATA
+- RIC EA.N market_id=643017: NO_TS_DATA
+- RIC EVR market_id=627698: NO_TS_DATA
+- RIC VZ market_id=627749: NO_TS_DATA
+- RIC OTIS.N market_id=637846: NO_TS_DATA
+- RIC BA market_id=647505: NO_TS_DATA
+- RIC CAT market_id=647509: NO_TS_DATA
+- RIC CVS market_id=647808: NO_TS_DATA
+- RIC ETSY.N market_id=647815: NO_TS_DATA
+- RIC GRMN.N market_id=647816: NO_TS_DATA
+- RIC KHC.N market_id=647818: NO_TS_DATA
+- RIC OTLY.N market_id=647823: NO_TS_DATA
+- RIC VIRT.N market_id=648218: NO_TS_DATA
+- RIC TDOC.N market_id=642124: NO_TS_DATA
+- RIC GOOGL.N market_id=642130: NO_TS_DATA
+- RIC SBUX.N market_id=643045: NO_TS_DATA
+- RIC MSFT.N market_id=643054: NO_TS_DATA
+- RIC CVNA.N market_id=647508: NO_TS_DATA
+- RIC CMG market_id=647510: NO_TS_DATA
+- RIC EBAY.N market_id=647811: NO_TS_DATA
+- RIC META.N market_id=647819: NO_TS_DATA
+- RIC AMP market_id=627672: NO_TS_DATA
+- RIC BUD market_id=647852: NO_TS_DATA
+- RIC EL market_id=647888: NO_TS_DATA
+- RIC ICE market_id=647937: NO_TS_DATA
+- RIC MA market_id=647938: NO_TS_DATA
+- RIC HGV market_id=647968: NO_TS_DATA
+- RIC SHAK.N market_id=648033: NO_TS_DATA
+- RIC FOXA.N market_id=648377: NO_TS_DATA
+- RIC AMZN.N market_id=642131: NO_TS_DATA
+- RIC AAPL.N market_id=647853: NO_TS_DATA
+- RIC MSTR.N market_id=648382: NO_TS_DATA
+- RIC XOM market_id=613046: NO_TS_DATA
+- RIC CBOE.N market_id=648228: NO_TS_DATA
+- RIC CVX market_id=648240: NO_TS_DATA
+- RIC CL market_id=648376: NO_TS_DATA
+- RIC BRKa market_id=658579: NO_TS_DATA
+- RIC IART.N market_id=643018: NO_TS_DATA
+- RIC ARES.N market_id=652512: NO_TS_DATA
+- RIC HESM.N market_id=652568: NO_TS_DATA
+- RIC GTM.N market_id=642129: NO_TS_DATA
+- RIC CLX market_id=647860: NO_TS_DATA
+- RIC COIN.N market_id=647869: NO_TS_DATA
+- RIC GRAB.N market_id=652566: NO_TS_DATA
+- RIC HIMS.N market_id=652567: NO_TS_DATA
+- RIC CBT market_id=656735: NO_TS_DATA
+- RIC GT.N market_id=658859: NO_TS_DATA
+- RIC HOG market_id=637875: NO_TS_DATA
+- RIC SSTK.N market_id=643037: NO_TS_DATA
+- RIC APO market_id=656760: NO_TS_DATA
+- RIC PJT market_id=656782: NO_TS_DATA
+- RIC HTZ.N market_id=656783: NO_TS_DATA
+- RIC WING.N market_id=656817: NO_TS_DATA
+- RIC SHOP.N market_id=657454: NO_TS_DATA
+- RIC BYND.N market_id=655224: NO_TS_DATA
+- RIC HNGE.N market_id=656723: NO_TS_DATA
+- RIC LYV market_id=656761: NO_TS_DATA
+- RIC CRSP.N market_id=657086: NO_TS_DATA
+- RIC CGBD.N market_id=657371: NO_TS_DATA
+- RIC AMD.N market_id=657445: NO_TS_DATA
+- RIC CRL market_id=652577: NO_TS_DATA
+- RIC FTDR.N market_id=652657: NO_TS_DATA
+- RIC IEP.N market_id=652658: NO_TS_DATA
+- RIC FIS market_id=655449: NO_TS_DATA
+- RIC HUM market_id=655450: NO_TS_DATA
+- RIC SONO.N market_id=656785: NO_TS_DATA
+- RIC ALL market_id=647504: NO_TS_DATA
+- RIC CHYM.N market_id=652651: NO_TS_DATA
+- RIC FSK market_id=652823: NO_TS_DATA
+- RIC FRGE.N market_id=653003: NO_TS_DATA
+- RIC APP.N market_id=655266: NO_TS_DATA
+- RIC ARM.N market_id=655388: NO_TS_DATA
+- RIC HOOD.N market_id=655400: NO_TS_DATA
+- RIC DASH.N market_id=655439: NO_TS_DATA
+- RIC TKO market_id=655448: NO_TS_DATA
+- RIC ATO market_id=655451: NO_TS_DATA
+- RIC HUBS.N market_id=655460: NO_TS_DATA
+- RIC AMPL.N market_id=656791: NO_TS_DATA
+- RIC BMBL.N market_id=656792: NO_TS_DATA
+- RIC FIG market_id=656808: NO_TS_DATA
+- RIC AMC market_id=658909: NO_TS_DATA
+... 255 more omitted
 

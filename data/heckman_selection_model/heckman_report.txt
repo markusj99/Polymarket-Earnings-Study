@@ -1,13 +1,13 @@
 =============== HECKMAN UNIVERSE REPORT ===============
-Generated at (UTC): 2026-02-18T14:09:08Z
+Generated at (UTC): 2026-03-06T11:20:48Z
 =======================================================
 
 Observed window from markets.jsonl
 ----------------------------------
-Markets JSONL:             C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.jsonl
+Markets JSONL:             /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/markets.jsonl
 Excluded outlier start:    2025-06-03
-Markets total / used:      547 / 546
-Observed start / end:      2025-09-15 .. 2026-02-17
+Markets total / used:      639 / 638
+Observed start / end:      2025-09-15 .. 2026-03-06
 As-of rule:               event_date - 2 days
 
 SCREEN stats (bounded)
@@ -16,13 +16,13 @@ Page size:                 1000
 Max pages cap:             25
 Max instruments cap:       25000
 Pages processed:           1
-Instruments collected:     2129
+Instruments collected:     2130
 Stop reason:               paging_ignored_returned_full_set_on_page1
-Universe used downstream:  2129 (after --max-rics if set)
+Universe used downstream:  2130 (after --max-rics if set)
 
 Top problems / warnings
 -----------------------
-SCREEN appears to ignore StartNum/EndNum (page1 rows=2129 > page_size=1000). Stopping after page 1 to avoid repeats.
+SCREEN appears to ignore StartNum/EndNum (page1 rows=2130 > page_size=1000). Stopping after page 1 to avoid repeats.
 (none from static fetch)
 (none from mcap/analysts series fetch)
 (none from pv fetch)
@@ -30,31 +30,31 @@ SCREEN appears to ignore StartNum/EndNum (page1 rows=2129 > page_size=1000). Sto
 
 Missing values (top 60 columns)
 -------------------------------
-exchange_mic                                  missing=    2786 / 2786     (100.00%)
-primary_exchange                              missing=    2786 / 2786     (100.00%)
-analysts_covering_asof_evt                    missing=     228 / 2786     (  8.18%)
-turnover_lookback_avg_daily_volume_asof_evt   missing=       9 / 2786     (  0.32%)
-turnover_lookback_sum_volume_asof_evt         missing=       9 / 2786     (  0.32%)
-volatility_lookback_asof_evt                  missing=       9 / 2786     (  0.32%)
-company_name                                  missing=       2 / 2786     (  0.07%)
-exchange_country                              missing=       2 / 2786     (  0.07%)
-hq_country                                    missing=       2 / 2786     (  0.07%)
-hq_country_code                               missing=       2 / 2786     (  0.07%)
-trbc_industry                                 missing=       2 / 2786     (  0.07%)
-turnover_lookback_window_end_asof_evt         missing=       2 / 2786     (  0.07%)
-turnover_lookback_window_start_asof_evt       missing=       2 / 2786     (  0.07%)
-market_cap_usd_asof_evt                       missing=       1 / 2786     (  0.04%)
-asof_date                                     missing=       0 / 2786     (  0.00%)
-country_of_risk                               missing=       0 / 2786     (  0.00%)
-event_date                                    missing=       0 / 2786     (  0.00%)
-event_time                                    missing=       0 / 2786     (  0.00%)
-event_title                                   missing=       0 / 2786     (  0.00%)
-event_type                                    missing=       0 / 2786     (  0.00%)
-gics_industry                                 missing=       0 / 2786     (  0.00%)
-gics_sector                                   missing=       0 / 2786     (  0.00%)
-observed_window_end_utc                       missing=       0 / 2786     (  0.00%)
-observed_window_start_utc                     missing=       0 / 2786     (  0.00%)
-retrieved_at_utc                              missing=       0 / 2786     (  0.00%)
-retrieved_at_utc_company                      missing=       0 / 2786     (  0.00%)
-ric                                           missing=       0 / 2786     (  0.00%)
-ticker                                        missing=       0 / 2786     (  0.00%)
+exchange_mic                                  missing=    3475 / 3475     (100.00%)
+primary_exchange                              missing=    3475 / 3475     (100.00%)
+analysts_covering_asof_evt                    missing=     313 / 3475     (  9.01%)
+turnover_lookback_avg_daily_volume_asof_evt   missing=       9 / 3475     (  0.26%)
+turnover_lookback_sum_volume_asof_evt         missing=       9 / 3475     (  0.26%)
+volatility_lookback_asof_evt                  missing=       9 / 3475     (  0.26%)
+market_cap_usd_asof_evt                       missing=       2 / 3475     (  0.06%)
+turnover_lookback_window_end_asof_evt         missing=       2 / 3475     (  0.06%)
+turnover_lookback_window_start_asof_evt       missing=       2 / 3475     (  0.06%)
+asof_date                                     missing=       0 / 3475     (  0.00%)
+company_name                                  missing=       0 / 3475     (  0.00%)
+country_of_risk                               missing=       0 / 3475     (  0.00%)
+event_date                                    missing=       0 / 3475     (  0.00%)
+event_time                                    missing=       0 / 3475     (  0.00%)
+event_title                                   missing=       0 / 3475     (  0.00%)
+event_type                                    missing=       0 / 3475     (  0.00%)
+exchange_country                              missing=       0 / 3475     (  0.00%)
+gics_industry                                 missing=       0 / 3475     (  0.00%)
+gics_sector                                   missing=       0 / 3475     (  0.00%)
+hq_country                                    missing=       0 / 3475     (  0.00%)
+hq_country_code                               missing=       0 / 3475     (  0.00%)
+observed_window_end_utc                       missing=       0 / 3475     (  0.00%)
+observed_window_start_utc                     missing=       0 / 3475     (  0.00%)
+retrieved_at_utc                              missing=       0 / 3475     (  0.00%)
+retrieved_at_utc_company                      missing=       0 / 3475     (  0.00%)
+ric                                           missing=       0 / 3475     (  0.00%)
+ticker                                        missing=       0 / 3475     (  0.00%)
+trbc_industry                                 missing=       0 / 3475     (  0.00%)
