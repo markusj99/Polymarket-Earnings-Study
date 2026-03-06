@@ -1,7 +1,7 @@
-{"type":"table","file":"01_obs_per_snapshot.csv","description":"Number of (valid-price) observations per snapshot_label (CSV)."}
-{"type":"table","file":"01_obs_per_snapshot.jsonl","description":"Number of (valid-price) observations per snapshot_label (JSONL)."}
-{"type":"table","file":"01b_price_availability_per_snapshot.csv","description":"Share of sample markets with valid prices per snapshot (CSV)."}
-{"type":"table","file":"01b_price_availability_per_snapshot.jsonl","description":"Share of sample markets with valid prices per snapshot (JSONL)."}
+{"type":"table","file":"01_obs_per_snapshot.csv","description":"Number of observations and distinct markets per snapshot_label (CSV)."}
+{"type":"table","file":"01_obs_per_snapshot.jsonl","description":"Number of observations and distinct markets per snapshot_label (JSONL)."}
+{"type":"table","file":"01b_price_availability_per_snapshot.csv","description":"Share of sample markets with prices per snapshot (CSV)."}
+{"type":"table","file":"01b_price_availability_per_snapshot.jsonl","description":"Share of sample markets with prices per snapshot (JSONL)."}
 {"type":"table","file":"02_active_trading_hours_summary.csv","description":"Summary stats for active_trading_hours (CSV)."}
 {"type":"table","file":"02_active_trading_hours_summary.jsonl","description":"Summary stats for active_trading_hours (JSONL)."}
 {"type":"table","file":"03_resolved_counts_by_uma_end_date.csv","description":"Counts of resolved markets per UMA end date (NO shown negative in plot; CSV)."}
@@ -12,8 +12,8 @@
 {"type":"table","file":"05_calibration_bins_by_snapshot.jsonl","description":"Calibration bins: mean implied prob vs observed YES rate (and counts) by snapshot (JSONL)."}
 {"type":"table","file":"06_volume_summary_usd.csv","description":"Summary stats for Polymarket volume (USD) (CSV)."}
 {"type":"table","file":"06_volume_summary_usd.jsonl","description":"Summary stats for Polymarket volume (USD) (JSONL)."}
-{"type":"table","file":"07_eps_estimate_diff_summary.csv","description":"Summary stats for (Polymarket EPS estimate - Eikon mean EPS estimate) (CSV)."}
-{"type":"table","file":"07_eps_estimate_diff_summary.jsonl","description":"Summary stats for (Polymarket EPS estimate - Eikon mean EPS estimate) (JSONL)."}
+{"type":"table","file":"07_eikon_eps_stddev_summary.csv","description":"Summary stats for Eikon EPS stddev estimate (CSV)."}
+{"type":"table","file":"07_eikon_eps_stddev_summary.jsonl","description":"Summary stats for Eikon EPS stddev estimate (JSONL)."}
 {"type":"table","file":"08_surprise_summary.csv","description":"Summary stats for surprise (val_surprise) (CSV)."}
 {"type":"table","file":"08_surprise_summary.jsonl","description":"Summary stats for surprise (val_surprise) (JSONL)."}
 {"type":"table","file":"10_firm_market_counts.csv","description":"Count of markets per firm (RIC) in sample (CSV)."}
@@ -24,68 +24,46 @@
 {"type":"table","file":"10c_markets_per_firm_distribution_table.jsonl","description":"Distribution table: number of firms by markets-per-firm (JSONL)."}
 {"type":"table","file":"11_market_cap_summary_usd.csv","description":"Summary stats for firm market cap (USD) in sample (CSV)."}
 {"type":"table","file":"11_market_cap_summary_usd.jsonl","description":"Summary stats for firm market cap (USD) in sample (JSONL)."}
-{"type":"table","file":"13_hq_country_distribution.csv","description":"Distribution of HQ country for sample firms (CSV)."}
-{"type":"table","file":"13_hq_country_distribution.jsonl","description":"Distribution of HQ country for sample firms (JSONL)."}
-{"type":"table","file":"13b_primary_exchange_distribution.csv","description":"Distribution of primary exchange for sample firms (CSV)."}
-{"type":"table","file":"13b_primary_exchange_distribution.jsonl","description":"Distribution of primary exchange for sample firms (JSONL)."}
-{"type":"table","file":"14_gics_sector_distribution.csv","description":"Distribution of GICS sector for sample firms (CSV)."}
-{"type":"table","file":"14_gics_sector_distribution.jsonl","description":"Distribution of GICS sector for sample firms (JSONL)."}
-{"type":"table","file":"14b_gics_industry_distribution.csv","description":"Distribution of GICS industry (top categories + Other) for sample firms (CSV)."}
-{"type":"table","file":"14b_gics_industry_distribution.jsonl","description":"Distribution of GICS industry (top categories + Other) for sample firms (JSONL)."}
-{"type":"table","file":"15_analysts_covering_summary.csv","description":"Summary stats for analysts covering (sample_mean preferred; else latest) (CSV)."}
-{"type":"table","file":"15_analysts_covering_summary.jsonl","description":"Summary stats for analysts covering (JSONL)."}
-{"type":"table","file":"16_event_counts_sample_vs_universe.csv","description":"Counts: sample events vs universe events (CSV)."}
-{"type":"table","file":"16_event_counts_sample_vs_universe.jsonl","description":"Counts: sample events vs universe events (JSONL)."}
-{"type":"table","file":"16b_event_inclusion_by_sector.csv","description":"Event inclusion share by GICS sector (CSV)."}
-{"type":"table","file":"16b_event_inclusion_by_sector.jsonl","description":"Event inclusion share by GICS sector (JSONL)."}
-{"type":"table","file":"17_snapshot_numeric_summary_12h.csv","description":"Snapshot numeric summary (CSV) for snapshot 12h."}
-{"type":"table","file":"17_snapshot_numeric_summary_12h.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 12h."}
-{"type":"table","file":"17_snapshot_numeric_summary_1d.csv","description":"Snapshot numeric summary (CSV) for snapshot 1d."}
-{"type":"table","file":"17_snapshot_numeric_summary_1d.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 1d."}
-{"type":"table","file":"17_snapshot_numeric_summary_1w.csv","description":"Snapshot numeric summary (CSV) for snapshot 1w."}
-{"type":"table","file":"17_snapshot_numeric_summary_1w.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 1w."}
-{"type":"table","file":"17_snapshot_numeric_summary_2d.csv","description":"Snapshot numeric summary (CSV) for snapshot 2d."}
-{"type":"table","file":"17_snapshot_numeric_summary_2d.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 2d."}
-{"type":"table","file":"17_snapshot_numeric_summary_2w.csv","description":"Snapshot numeric summary (CSV) for snapshot 2w."}
-{"type":"table","file":"17_snapshot_numeric_summary_2w.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 2w."}
-{"type":"table","file":"17_snapshot_numeric_summary_3d.csv","description":"Snapshot numeric summary (CSV) for snapshot 3d."}
-{"type":"table","file":"17_snapshot_numeric_summary_3d.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 3d."}
-{"type":"table","file":"17_snapshot_numeric_summary_3w.csv","description":"Snapshot numeric summary (CSV) for snapshot 3w."}
-{"type":"table","file":"17_snapshot_numeric_summary_3w.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 3w."}
-{"type":"table","file":"17_snapshot_numeric_summary_4d.csv","description":"Snapshot numeric summary (CSV) for snapshot 4d."}
-{"type":"table","file":"17_snapshot_numeric_summary_4d.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 4d."}
-{"type":"table","file":"17_snapshot_numeric_summary_4w.csv","description":"Snapshot numeric summary (CSV) for snapshot 4w."}
-{"type":"table","file":"17_snapshot_numeric_summary_4w.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 4w."}
-{"type":"table","file":"17_snapshot_numeric_summary_5d.csv","description":"Snapshot numeric summary (CSV) for snapshot 5d."}
-{"type":"table","file":"17_snapshot_numeric_summary_5d.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 5d."}
-{"type":"table","file":"17_snapshot_numeric_summary_6d.csv","description":"Snapshot numeric summary (CSV) for snapshot 6d."}
-{"type":"table","file":"17_snapshot_numeric_summary_6d.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 6d."}
-{"type":"table","file":"17_snapshot_numeric_summary_6h.csv","description":"Snapshot numeric summary (CSV) for snapshot 6h."}
-{"type":"table","file":"17_snapshot_numeric_summary_6h.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 6h."}
-{"type":"table","file":"17_snapshot_numeric_summary_all.csv","description":"Combined snapshot summary table for all numeric variables (CSV)."}
-{"type":"table","file":"17_snapshot_numeric_summary_all.jsonl","description":"Combined snapshot summary table for all numeric variables (JSONL)."}
-{"type":"table","file":"18c_event_day_return_summary.csv","description":"Event-day return summary (close[0]/close[-1]-1) if available (CSV)."}
-{"type":"table","file":"18c_event_day_return_summary.jsonl","description":"Event-day return summary if available (JSONL)."}
-{"type":"plot","file":"01_obs_per_snapshot.png","description":"Bar chart of valid-price observations per snapshot_label."}
-{"type":"plot","file":"01b_price_availability_per_snapshot.png","description":"Bar chart: share of sample markets with valid snapshot prices per snapshot_label."}
+{"type":"table","file":"13_gics_sector_distribution.csv","description":"Distribution of GICS sector for sample firms (CSV)."}
+{"type":"table","file":"13_gics_sector_distribution.jsonl","description":"Distribution of GICS sector for sample firms (JSONL)."}
+{"type":"table","file":"14_analysts_covering_summary.csv","description":"Summary stats for analysts covering (CSV)."}
+{"type":"table","file":"14_analysts_covering_summary.jsonl","description":"Summary stats for analysts covering (JSONL)."}
+{"type":"table","file":"15_event_counts_sample_vs_universe.csv","description":"Counts: sample events vs universe events (CSV)."}
+{"type":"table","file":"15_event_counts_sample_vs_universe.jsonl","description":"Counts: sample events vs universe events (JSONL)."}
+{"type":"table","file":"16_snapshot_numeric_summary_12h.csv","description":"Snapshot numeric summary (CSV) for snapshot 12h."}
+{"type":"table","file":"16_snapshot_numeric_summary_12h.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 12h."}
+{"type":"table","file":"16_snapshot_numeric_summary_1d.csv","description":"Snapshot numeric summary (CSV) for snapshot 1d."}
+{"type":"table","file":"16_snapshot_numeric_summary_1d.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 1d."}
+{"type":"table","file":"16_snapshot_numeric_summary_1w.csv","description":"Snapshot numeric summary (CSV) for snapshot 1w."}
+{"type":"table","file":"16_snapshot_numeric_summary_1w.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 1w."}
+{"type":"table","file":"16_snapshot_numeric_summary_2d.csv","description":"Snapshot numeric summary (CSV) for snapshot 2d."}
+{"type":"table","file":"16_snapshot_numeric_summary_2d.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 2d."}
+{"type":"table","file":"16_snapshot_numeric_summary_3d.csv","description":"Snapshot numeric summary (CSV) for snapshot 3d."}
+{"type":"table","file":"16_snapshot_numeric_summary_3d.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 3d."}
+{"type":"table","file":"16_snapshot_numeric_summary_4d.csv","description":"Snapshot numeric summary (CSV) for snapshot 4d."}
+{"type":"table","file":"16_snapshot_numeric_summary_4d.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 4d."}
+{"type":"table","file":"16_snapshot_numeric_summary_5d.csv","description":"Snapshot numeric summary (CSV) for snapshot 5d."}
+{"type":"table","file":"16_snapshot_numeric_summary_5d.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 5d."}
+{"type":"table","file":"16_snapshot_numeric_summary_6d.csv","description":"Snapshot numeric summary (CSV) for snapshot 6d."}
+{"type":"table","file":"16_snapshot_numeric_summary_6d.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 6d."}
+{"type":"table","file":"16_snapshot_numeric_summary_6h.csv","description":"Snapshot numeric summary (CSV) for snapshot 6h."}
+{"type":"table","file":"16_snapshot_numeric_summary_6h.jsonl","description":"Snapshot numeric summary (JSONL) for snapshot 6h."}
+{"type":"table","file":"16_snapshot_numeric_summary_all.csv","description":"Combined snapshot summary table for all numeric variables (CSV)."}
+{"type":"table","file":"16_snapshot_numeric_summary_all.jsonl","description":"Combined snapshot summary table for all numeric variables (JSONL)."}
+{"type":"plot","file":"01_obs_per_snapshot.png","description":"Bar chart of observations per snapshot_label."}
+{"type":"plot","file":"01b_price_availability_per_snapshot.png","description":"Bar chart: share of markets with probabilities per snapshot_label."}
 {"type":"plot","file":"02_active_trading_hours_distribution.png","description":"Histogram: active_trading_hours across markets."}
 {"type":"plot","file":"03_resolved_yes_no_over_time.png","description":"Diverging bar chart: resolved YES (positive) and NO (negative) over time."}
 {"type":"plot","file":"04_resolved_share_yes_no.png","description":"Bar chart: share of markets resolved to YES vs NO."}
 {"type":"plot","file":"05_calibration_all_snapshots_faceted.png","description":"Faceted calibration plot: mean implied prob vs observed YES rate for all snapshots."}
 {"type":"plot","file":"06_volume_distribution_log_usd.png","description":"Histogram: volume distribution with log10 x-axis labeled in USD."}
-{"type":"plot","file":"07_eps_estimate_diff_distribution.png","description":"Histogram: EPS estimate differences (Polymarket - Eikon)."}
+{"type":"plot","file":"07_eikon_eps_stddev_distribution.png","description":"Histogram: Eikon EPS stddev estimate distribution."}
 {"type":"plot","file":"08_surprise_distribution.png","description":"Histogram: surprise distribution (val_surprise)."}
 {"type":"plot","file":"09_active_hours_vs_volume.png","description":"Scatter + LOESS: active trading hours vs volume (log USD)."}
 {"type":"plot","file":"10c_markets_per_firm_distribution.png","description":"Bar chart: distribution of markets per firm (RIC)."}
 {"type":"plot","file":"11_market_cap_distribution_log_usd.png","description":"Histogram: market cap distribution (log USD)."}
 {"type":"plot","file":"12_volume_vs_market_cap.png","description":"Scatter + LOESS: Polymarket volume vs market cap (log-log)."}
-{"type":"plot","file":"13_hq_country_distribution.png","description":"Bar chart: HQ country distribution (top categories + Other)."}
-{"type":"plot","file":"13b_primary_exchange_distribution.png","description":"Bar chart: primary exchange distribution (top categories + Other)."}
-{"type":"plot","file":"14_gics_sector_distribution.png","description":"Bar chart: GICS sector distribution."}
-{"type":"plot","file":"14b_gics_industry_distribution.png","description":"Bar chart: GICS industry distribution (top categories + Other)."}
-{"type":"plot","file":"15_analysts_covering_distribution.png","description":"Histogram: analysts covering distribution (sample firms)."}
-{"type":"plot","file":"16_event_counts_sample_vs_universe.png","description":"Bar chart: number of sample events vs universe events."}
-{"type":"plot","file":"16b_event_inclusion_by_sector.png","description":"Bar chart: share of universe events included in sample by GICS sector."}
-{"type":"plot","file":"18a_implied_probability_distribution_by_snapshot.png","description":"Faceted histograms: implied probabilities by snapshot_label."}
-{"type":"plot","file":"18b_complement_error_distribution.png","description":"Histogram: complement error (price consistency) for snapshot observations."}
-{"type":"plot","file":"18c_event_day_return_distribution.png","description":"Histogram: event-day stock return distribution (if data available)."}
+{"type":"plot","file":"13_gics_sector_distribution.png","description":"Bar chart: GICS sector distribution."}
+{"type":"plot","file":"14_analysts_covering_distribution.png","description":"Histogram: analysts covering distribution (sample firms)."}
+{"type":"plot","file":"15_event_counts_sample_vs_universe.png","description":"Bar chart: number of sample events vs universe events."}
+{"type":"plot","file":"17a_implied_probability_distribution_by_snapshot.png","description":"Faceted histograms: implied probabilities by snapshot_label."}

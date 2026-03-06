@@ -582,7 +582,7 @@ def compute_brier_rows_market_horizon(
             else:
                 p_pm = poly.prices_yes.get(h)
                 if p_pm is None:
-                    status = "missing"
+                    status = "price_missing"
                     reason = "missing_price_at_horizon"
                     d["missing_price_at_horizon"] += 1
                 else:

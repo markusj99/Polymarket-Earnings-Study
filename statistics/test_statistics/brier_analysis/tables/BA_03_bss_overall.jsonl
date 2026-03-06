@@ -1,2 +1,0 @@
-{"benchmark":"Coinflip (0.5)","brier_model":0.1525,"brier_ref":0.25,"bss":0.39}
-{"benchmark":"Historical base rate","brier_model":0.1525,"brier_ref":0.18708,"bss":0.18483}

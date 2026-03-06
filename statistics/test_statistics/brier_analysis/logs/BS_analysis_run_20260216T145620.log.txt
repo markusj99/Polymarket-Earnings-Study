@@ -1,522 +1,0 @@
-Brier analysis run started: 2026-02-16 14:56:20.167202Project root: C:/Users/lasts/Desktop/Polymarket/Polymarket-Earnings-StudyOutput dir:   C:/Users/lasts/Desktop/Polymarket/Polymarket-Earnings-Study/statistics/test_statistics/brier_analysis
-Reading inputs...
-
-[2] Preparing covariates...
-
-[3] Preparing analysis dataset from brier_scores...
-Usable observations: 3709Distinct markets:    450
-[4] Brier score summaries + Brier Skill Score...
-wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   wrote 449.00B in  0s, 26.52MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
---- TABLE: BA_01_brier_overall_ci_long ---
-# A tibble: 3 × 9
-  model                    N n_markets  mean    sd      se ci_low_95 ci_high_95 brier_mean_ci_95       
-  <chr>                <int>     <int> <dbl> <dbl>   <dbl>     <dbl>      <dbl> <chr>                  
-1 Coinflip (0.5)        3709       450 0.25  0     0           0.25       0.25  0.2500 [0.2500, 0.2500]
-2 Historical base rate  3709       450 0.187 0.242 0.00398     0.179      0.195 0.1871 [0.1793, 0.1949]
-3 Polymarket            3709       450 0.153 0.212 0.00348     0.146      0.159 0.1525 [0.1457, 0.1593]
-
---- TABLE: BA_02_brier_by_horizon_ci_long ---
-# A tibble: 27 × 10
-   horizon model                    N n_markets  mean    sd     se ci_low_95 ci_high_95 brier_mean_ci_95       
-   <chr>   <chr>                <int>     <int> <dbl> <dbl>  <dbl>     <dbl>      <dbl> <chr>                  
- 1 1w      Coinflip (0.5)         277       277 0.25  0     0          0.25       0.25  0.2500 [0.2500, 0.2500]
- 2 1w      Historical base rate   277       277 0.187 0.241 0.0145     0.159      0.216 0.1875 [0.1590, 0.2160]
- 3 1w      Polymarket             277       277 0.162 0.213 0.0128     0.137      0.188 0.1625 [0.1373, 0.1876]
- 4 6d      Coinflip (0.5)         362       362 0.25  0     0          0.25       0.25  0.2500 [0.2500, 0.2500]
- 5 6d      Historical base rate   362       362 0.182 0.237 0.0125     0.158      0.207 0.1823 [0.1578, 0.2068]
- 6 6d      Polymarket             362       362 0.165 0.207 0.0109     0.144      0.187 0.1652 [0.1438, 0.1865]
- 7 5d      Coinflip (0.5)         409       409 0.25  0     0          0.25       0.25  0.2500 [0.2500, 0.2500]
- 8 5d      Historical base rate   409       409 0.189 0.243 0.0120     0.166      0.213 0.1891 [0.1655, 0.2127]
- 9 5d      Polymarket             409       409 0.158 0.205 0.0102     0.138      0.178 0.1582 [0.1382, 0.1781]
-10 4d      Coinflip (0.5)         426       426 0.25  0     0          0.25       0.25  0.2500 [0.2500, 0.2500]
-# ℹ 17 more rows
-# ℹ Use `print(n = ...)` to see more rows
-wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   wrote 168.00B in  0s, 11.94MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
---- TABLE: BA_03_bss_overall ---
-# A tibble: 2 × 4
-  benchmark            brier_model brier_ref   bss
-  <chr>                      <dbl>     <dbl> <dbl>
-1 Coinflip (0.5)             0.153     0.25  0.390
-2 Historical base rate       0.153     0.187 0.185
-
---- TABLE: BA_04_bss_by_horizon ---
-# A tibble: 9 × 3
-  horizon bss_vs_coinflip bss_vs_hist
-  <chr>             <dbl>       <dbl>
-1 1w                0.350      0.133 
-2 6d                0.339      0.0939
-3 5d                0.367      0.164 
-4 4d                0.371      0.165 
-5 3d                0.384      0.178 
-6 2d                0.379      0.171 
-7 1d                0.387      0.179 
-8 12h               0.407      0.206 
-9 6h                0.498      0.331 
-
-[5] Correlation matrix (market-level averages)...
-Correlation: dropping zero-variance variables:
-   log_poly_liquidity 
-
-wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   wrote 708.00B in  0s, 26.28MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   wrote 258.00B in  0s, 18.34MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
---- TABLE: BA_06_corr_matrix_pearson_wide ---
-                    var brier_polymarket    accuracy log_mkt_cap     analysts log_stock_turnover_6m stock_volatility_6m
-1      brier_polymarket      1.000000000 -0.94548879 -0.10477115 -0.069746140          -0.005485745          0.07067502
-2              accuracy     -0.945488792  1.00000000  0.12273767  0.075983195           0.016637963         -0.09679430
-3           log_mkt_cap     -0.104771149  0.12273767  1.00000000  0.739201308           0.449090466         -0.53597184
-4              analysts     -0.069746140  0.07598319  0.73920131  1.000000000           0.285489006         -0.26406907
-5 log_stock_turnover_6m     -0.005485745  0.01663796  0.44909047  0.285489006           1.000000000         -0.19857255
-6   stock_volatility_6m      0.070675018 -0.09679430 -0.53597184 -0.264069072          -0.198572548          1.00000000
-7       log_poly_volume      0.048164462 -0.06115579  0.40384487  0.373684609           0.199047736         -0.06321162
-8      market_open_days     -0.071341729  0.05574609  0.09327942  0.006109573           0.111996355         -0.13360204
-9          abs_surprise     -0.017394839  0.02776044  0.08589640 -0.064164731          -0.132561365         -0.04793369
-  log_poly_volume market_open_days abs_surprise
-1      0.04816446     -0.071341729  -0.01739484
-2     -0.06115579      0.055746093   0.02776044
-3      0.40384487      0.093279424   0.08589640
-4      0.37368461      0.006109573  -0.06416473
-5      0.19904774      0.111996355  -0.13256137
-6     -0.06321162     -0.133602037  -0.04793369
-7      1.00000000      0.271273975  -0.13526419
-8      0.27127398      1.000000000  -0.06882428
-9     -0.13526419     -0.068824282   1.00000000
-
---- TABLE: BA_07_corr_matrix_pearson_long_with_pvalues ---
-# A tibble: 55 × 5
-   var1         var2                      n    corr  p_value
-   <chr>        <chr>                 <int>   <dbl>    <dbl>
- 1 abs_surprise abs_surprise            449  1       0      
- 2 abs_surprise accuracy                449  0.0278  0.557  
- 3 abs_surprise analysts                449 -0.0642  0.175  
- 4 abs_surprise brier_polymarket        449 -0.0174  0.713  
- 5 abs_surprise log_mkt_cap             449  0.0859  0.0690 
- 6 abs_surprise log_poly_liquidity        2 NA      NA      
- 7 abs_surprise log_poly_volume         449 -0.135   0.00409
- 8 abs_surprise log_stock_turnover_6m   448 -0.133   0.00495
- 9 abs_surprise market_open_days        449 -0.0688  0.145  
-10 abs_surprise stock_volatility_6m     448 -0.0479  0.311  
-# ℹ 45 more rows
-# ℹ Use `print(n = ...)` to see more rows
-
-[6] Regression analysis: determinants of Polymarket Brier loss...
-wrote 592.00B in  0s, 45.98MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
---- TABLE: BA_08_reg_ols_panel_cluster_market ---
-# A tibble: 42 × 9
-   model        term        estimate std_error statistic   p_value conf_low_95 conf_high_95 sig  
-   <chr>        <chr>          <dbl>     <dbl>     <dbl>     <dbl>       <dbl>        <dbl> <chr>
- 1 OLS_panel_M1 (Intercept)  0.133     0.160       0.830 0.406         -0.181      0.448    ""   
- 2 OLS_panel_M1 horizon6d   -0.00161   0.00680    -0.237 0.813         -0.0149     0.0117   ""   
- 3 OLS_panel_M1 horizon5d   -0.00999   0.00808    -1.24  0.217         -0.0258     0.00585  ""   
- 4 OLS_panel_M1 horizon4d   -0.0124    0.00799    -1.55  0.121         -0.0281     0.00326  ""   
- 5 OLS_panel_M1 horizon3d   -0.0164    0.00796    -2.06  0.0395        -0.0320    -0.000788 "*"  
- 6 OLS_panel_M1 horizon2d   -0.0152    0.00822    -1.85  0.0641        -0.0313     0.000893 "."  
- 7 OLS_panel_M1 horizon1d   -0.0169    0.00931    -1.82  0.0694        -0.0352     0.00134  "."  
- 8 OLS_panel_M1 horizon12h  -0.0225    0.0107     -2.10  0.0358        -0.0435    -0.00149  "*"  
- 9 OLS_panel_M1 horizon6h   -0.0447    0.0113     -3.97  0.0000715     -0.0668    -0.0226   "***"
-10 OLS_panel_M1 log_mkt_cap -0.00987   0.00577    -1.71  0.0871        -0.0212     0.00144  "."  
-# ℹ 32 more rows
-# ℹ Use `print(n = ...)` to see more rows
-
---- REGRESSION TABLE: Panel OLS (clustered SE by market_id) ---
-Called from: cat(tab, "\n")
-- Project 'C:/Users/lasts/Desktop/Polymarket/Polymarket-Earnings-Study' loaded. [renv 1.1.7]
-- The project is out-of-sync -- use `]8;;x-r-run:renv::status()renv::status()]8;;` for details.
-- The library is already synchronized with the lockfile.
-Brier analysis run started: 2026-02-16 15:05:02.317724Project root: C:/Users/lasts/Desktop/Polymarket/Polymarket-Earnings-StudyOutput dir:   C:/Users/lasts/Desktop/Polymarket/Polymarket-Earnings-Study/statistics/test_statistics/brier_analysis
-Reading inputs...
-
-[2] Preparing covariates...
-
-[3] Preparing analysis dataset from brier_scores...
-Usable observations: 3709Distinct markets:    450
-[4] Brier score summaries + Brier Skill Score...
-wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   wrote 449.00B in  0s, 29.89MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
---- TABLE: BA_01_brier_overall_ci_long ---
-# A tibble: 3 × 9
-  model                    N n_markets  mean    sd      se ci_low_95 ci_high_95 brier_mean_ci_95       
-  <chr>                <int>     <int> <dbl> <dbl>   <dbl>     <dbl>      <dbl> <chr>                  
-1 Coinflip (0.5)        3709       450 0.25  0     0           0.25       0.25  0.2500 [0.2500, 0.2500]
-2 Historical base rate  3709       450 0.187 0.242 0.00398     0.179      0.195 0.1871 [0.1793, 0.1949]
-3 Polymarket            3709       450 0.153 0.212 0.00348     0.146      0.159 0.1525 [0.1457, 0.1593]
-
---- TABLE: BA_02_brier_by_horizon_ci_long ---
-# A tibble: 27 × 10
-   horizon model                    N n_markets  mean    sd     se ci_low_95 ci_high_95 brier_mean_ci_95       
-   <chr>   <chr>                <int>     <int> <dbl> <dbl>  <dbl>     <dbl>      <dbl> <chr>                  
- 1 1w      Coinflip (0.5)         277       277 0.25  0     0          0.25       0.25  0.2500 [0.2500, 0.2500]
- 2 1w      Historical base rate   277       277 0.187 0.241 0.0145     0.159      0.216 0.1875 [0.1590, 0.2160]
- 3 1w      Polymarket             277       277 0.162 0.213 0.0128     0.137      0.188 0.1625 [0.1373, 0.1876]
- 4 6d      Coinflip (0.5)         362       362 0.25  0     0          0.25       0.25  0.2500 [0.2500, 0.2500]
- 5 6d      Historical base rate   362       362 0.182 0.237 0.0125     0.158      0.207 0.1823 [0.1578, 0.2068]
- 6 6d      Polymarket             362       362 0.165 0.207 0.0109     0.144      0.187 0.1652 [0.1438, 0.1865]
- 7 5d      Coinflip (0.5)         409       409 0.25  0     0          0.25       0.25  0.2500 [0.2500, 0.2500]
- 8 5d      Historical base rate   409       409 0.189 0.243 0.0120     0.166      0.213 0.1891 [0.1655, 0.2127]
- 9 5d      Polymarket             409       409 0.158 0.205 0.0102     0.138      0.178 0.1582 [0.1382, 0.1781]
-10 4d      Coinflip (0.5)         426       426 0.25  0     0          0.25       0.25  0.2500 [0.2500, 0.2500]
-# ℹ 17 more rows
-# ℹ Use `print(n = ...)` to see more rows
-wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   wrote 168.00B in  0s, 8.92MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
---- TABLE: BA_03_bss_overall ---
-# A tibble: 2 × 4
-  benchmark            brier_model brier_ref   bss
-  <chr>                      <dbl>     <dbl> <dbl>
-1 Coinflip (0.5)             0.153     0.25  0.390
-2 Historical base rate       0.153     0.187 0.185
-
---- TABLE: BA_04_bss_by_horizon ---
-# A tibble: 9 × 3
-  horizon bss_vs_coinflip bss_vs_hist
-  <chr>             <dbl>       <dbl>
-1 1w                0.350      0.133 
-2 6d                0.339      0.0939
-3 5d                0.367      0.164 
-4 4d                0.371      0.165 
-5 3d                0.384      0.178 
-6 2d                0.379      0.171 
-7 1d                0.387      0.179 
-8 12h               0.407      0.206 
-9 6h                0.498      0.331 
-
-[5] Correlation matrix (market-level averages)...
-Correlation: dropping zero-variance variables:
-   log_poly_liquidity 
-
-wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   wrote 708.00B in  0s, 39.07MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   wrote 258.00B in  0s, 21.64MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
---- TABLE: BA_06_corr_matrix_pearson_wide ---
-                    var brier_polymarket    accuracy log_mkt_cap     analysts log_stock_turnover_6m stock_volatility_6m
-1      brier_polymarket      1.000000000 -0.94548879 -0.10477115 -0.069746140          -0.005485745          0.07067502
-2              accuracy     -0.945488792  1.00000000  0.12273767  0.075983195           0.016637963         -0.09679430
-3           log_mkt_cap     -0.104771149  0.12273767  1.00000000  0.739201308           0.449090466         -0.53597184
-4              analysts     -0.069746140  0.07598319  0.73920131  1.000000000           0.285489006         -0.26406907
-5 log_stock_turnover_6m     -0.005485745  0.01663796  0.44909047  0.285489006           1.000000000         -0.19857255
-6   stock_volatility_6m      0.070675018 -0.09679430 -0.53597184 -0.264069072          -0.198572548          1.00000000
-7       log_poly_volume      0.048164462 -0.06115579  0.40384487  0.373684609           0.199047736         -0.06321162
-8      market_open_days     -0.071341729  0.05574609  0.09327942  0.006109573           0.111996355         -0.13360204
-9          abs_surprise     -0.017394839  0.02776044  0.08589640 -0.064164731          -0.132561365         -0.04793369
-  log_poly_volume market_open_days abs_surprise
-1      0.04816446     -0.071341729  -0.01739484
-2     -0.06115579      0.055746093   0.02776044
-3      0.40384487      0.093279424   0.08589640
-4      0.37368461      0.006109573  -0.06416473
-5      0.19904774      0.111996355  -0.13256137
-6     -0.06321162     -0.133602037  -0.04793369
-7      1.00000000      0.271273975  -0.13526419
-8      0.27127398      1.000000000  -0.06882428
-9     -0.13526419     -0.068824282   1.00000000
-
---- TABLE: BA_07_corr_matrix_pearson_long_with_pvalues ---
-# A tibble: 55 × 5
-   var1         var2                      n    corr  p_value
-   <chr>        <chr>                 <int>   <dbl>    <dbl>
- 1 abs_surprise abs_surprise            449  1       0      
- 2 abs_surprise accuracy                449  0.0278  0.557  
- 3 abs_surprise analysts                449 -0.0642  0.175  
- 4 abs_surprise brier_polymarket        449 -0.0174  0.713  
- 5 abs_surprise log_mkt_cap             449  0.0859  0.0690 
- 6 abs_surprise log_poly_liquidity        2 NA      NA      
- 7 abs_surprise log_poly_volume         449 -0.135   0.00409
- 8 abs_surprise log_stock_turnover_6m   448 -0.133   0.00495
- 9 abs_surprise market_open_days        449 -0.0688  0.145  
-10 abs_surprise stock_volatility_6m     448 -0.0479  0.311  
-# ℹ 45 more rows
-# ℹ Use `print(n = ...)` to see more rows
-
-[6] Regression analysis: determinants of Polymarket Brier loss...
-wrote 592.00B in  0s, 42.81MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
---- TABLE: BA_08_reg_ols_panel_cluster_market ---
-# A tibble: 42 × 9
-   model        term        estimate std_error statistic   p_value conf_low_95 conf_high_95 sig  
-   <chr>        <chr>          <dbl>     <dbl>     <dbl>     <dbl>       <dbl>        <dbl> <chr>
- 1 OLS_panel_M1 (Intercept)  0.133     0.160       0.830 0.406         -0.181      0.448    ""   
- 2 OLS_panel_M1 horizon6d   -0.00161   0.00680    -0.237 0.813         -0.0149     0.0117   ""   
- 3 OLS_panel_M1 horizon5d   -0.00999   0.00808    -1.24  0.217         -0.0258     0.00585  ""   
- 4 OLS_panel_M1 horizon4d   -0.0124    0.00799    -1.55  0.121         -0.0281     0.00326  ""   
- 5 OLS_panel_M1 horizon3d   -0.0164    0.00796    -2.06  0.0395        -0.0320    -0.000788 "*"  
- 6 OLS_panel_M1 horizon2d   -0.0152    0.00822    -1.85  0.0641        -0.0313     0.000893 "."  
- 7 OLS_panel_M1 horizon1d   -0.0169    0.00931    -1.82  0.0694        -0.0352     0.00134  "."  
- 8 OLS_panel_M1 horizon12h  -0.0225    0.0107     -2.10  0.0358        -0.0435    -0.00149  "*"  
- 9 OLS_panel_M1 horizon6h   -0.0447    0.0113     -3.97  0.0000715     -0.0668    -0.0226   "***"
-10 OLS_panel_M1 log_mkt_cap -0.00987   0.00577    -1.71  0.0871        -0.0212     0.00144  "."  
-# ℹ 32 more rows
-# ℹ Use `print(n = ...)` to see more rows
-
---- REGRESSION TABLE: Panel OLS (clustered SE by market_id) ---
-
-+------------------+------------+------------+------------+
-|                  | M1         | M2         | M3         |
-+==================+============+============+============+
-| (Intercept)      | 0.1331     | 45.6063*** | 45.6063*** |
-+------------------+------------+------------+------------+
-|                  | (0.1604)   | (4.5253)   | (4.5253)   |
-+------------------+------------+------------+------------+
-| horizon6d        | -0.0016    |            |            |
-+------------------+------------+------------+------------+
-|                  | (0.0068)   |            |            |
-+------------------+------------+------------+------------+
-| horizon5d        | -0.0100    |            |            |
-+------------------+------------+------------+------------+
-|                  | (0.0081)   |            |            |
-+------------------+------------+------------+------------+
-| horizon4d        | -0.0124    |            |            |
-+------------------+------------+------------+------------+
-|                  | (0.0080)   |            |            |
-+------------------+------------+------------+------------+
-| horizon3d        | -0.0164**  | -0.0235    | -0.0235    |
-+------------------+------------+------------+------------+
-|                  | (0.0080)   | (0.1566)   | (0.1566)   |
-+------------------+------------+------------+------------+
-| horizon2d        | -0.0152*   | 0.0783     | 0.0783     |
-+------------------+------------+------------+------------+
-|                  | (0.0082)   | (0.1340)   | (0.1340)   |
-+------------------+------------+------------+------------+
-| horizon1d        | -0.0169*   | 0.1175     | 0.1175     |
-+------------------+------------+------------+------------+
-|                  | (0.0093)   | (0.1400)   | (0.1400)   |
-+------------------+------------+------------+------------+
-| horizon12h       | -0.0225**  | 0.1382     | 0.1382     |
-+------------------+------------+------------+------------+
-|                  | (0.0107)   | (0.1609)   | (0.1609)   |
-+------------------+------------+------------+------------+
-| horizon6h        | -0.0447*** | 0.0946     | 0.0946     |
-+------------------+------------+------------+------------+
-|                  | (0.0113)   | (0.1419)   | (0.1419)   |
-+------------------+------------+------------+------------+
-| log_mkt_cap      | -0.0099*   | -1.9124*** | -1.9124*** |
-+------------------+------------+------------+------------+
-|                  | (0.0058)   | (0.1909)   | (0.1909)   |
-+------------------+------------+------------+------------+
-| analysts         | -0.0006    |            |            |
-+------------------+------------+------------+------------+
-|                  | (0.0011)   |            |            |
-+------------------+------------+------------+------------+
-| log_poly_volume  | 0.0330**   |            |            |
-+------------------+------------+------------+------------+
-|                  | (0.0132)   |            |            |
-+------------------+------------+------------+------------+
-| market_open_days | -0.0033**  |            |            |
-+------------------+------------+------------+------------+
-|                  | (0.0013)   |            |            |
-+------------------+------------+------------+------------+
-| Num.Obs.         | 3700       | 12         | 12         |
-+------------------+------------+------------+------------+
-| R2               | 0.026      | 0.950      | 0.950      |
-+------------------+------------+------------+------------+
-| R2 Adj.          | 0.023      | 0.890      | 0.890      |
-+==================+============+============+============+
-| * p < 0.1, ** p < 0.05, *** p < 0.01                    |
-+==================+============+============+============+ 
-
-wrote 603.00B in  0s, 42.87MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
---- TABLE: BA_09_reg_ols_market_cluster_market ---
-# A tibble: 24 × 9
-   model         term                estimate std_error statistic p_value conf_low_95 conf_high_95 sig  
-   <chr>         <chr>                  <dbl>     <dbl>     <dbl>   <dbl>       <dbl>        <dbl> <chr>
- 1 OLS_market_M1 (Intercept)         0.179      0.160       1.11   0.265     -0.136       0.493    ""   
- 2 OLS_market_M1 log_mkt_cap        -0.0122     0.00556    -2.20   0.0278    -0.0231     -0.00134  "*"  
- 3 OLS_market_M1 analysts           -0.000279   0.00108    -0.259  0.796     -0.00239     0.00183  ""   
- 4 OLS_market_M1 log_poly_volume     0.0315     0.0129      2.44   0.0148     0.00618     0.0569   "*"  
- 5 OLS_market_M1 market_open_days   -0.00310    0.00135    -2.29   0.0220    -0.00575    -0.000448 "*"  
- 6 OLS_market_M2 (Intercept)        45.7        0         Inf      0         45.7        45.7      "***"
- 7 OLS_market_M2 log_mkt_cap        -1.91       0        -Inf      0         -1.91       -1.91     "***"
- 8 OLS_market_M2 analysts           NA         NA          NA     NA         NA          NA        ""   
- 9 OLS_market_M2 log_poly_volume    NA         NA          NA     NA         NA          NA        ""   
-10 OLS_market_M2 log_poly_liquidity NA         NA          NA     NA         NA          NA        ""   
-# ℹ 14 more rows
-# ℹ Use `print(n = ...)` to see more rows
-
---- REGRESSION TABLE: Market-level OLS (clustered SE by market_id) ---
-
-+------------------+-----------+----------+----------+
-|                  | M1        | M2       | M3       |
-+==================+===========+==========+==========+
-| (Intercept)      | 0.1787    | 45.6738  | 45.6738  |
-+------------------+-----------+----------+----------+
-|                  | (0.1603)  | (0.0000) | (0.0000) |
-+------------------+-----------+----------+----------+
-| log_mkt_cap      | -0.0122** | -1.9124  | -1.9124  |
-+------------------+-----------+----------+----------+
-|                  | (0.0056)  | (0.0000) | (0.0000) |
-+------------------+-----------+----------+----------+
-| analysts         | -0.0003   |          |          |
-+------------------+-----------+----------+----------+
-|                  | (0.0011)  |          |          |
-+------------------+-----------+----------+----------+
-| log_poly_volume  | 0.0315**  |          |          |
-+------------------+-----------+----------+----------+
-|                  | (0.0129)  |          |          |
-+------------------+-----------+----------+----------+
-| market_open_days | -0.0031** |          |          |
-+------------------+-----------+----------+----------+
-|                  | (0.0014)  |          |          |
-+------------------+-----------+----------+----------+
-| Num.Obs.         | 449       | 2        | 2        |
-+------------------+-----------+----------+----------+
-| R2               | 0.029     | 1.000    | 1.000    |
-+------------------+-----------+----------+----------+
-| R2 Adj.          | 0.020     |          |          |
-+==================+===========+==========+==========+
-| * p < 0.1, ** p < 0.05, *** p < 0.01               |
-+==================+===========+==========+==========+ 
-
-
-[7] Logit + Probit: probability Polymarket prediction is correct...
-wrote 798.00B in  0s, 53.13MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
---- TABLE: BA_10_glm_logit_probit_correct_cluster_market ---
-# A tibble: 30 × 12
-   model                   term   estimate std_error statistic p_value conf_low_95 conf_high_95 odds_ratio or_low_95 or_high_95 sig  
-   <chr>                   <chr>     <dbl>     <dbl>     <dbl>   <dbl>       <dbl>        <dbl>      <dbl>     <dbl>      <dbl> <chr>
- 1 LOGIT_correct_cluster_… (Int… -3.39e+ 3     59.2  -5.73e+ 1   0        -3510.       -3277.      0        0           0       "***"
- 2 LOGIT_correct_cluster_… hori…  2.29e-10      1.48  1.54e-10   1.000       -2.91         2.91    1.00e 0  5.45e- 2    1.84e 1 ""   
- 3 LOGIT_correct_cluster_… hori…  2.29e-10      1.48  1.54e-10   1.000       -2.91         2.91    1.00e 0  5.45e- 2    1.84e 1 ""   
- 4 LOGIT_correct_cluster_… hori…  2.29e-10      1.48  1.54e-10   1.000       -2.91         2.91    1.00e 0  5.45e- 2    1.84e 1 ""   
- 5 LOGIT_correct_cluster_… hori…  2.49e-10      1.48  1.68e-10   1.000       -2.91         2.91    1.00e 0  5.45e- 2    1.84e 1 ""   
- 6 LOGIT_correct_cluster_… hori…  2.29e-10      1.48  1.54e-10   1.000       -2.91         2.91    1.00e 0  5.45e- 2    1.84e 1 ""   
- 7 LOGIT_correct_cluster_… log_…  1.43e+ 2      2.50  5.73e+ 1   0          138.         148.      1.62e62  1.21e+60    2.18e64 "***"
- 8 LOGIT_correct_cluster_… anal… NA            NA    NA         NA           NA           NA      NA       NA          NA       ""   
- 9 LOGIT_correct_cluster_… log_… NA            NA    NA         NA           NA           NA      NA       NA          NA       ""   
-10 LOGIT_correct_cluster_… log_… NA            NA    NA         NA           NA           NA      NA       NA          NA       ""   
-# ℹ 20 more rows
-# ℹ Use `print(n = ...)` to see more rows
-
---- REGRESSION TABLE: Logit/Probit P(correct) (clustered SE by market_id) ---
-
-+-------------+---------------+--------------+
-|             | LOGIT         | PROBIT       |
-+=============+===============+==============+
-| (Intercept) | -3393.4645*** | -925.7952*** |
-+-------------+---------------+--------------+
-|             | (59.2215)     | (8.6515)     |
-+-------------+---------------+--------------+
-| horizon3d   | 0.0000        | 0.0000       |
-+-------------+---------------+--------------+
-|             | (1.4849)      | (0.2169)     |
-+-------------+---------------+--------------+
-| horizon2d   | 0.0000        | 0.0000       |
-+-------------+---------------+--------------+
-|             | (1.4849)      | (0.2169)     |
-+-------------+---------------+--------------+
-| horizon1d   | 0.0000        | 0.0000       |
-+-------------+---------------+--------------+
-|             | (1.4849)      | (0.2169)     |
-+-------------+---------------+--------------+
-| horizon12h  | 0.0000        | 0.0000       |
-+-------------+---------------+--------------+
-|             | (1.4849)      | (0.2169)     |
-+-------------+---------------+--------------+
-| horizon6h   | 0.0000        | 0.0000       |
-+-------------+---------------+--------------+
-|             | (1.4849)      | (0.2169)     |
-+-------------+---------------+--------------+
-| log_mkt_cap | 143.2440***   | 39.0794***   |
-+-------------+---------------+--------------+
-|             | (2.4995)      | (0.3651)     |
-+-------------+---------------+--------------+
-| Num.Obs.    | 12            | 12           |
-+-------------+---------------+--------------+
-| AIC         | 14.0          | 14.0         |
-+-------------+---------------+--------------+
-| BIC         | 17.4          | 17.4         |
-+-------------+---------------+--------------+
-| Log.Lik.    | -0.000        | -0.000       |
-+-------------+---------------+--------------+
-| Std.Errors  | LOGIT         | PROBIT       |
-+-------------+---------------+--------------+
-| McFadden R2 | 1.0000        | 1.0000       |
-+=============+===============+==============+
-| * p < 0.1, ** p < 0.05, *** p < 0.01       |
-+=============+===============+==============+ 
-
-
-[8] 5-bin analysis (width 0.2): P(YES | price-bin)...
-wrote 317.00B in  0s, 22.54MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   wrote 317.00B in  0s, 17.73MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
---- TABLE: BA_11_price_bins_p_yes_by_horizon ---
-# A tibble: 45 × 8
-   horizon p_bin       n n_markets mean_p p_yes_empirical accuracy   brier
-   <chr>   <fct>   <int>     <int>  <dbl>           <dbl>    <dbl>   <dbl>
- 1 1w      0-0.2       4         4 0.056            0        1     0.00958
- 2 1w      0.2-0.4    17        17 0.339            0.412    0.588 0.264  
- 3 1w      0.4-0.6    35        35 0.518            0.657    0.571 0.243  
- 4 1w      0.6-0.8    90        90 0.714            0.722    0.722 0.198  
- 5 1w      0.8-1     131       131 0.866            0.878    0.878 0.108  
- 6 6d      0-0.2       5         5 0.0358           0        1     0.00485
- 7 6d      0.2-0.4    29        29 0.328            0.448    0.552 0.272  
- 8 6d      0.4-0.6    57        57 0.508            0.667    0.579 0.241  
- 9 6d      0.6-0.8   120       120 0.723            0.8      0.8   0.168  
-10 6d      0.8-1     151       151 0.862            0.861    0.861 0.119  
-# ℹ 35 more rows
-# ℹ Use `print(n = ...)` to see more rows
-
---- TABLE: BA_12_price_bins_p_yes_single_horizon ---
-# A tibble: 5 × 8
-  horizon p_bin       n n_markets mean_p p_yes_empirical accuracy   brier
-  <chr>   <fct>   <int>     <int>  <dbl>           <dbl>    <dbl>   <dbl>
-1 1w      0-0.2       4         4  0.056           0        1     0.00958
-2 1w      0.2-0.4    17        17  0.339           0.412    0.588 0.264  
-3 1w      0.4-0.6    35        35  0.518           0.657    0.571 0.243  
-4 1w      0.6-0.8    90        90  0.714           0.722    0.722 0.198  
-5 1w      0.8-1     131       131  0.866           0.878    0.878 0.108  
-
-[9] Calibration regression (optional scientific diagnostic)...
-wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
---- TABLE: BA_14_calibration_logit_y_on_logitp ---
-# A tibble: 2 × 9
-  model                            term        estimate std_error statistic  p_value conf_low_95 conf_high_95 sig  
-  <chr>                            <chr>          <dbl>     <dbl>     <dbl>    <dbl>       <dbl>        <dbl> <chr>
-1 LOGIT_y_on_logitp_cluster_market (Intercept)    0.352     0.143      2.46 1.39e- 2      0.0716        0.633 *    
-2 LOGIT_y_on_logitp_cluster_market logit_p        0.848     0.102      8.35 6.84e-17      0.649         1.05  ***  
-
---- REGRESSION TABLE: Calibration logit(y) ~ logit(p) (clustered SE by market_id) ---
-
-+-------------+-----------+
-|             | CAL_LOGIT |
-+=============+===========+
-| (Intercept) | 0.3524**  |
-+-------------+-----------+
-|             | (0.1432)  |
-+-------------+-----------+
-| logit_p     | 0.8475*** |
-+-------------+-----------+
-|             | (0.1015)  |
-+-------------+-----------+
-| Num.Obs.    | 3709      |
-+-------------+-----------+
-| AIC         | 3467.2    |
-+-------------+-----------+
-| BIC         | 3479.7    |
-+-------------+-----------+
-| Log.Lik.    | -1731.617 |
-+-------------+-----------+
-| Std.Errors  | CAL_LOGIT |
-+-------------+-----------+
-| McFadden R2 | 0.1584    |
-+=============+===========+
-| * p < 0.1, ** p <       |
-| 0.05, *** p < 0.01      |
-+=============+===========+ 
-
-
-[10] Writing manifest + README + session info...
-wrote 672.00B in  0s, 39.70MB/s                                                                                                                                   wrote 2.15GB in  0s, 2.15GB/s                                                                                                                                   
---- TABLE: BA_00_output_manifest ---
-# A tibble: 16 × 4
-   type  file                                              rel_path                                                       description
-   <chr> <chr>                                             <fs::path>                                                     <glue>     
- 1 table BA_01_brier_overall_ci_long.csv                   …tistics/brier_analysis/tables/BA_01_brier_overall_ci_long.csv Overall Br…
- 2 table BA_02_brier_by_horizon_ci_long.csv                …tics/brier_analysis/tables/BA_02_brier_by_horizon_ci_long.csv Brier scor…
- 3 table BA_03_bss_overall.csv                             …s/test_statistics/brier_analysis/tables/BA_03_bss_overall.csv Overall Br…
- 4 table BA_04_bss_by_horizon.csv                          …est_statistics/brier_analysis/tables/BA_04_bss_by_horizon.csv BSS by hor…
- 5 table BA_06_corr_matrix_pearson_wide.csv                …tics/brier_analysis/tables/BA_06_corr_matrix_pearson_wide.csv Pearson co…
- 6 table BA_06a_corr_dropped_zero_variance_vars.csv        …er_analysis/tables/BA_06a_corr_dropped_zero_variance_vars.csv Variables …
- 7 table BA_07_corr_matrix_pearson_long_with_pvalues.csv   …alysis/tables/BA_07_corr_matrix_pearson_long_with_pvalues.csv Pearson co…
- 8 table BA_08_reg_ols_panel_cluster_market.csv            …/brier_analysis/tables/BA_08_reg_ols_panel_cluster_market.csv OLS regres…
- 9 table BA_09_reg_ols_market_cluster_market.csv           …brier_analysis/tables/BA_09_reg_ols_market_cluster_market.csv OLS regres…
-10 table BA_10_glm_logit_probit_correct_cluster_market.csv …ysis/tables/BA_10_glm_logit_probit_correct_cluster_market.csv Logit + Pr…
-11 table BA_11_price_bins_p_yes_by_horizon.csv             …s/brier_analysis/tables/BA_11_price_bins_p_yes_by_horizon.csv 5-bin tabl…
-12 table BA_12_price_bins_p_yes_single_horizon.csv         …ier_analysis/tables/BA_12_price_bins_p_yes_single_horizon.csv 5-bin tabl…
-13 table BA_14_calibration_logit_y_on_logitp.csv           …brier_analysis/tables/BA_14_calibration_logit_y_on_logitp.csv Calibratio…
-14 plot  BA_05_plot_brier_by_horizon_ci.png                …stics/brier_analysis/plots/BA_05_plot_brier_by_horizon_ci.png Plot: Brie…
-15 plot  BA_13_plot_p_yes_by_price_bins_1w.png             …cs/brier_analysis/plots/BA_13_plot_p_yes_by_price_bins_1w.png Plot: empi…
-16 table BA_00_output_manifest.csv                         …st_statistics/brier_analysis/tables/BA_00_output_manifest.csv Manifest o…
-
-==================== BRIER ANALYSIS COMPLETE ====================
-Log: C:/Users/lasts/Desktop/Polymarket/Polymarket-Earnings-Study/statistics/test_statistics/brier_analysis/logs/BS_analysis_run_20260216T150502.log.txtOut: C:/Users/lasts/Desktop/Polymarket/Polymarket-Earnings-Study/statistics/test_statistics/brier_analysis=================================================================
-

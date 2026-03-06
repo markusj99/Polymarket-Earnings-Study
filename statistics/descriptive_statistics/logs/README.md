@@ -1,34 +1,26 @@
 # Descriptive Statistics Output
 
-- Run timestamp: **20260216T104509**
-- Generated at: **2026-02-16 10:45:19.939113**
-- Script: `Corporate_Earnings/R/scripts/descriptive_stats.R`
-- Output directory: `Corporate_Earnings/statistics/descriptive_statistics/`
+- Run timestamp: **20260219T094743**
+- Generated at: **2026-02-19 09:48:00.034945**
+- Script: `R/00_descriptive_statistics.R`
+- Output directory: `statistics/descriptive_statistics/`
 
 ## Inputs
 
 The script reads the following input files (relative to project root):
 
-- `data/markets/markets.csv`
-- `data/brier_scores/brier_scores_market_horizon.csv`
-- `data/poly_prices/poly_prices_long.csv`
+- `data/complete_dataset_long.csv`
 - `data/stock_prices/stock_prices_daily.csv`
-- `data/corporate_info/corporate_info.csv`
-- `data/heckman_selection_model/heckman_selection_companies.csv`
 - `data/heckman_selection_model/heckman_universe_events.csv`
 
 ## Key definitions / filters used
 
-- **Active trading hours** = `abs(difftime(umaEndDate, startDate, units='hours'))`.
-- **Valid (non-stale) snapshot prices** require:
-  - `price_yes` and `price_no` not missing
-  - `src_yes_ts` and `src_no_ts` not missing
-  - `abs(price_yes + price_no - 1) <= complement_tolerance` (default 0.05 if tolerance missing)
+- **Active trading hours** = `abs(difftime(umaEndDate, acceptingOrdersTimestamp, units='hours'))` (best available proxy given reduced inputs).
+- **Valid snapshot probabilities** require:
+  - `p_polymarket_yes` present and in [0,1]
+  - if `snapshot_dt_utc` exists in the file: it must be non-missing
 
-- **Sample markets** are restricted to:
-  - Resolved outcome in {YES, NO}
-  - Non-missing `val_ric` and `val_anchor_date` (matched to corporate events)
-  - If `val_status` exists: `val_status` starts with `MATCHED`
+- **Sample markets** are restricted to resolved outcome in {YES, NO}.
 
 ## Output files
 
@@ -38,5 +30,5 @@ See `00_output_manifest.csv` for a complete list of outputs and descriptions.
 
 ## Notes on calibration plots
 
-Calibration plots show **observed YES rate** vs **implied probability** (Polymarket `price_yes`).
-The dashed 45-degree line represents perfect calibration (e.g., p=0.5 should resolve YES 50% of the time).
+Calibration plots show **observed YES rate** vs **implied probability** (Polymarket `p_polymarket_yes`).
+The dashed 45-degree line represents perfect calibration.

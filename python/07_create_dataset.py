@@ -85,6 +85,7 @@ BRIER_COLS = [
     "loss_dice",
     "loss_hist",
     "seconds_before_close",
+    "status"
 ]
 
 # In the WIDE dataset, we pivot only these brier variables across horizons.
