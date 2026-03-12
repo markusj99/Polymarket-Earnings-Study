@@ -64,6 +64,7 @@ MARKETS_COLS = [
 CORPORATE_COLS = [
     "slug",  # join key
     "ric",
+    "earnings_release_datetime",
     "asof_date",
     "market_cap_usd_asof",
     "analysts_covering_asof",

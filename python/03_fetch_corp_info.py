@@ -220,29 +220,130 @@ def chunked(xs: List[str], n: int) -> Iterable[List[str]]:
     for i in range(0, len(xs), n):
         yield xs[i : i + n]
 
+def find_col_by_substrings(columns: List[Any], substrings: List[str]) -> Optional[Any]:
+    """
+    Find a column whose name contains any of the provided substrings.
+    Safely ignores None / blank / non-string column names.
+    """
+    cleaned: List[Tuple[Any, str]] = []
+    for c in columns:
+        if c is None:
+            continue
+        c_text = str(c).strip()
+        if not c_text:
+            continue
+        cleaned.append((c, c_text.lower()))
 
-def find_col_by_substrings(columns: List[str], substrings: List[str]) -> Optional[str]:
-    """Find a column whose lower-cased name contains ANY of the provided substrings."""
-    low_cols = [c.lower() for c in columns]
     for sub in substrings:
-        s = sub.lower()
-        for i, c in enumerate(low_cols):
-            if s in c:
-                return columns[i]
+        s = str(sub).lower()
+        for original_col, lower_col in cleaned:
+            if s in lower_col:
+                return original_col
     return None
 
 
-def get_first_present_column(columns: List[str], preferred_exact: List[str], fallback_substrings: List[str]) -> Optional[str]:
+def get_first_present_column(
+    columns: List[Any],
+    preferred_exact: List[str],
+    fallback_substrings: List[str],
+) -> Optional[Any]:
     """
     Prefer exact header matches first, then fallback to substring-based matching.
+    Safely ignores None / blank / non-string column names.
     """
-    colset = set(columns)
+    cleaned: List[Tuple[Any, str]] = []
+    for c in columns:
+        if c is None:
+            continue
+        c_text = str(c).strip()
+        if not c_text:
+            continue
+        cleaned.append((c, c_text))
+
+    exact_map = {text: original for original, text in cleaned}
+
     for name in preferred_exact:
-        if name in colset:
-            return name
+        if name in exact_map:
+            return exact_map[name]
+
     if fallback_substrings:
-        return find_col_by_substrings(columns, fallback_substrings)
+        return find_col_by_substrings([original for original, _ in cleaned], fallback_substrings)
+
     return None
+
+def fetch_earnings_release_datetime(
+    ric: str,
+    around_date: date,
+    *,
+    fail_fast: bool,
+) -> Optional[str]:
+    """
+    Fetch the earnings release date+time nearest to around_date.
+    Returns:
+        YYYY-MM-DDTHH:MM:SS  if time is available
+        YYYY-MM-DD           if only date is available
+        None                 if nothing is found
+    """
+    start = around_date - timedelta(days=14)
+    end = around_date + timedelta(days=1)
+
+    fields = [
+        "TR.EventStartDate",
+        "TR.EventStartTime",
+        "TR.EventType",
+        "TR.EventTitle",
+    ]
+    params = {
+        "SDate": start.isoformat(),
+        "EDate": end.isoformat(),
+        "EventType": "RES",
+    }
+
+    df, err = eikon_retry_get_data(
+        [ric],
+        fields,
+        params,
+        retries=EIKON_RETRIES,
+        fail_fast=fail_fast,
+    )
+    if df is None or df.empty:
+        return None
+
+    cols = list(df.columns)
+    cols = [c for c in df.columns if c is not None and str(c).strip() != ""]
+    if not cols:
+        return None
+    dcol = get_first_present_column(
+        cols,
+        preferred_exact=[],
+        fallback_substrings=["event start date", "start date"],
+    )
+    tcol = get_first_present_column(
+        cols,
+        preferred_exact=[],
+        fallback_substrings=["event start time", "start time"],
+    )
+
+    if dcol is None:
+        return None
+
+    tmp = df.copy()
+    tmp["event_date"] = pd.to_datetime(tmp[dcol], errors="coerce").dt.date
+    tmp = tmp.dropna(subset=["event_date"])
+    if tmp.empty:
+        return None
+
+    tmp["distance_days"] = tmp["event_date"].apply(lambda d: abs((d - around_date).days))
+    row = tmp.sort_values(["distance_days"]).iloc[0]
+
+    event_date = row["event_date"].isoformat()
+
+    if tcol is not None and not _is_missing_value(row.get(tcol)):
+        event_time = str(row[tcol]).strip()
+        if event_time:
+            return f"{event_date}T{event_time}"
+
+    return event_date
 
 
 # =========================
@@ -404,6 +505,8 @@ class CorporateInfoByMarket:
     uma_end_date: str
     close_date: str
     asof_date: str
+
+    earnings_release_datetime: Optional[str]
 
     # Corporate characteristics (as-of asof_date where applicable)
     company_name: Optional[str]
@@ -1004,6 +1107,17 @@ def main(argv: Optional[List[str]] = None) -> int:
                 notes.append("bad_asof_date")
                 asof_dt = date.today()
 
+            close_dt_for_event = parse_iso_date(m.close_date)
+            earnings_release_datetime = None
+            if close_dt_for_event is not None:
+                earnings_release_datetime = fetch_earnings_release_datetime(
+                    m.ric,
+                    close_dt_for_event,
+                    fail_fast=fail_fast,
+                )
+            if earnings_release_datetime is None:
+                notes.append("earnings_release_time_missing")
+
             # As-of snapshots (market cap + analysts)
             market_cap_asof = snapshot_asof(mc_by_ric.get(m.ric, pd.DataFrame()), asof_dt, "market_cap_usd")
             if market_cap_asof is None:
@@ -1032,6 +1146,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                     uma_end_date=m.uma_end_date_raw,
                     close_date=m.close_date,
                     asof_date=m.asof_date,
+                    earnings_release_datetime=earnings_release_datetime,
                     company_name=company_name,
                     market_cap_usd_asof=market_cap_asof,
                     analysts_covering_asof=analysts_asof,

@@ -5,6 +5,8 @@ table,01b_price_availability_per_snapshot.csv,Share of sample markets with price
 table,01b_price_availability_per_snapshot.jsonl,Share of sample markets with prices per snapshot (JSONL).
 table,02_active_trading_hours_summary.csv,Summary stats for active_trading_hours (CSV).
 table,02_active_trading_hours_summary.jsonl,Summary stats for active_trading_hours (JSONL).
+table,02b_earnings_release_to_uma_end_summary.csv,Summary stats for time between earnings_release_datetime and uma_end_date_utc (CSV).
+table,02b_earnings_release_to_uma_end_summary.jsonl,Summary stats for time between earnings_release_datetime and uma_end_date_utc (JSONL).
 table,03_resolved_counts_by_uma_end_date.csv,Counts of resolved markets per UMA end date (NO shown negative in plot; CSV).
 table,03_resolved_counts_by_uma_end_date.jsonl,Counts of resolved markets per UMA end date (JSONL).
 table,04_resolved_share_yes_no.csv,Overall share of resolved YES vs NO (CSV).
@@ -54,6 +56,7 @@ table,16_snapshot_numeric_summary_all.jsonl,Combined snapshot summary table for 
 plot,01_obs_per_snapshot.png,Bar chart of observations per snapshot_label.
 plot,01b_price_availability_per_snapshot.png,Bar chart: share of markets with probabilities per snapshot_label.
 plot,02_active_trading_hours_distribution.png,Histogram: active_trading_hours across markets.
+plot,02b_earnings_release_to_uma_end_distribution.png,"Histogram: time between earnings_release_datetime and uma_end_date_utc in hours, zoomed to the 1st-99th percentile range."
 plot,03_resolved_yes_no_over_time.png,Diverging bar chart: resolved YES (positive) and NO (negative) over time.
 plot,04_resolved_share_yes_no.png,Bar chart: share of markets resolved to YES vs NO.
 plot,05_calibration_all_snapshots_faceted.png,Faceted calibration plot: mean implied prob vs observed YES rate for all snapshots.

@@ -1,14 +1,14 @@
 Polymarket Earnings — Historical Prices Fetch Summary
 ========================================================
-Run ID:            20260306T104602Z
-Generated (UTC):   2026-03-06 10:47:09Z
-Elapsed seconds:   66.487
+Run ID:            20260306T125010Z
+Generated (UTC):   2026-03-06 13:00:56Z
+Elapsed seconds:   646.135
 
 Mode
 - TEST:            False
 
 Inputs
-- Markets JSONL:   /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/markets.jsonl
+- Markets JSONL:   C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.jsonl
 - Markets in file: 639
 - Markets processed:639
 
@@ -17,12 +17,12 @@ Resolution window (based on OBSERVED first/last price timestamps)
 - Latest last price (UTC):    2026-03-06 00:25:25Z
 
 Outputs
-- Historical prices JSONL: /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/poly_prices/poly_prices.jsonl
-- Failed markets JSONL:    /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/poly_prices/failed_poly_markets.jsonl
-- Prices WIDE CSV:        /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/poly_prices/poly_prices_wide.csv
-- Prices LONG CSV:        /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/poly_prices/poly_prices_long.csv
-- Failed markets CSV:     /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/poly_prices/failed_poly_markets.csv
-- Summary TXT:             /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/poly_prices/summary.txt
+- Historical prices JSONL: C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\poly_prices.jsonl
+- Failed markets JSONL:    C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\failed_poly_markets.jsonl
+- Prices WIDE CSV:        C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\poly_prices_wide.csv
+- Prices LONG CSV:        C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\poly_prices_long.csv
+- Failed markets CSV:     C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\failed_poly_markets.csv
+- Summary TXT:             C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\summary.txt
 
 Results
 - Successful markets written: 639

@@ -1,10 +1,10 @@
 =============== HECKMAN UNIVERSE REPORT ===============
-Generated at (UTC): 2026-03-06T11:20:48Z
+Generated at (UTC): 2026-03-06T13:28:45Z
 =======================================================
 
 Observed window from markets.jsonl
 ----------------------------------
-Markets JSONL:             /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/markets.jsonl
+Markets JSONL:             C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.jsonl
 Excluded outlier start:    2025-06-03
 Markets total / used:      639 / 638
 Observed start / end:      2025-09-15 .. 2026-03-06
@@ -30,31 +30,31 @@ SCREEN appears to ignore StartNum/EndNum (page1 rows=2130 > page_size=1000). Sto
 
 Missing values (top 60 columns)
 -------------------------------
-exchange_mic                                  missing=    3475 / 3475     (100.00%)
-primary_exchange                              missing=    3475 / 3475     (100.00%)
-analysts_covering_asof_evt                    missing=     313 / 3475     (  9.01%)
-turnover_lookback_avg_daily_volume_asof_evt   missing=       9 / 3475     (  0.26%)
-turnover_lookback_sum_volume_asof_evt         missing=       9 / 3475     (  0.26%)
-volatility_lookback_asof_evt                  missing=       9 / 3475     (  0.26%)
-market_cap_usd_asof_evt                       missing=       2 / 3475     (  0.06%)
-turnover_lookback_window_end_asof_evt         missing=       2 / 3475     (  0.06%)
-turnover_lookback_window_start_asof_evt       missing=       2 / 3475     (  0.06%)
-asof_date                                     missing=       0 / 3475     (  0.00%)
-company_name                                  missing=       0 / 3475     (  0.00%)
-country_of_risk                               missing=       0 / 3475     (  0.00%)
-event_date                                    missing=       0 / 3475     (  0.00%)
-event_time                                    missing=       0 / 3475     (  0.00%)
-event_title                                   missing=       0 / 3475     (  0.00%)
-event_type                                    missing=       0 / 3475     (  0.00%)
-exchange_country                              missing=       0 / 3475     (  0.00%)
-gics_industry                                 missing=       0 / 3475     (  0.00%)
-gics_sector                                   missing=       0 / 3475     (  0.00%)
-hq_country                                    missing=       0 / 3475     (  0.00%)
-hq_country_code                               missing=       0 / 3475     (  0.00%)
-observed_window_end_utc                       missing=       0 / 3475     (  0.00%)
-observed_window_start_utc                     missing=       0 / 3475     (  0.00%)
-retrieved_at_utc                              missing=       0 / 3475     (  0.00%)
-retrieved_at_utc_company                      missing=       0 / 3475     (  0.00%)
-ric                                           missing=       0 / 3475     (  0.00%)
-ticker                                        missing=       0 / 3475     (  0.00%)
-trbc_industry                                 missing=       0 / 3475     (  0.00%)
+exchange_mic                                  missing=    3506 / 3506     (100.00%)
+primary_exchange                              missing=    3506 / 3506     (100.00%)
+analysts_covering_asof_evt                    missing=     319 / 3506     (  9.10%)
+turnover_lookback_avg_daily_volume_asof_evt   missing=       9 / 3506     (  0.26%)
+turnover_lookback_sum_volume_asof_evt         missing=       9 / 3506     (  0.26%)
+volatility_lookback_asof_evt                  missing=       9 / 3506     (  0.26%)
+country_of_risk                               missing=       5 / 3506     (  0.14%)
+exchange_country                              missing=       2 / 3506     (  0.06%)
+market_cap_usd_asof_evt                       missing=       2 / 3506     (  0.06%)
+turnover_lookback_window_end_asof_evt         missing=       2 / 3506     (  0.06%)
+turnover_lookback_window_start_asof_evt       missing=       2 / 3506     (  0.06%)
+asof_date                                     missing=       0 / 3506     (  0.00%)
+company_name                                  missing=       0 / 3506     (  0.00%)
+event_date                                    missing=       0 / 3506     (  0.00%)
+event_time                                    missing=       0 / 3506     (  0.00%)
+event_title                                   missing=       0 / 3506     (  0.00%)
+event_type                                    missing=       0 / 3506     (  0.00%)
+gics_industry                                 missing=       0 / 3506     (  0.00%)
+gics_sector                                   missing=       0 / 3506     (  0.00%)
+hq_country                                    missing=       0 / 3506     (  0.00%)
+hq_country_code                               missing=       0 / 3506     (  0.00%)
+observed_window_end_utc                       missing=       0 / 3506     (  0.00%)
+observed_window_start_utc                     missing=       0 / 3506     (  0.00%)
+retrieved_at_utc                              missing=       0 / 3506     (  0.00%)
+retrieved_at_utc_company                      missing=       0 / 3506     (  0.00%)
+ric                                           missing=       0 / 3506     (  0.00%)
+ticker                                        missing=       0 / 3506     (  0.00%)
+trbc_industry                                 missing=       0 / 3506     (  0.00%)

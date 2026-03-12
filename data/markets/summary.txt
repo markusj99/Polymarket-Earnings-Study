@@ -1,16 +1,16 @@
 Polymarket Earnings Resolved Markets — Summary
 ====================================================
-Generated (UTC): 2026-03-06 10:46:02Z
+Generated (UTC): 2026-03-06 12:50:08Z
 Mode: incremental
 write_csv: True
-Existing loaded: 639 (parse_errors=0)
-New markets added this run: 0
+Existing loaded: 0 (parse_errors=0)
+New markets added this run: 639
 
 Outputs
-- Markets JSONL:     /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/markets.jsonl
-- Markets CSV:       /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/markets.csv
-- Discarded JSONL:   /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/discarded_markets.jsonl (this run)
-- Summary TXT:       /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/summary.txt
+- Markets JSONL:     C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.jsonl
+- Markets CSV:       C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.csv
+- Discarded JSONL:   C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\discarded_markets.jsonl (this run)
+- Summary TXT:       C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\summary.txt
 
 Resolution time range (based on endDate)
 - Earliest resolved: 2025-06-05 00:00:00Z
@@ -23,11 +23,11 @@ Counts (overall output)
 
 This run (scan/fetch/build)
 - Scanned closed earnings-tag markets: 644
-- Skipped already-known markets:       639
-- Candidates after filter:             0
-- Details fetched OK:                  0
+- Skipped already-known markets:       0
+- Candidates after filter:             639
+- Details fetched OK:                  639
 - Detail errors:                       0
-- New resolved markets built:          0 (Yes=0, No=0)
+- New resolved markets built:          639 (Yes=468, No=171)
 - Discarded markets logged:            5
 
 Discard reasons (this run)
@@ -42,7 +42,7 @@ volumeNum stats (overall output)
 
 Run metadata
 - Cancelled: False (stage=finalize)
-- Elapsed seconds: 1.666
+- Elapsed seconds: 958.821
 - Page limit: 200
 - Max workers: 15
 - END_DATE_MIN: None

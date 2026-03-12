@@ -1,7 +1,7 @@
 # Descriptive Statistics Output
 
-- Run timestamp: **20260219T094743**
-- Generated at: **2026-02-19 09:48:00.034945**
+- Run timestamp: **20260311T160534**
+- Generated at: **2026-03-11 16:05:44.714391**
 - Script: `R/00_descriptive_statistics.R`
 - Output directory: `statistics/descriptive_statistics/`
 
@@ -19,6 +19,7 @@ The script reads the following input files (relative to project root):
 - **Valid snapshot probabilities** require:
   - `p_polymarket_yes` present and in [0,1]
   - if `snapshot_dt_utc` exists in the file: it must be non-missing
+- **Hours from earnings release to UMA end** = `difftime(umaEndDate, earnings_release_datetime, units='hours')`.
 
 - **Sample markets** are restricted to resolved outcome in {YES, NO}.
 

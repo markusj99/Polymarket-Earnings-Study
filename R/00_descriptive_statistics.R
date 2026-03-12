@@ -237,6 +237,7 @@ dataset_long <- dataset_long %>%
     ),
     
     uma_end_date_utc = if ("uma_end_date" %in% names(.)) parse_ts_utc(uma_end_date) else as.POSIXct(NA),
+    earnings_release_datetime_utc = if ("earnings_release_datetime" %in% names(.)) parse_ts_utc(earnings_release_datetime) else as.POSIXct(NA, tz = "UTC"),
     accepting_orders_ts_utc = if ("accepting_orders_timestamp" %in% names(.)) parse_ts_utc(accepting_orders_timestamp) else as.POSIXct(NA),
     snapshot_dt_utc = if ("snapshot_dt_utc" %in% names(.)) parse_ts_utc(snapshot_dt_utc) else as.POSIXct(NA),
     
@@ -318,6 +319,7 @@ markets_sample <- prices_sample %>%
     asof_date = dplyr::first(asof_date),
     resolved_outcome_std = dplyr::first(resolved_outcome_std),
     uma_end_date_utc = dplyr::first(uma_end_date_utc),
+    earnings_release_datetime_utc = dplyr::first(earnings_release_datetime_utc),
     accepting_orders_ts_utc = dplyr::first(accepting_orders_ts_utc),
     active_trading_hours = dplyr::first(active_trading_hours),
     volume_num = dplyr::first(volume_num),
@@ -442,6 +444,76 @@ p_hours <- ggplot2::ggplot(markets_sample, ggplot2::aes(x = active_trading_hours
 
 plot_path <- save_plot_png(p_hours, "02_active_trading_hours_distribution", out_dir, width = 10, height = 6)
 add_manifest("plot", plot_path, "Histogram: active_trading_hours across markets.")
+
+# =============================================================================
+# 2b) Time between earnings release and UMA end
+# =============================================================================
+cat("2b) Time between earnings release and UMA end...\n")
+
+release_gap_df <- markets_sample %>%
+  dplyr::mutate(
+    earnings_to_uma_end_hours = as.numeric(
+      difftime(uma_end_date_utc, earnings_release_datetime_utc, units = "hours")
+    ),
+    earnings_to_uma_end_days = earnings_to_uma_end_hours / 24
+  ) %>%
+  dplyr::filter(
+    !is.na(earnings_release_datetime_utc),
+    !is.na(uma_end_date_utc),
+    is.finite(earnings_to_uma_end_hours)
+  )
+
+release_gap_summary <- release_gap_df %>%
+  dplyr::summarise(
+    n = dplyr::n(),
+    min_hours = safe_min(earnings_to_uma_end_hours),
+    p25_hours = safe_quantile(earnings_to_uma_end_hours, 0.25),
+    mean_hours = safe_mean(earnings_to_uma_end_hours),
+    median_hours = safe_median(earnings_to_uma_end_hours),
+    p75_hours = safe_quantile(earnings_to_uma_end_hours, 0.75),
+    max_hours = safe_max(earnings_to_uma_end_hours),
+    min_days = safe_min(earnings_to_uma_end_days),
+    p25_days = safe_quantile(earnings_to_uma_end_days, 0.25),
+    mean_days = safe_mean(earnings_to_uma_end_days),
+    median_days = safe_median(earnings_to_uma_end_days),
+    p75_days = safe_quantile(earnings_to_uma_end_days, 0.75),
+    max_days = safe_max(earnings_to_uma_end_days),
+    n_negative_hours = sum(earnings_to_uma_end_hours < 0, na.rm = TRUE)
+  )
+
+out_paths <- write_table_dual(release_gap_summary, "02b_earnings_release_to_uma_end_summary", out_dir)
+add_manifest("table", out_paths$csv,   "Summary stats for time between earnings_release_datetime and uma_end_date_utc (CSV).")
+add_manifest("table", out_paths$jsonl, "Summary stats for time between earnings_release_datetime and uma_end_date_utc (JSONL).")
+
+x99 <- as.numeric(stats::quantile(release_gap_df$earnings_to_uma_end_hours, probs = 0.99, na.rm = TRUE))
+x01 <- as.numeric(stats::quantile(release_gap_df$earnings_to_uma_end_hours, probs = 0.01, na.rm = TRUE))
+
+release_gap_zoom_df <- release_gap_df %>%
+  dplyr::filter(
+    earnings_to_uma_end_hours >= x01,
+    earnings_to_uma_end_hours <= x99
+  )
+
+x_breaks <- seq(
+  from = floor(min(release_gap_zoom_df$earnings_to_uma_end_hours, na.rm = TRUE) / 5) * 5,
+  to   = ceiling(max(release_gap_zoom_df$earnings_to_uma_end_hours, na.rm = TRUE) / 5) * 5,
+  by   = 5
+)
+
+p_release_gap_zoom <- ggplot2::ggplot(release_gap_zoom_df, ggplot2::aes(x = earnings_to_uma_end_hours)) +
+  ggplot2::geom_histogram(bins = 30, fill = DATA_COL, color = BORDER_COL) +
+  ggplot2::geom_vline(xintercept = 0, color = COL_RED, linewidth = 0.7, linetype = "dashed") +
+  ggplot2::scale_x_continuous(breaks = x_breaks) +
+  ggplot2::labs(
+    title = "Distribution of time between earnings release and UMA end",
+    subtitle = "Histogram shown for the 1st-99th percentile range; positive values mean release before market close",
+    x = "Hours from earnings release to UMA end",
+    y = "Count of markets"
+  ) +
+  theme_corporate()
+
+plot_path <- save_plot_png(p_release_gap_zoom, "02b_earnings_release_to_uma_end_distribution", out_dir, width = 10, height = 6)
+add_manifest("plot", plot_path, "Histogram: time between earnings_release_datetime and uma_end_date_utc in hours, zoomed to the 1st-99th percentile range.")
 
 # =============================================================================
 # 3) YES vs NO resolved markets over time (diverging stacked bars)
@@ -1029,6 +1101,7 @@ readme_lines <- c(
   "- **Valid snapshot probabilities** require:",
   "  - `p_polymarket_yes` present and in [0,1]",
   "  - if `snapshot_dt_utc` exists in the file: it must be non-missing",
+  "- **Hours from earnings release to UMA end** = `difftime(umaEndDate, earnings_release_datetime, units='hours')`.",
   "",
   "- **Sample markets** are restricted to resolved outcome in {YES, NO}.",
   "",

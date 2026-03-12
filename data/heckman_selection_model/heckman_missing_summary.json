@@ -1,145 +1,145 @@
 {
-  "generated_at_utc": "2026-03-06T11:20:48Z",
-  "rows": 3475,
+  "generated_at_utc": "2026-03-06T13:28:45Z",
+  "rows": 3506,
   "columns": {
     "ric": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     },
     "event_date": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     },
     "event_time": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     },
     "event_type": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     },
     "event_title": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     },
     "asof_date": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     },
     "retrieved_at_utc": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     },
     "observed_window_start_utc": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     },
     "observed_window_end_utc": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     },
     "market_cap_usd_asof_evt": {
       "missing": 2,
-      "total": 3475,
-      "missing_pct": 0.05755395683453237
+      "total": 3506,
+      "missing_pct": 0.057045065601825436
     },
     "analysts_covering_asof_evt": {
-      "missing": 313,
-      "total": 3475,
-      "missing_pct": 9.007194244604316
+      "missing": 319,
+      "total": 3506,
+      "missing_pct": 9.098687963491157
     },
     "turnover_lookback_sum_volume_asof_evt": {
       "missing": 9,
-      "total": 3475,
-      "missing_pct": 0.2589928057553957
+      "total": 3506,
+      "missing_pct": 0.2567027952082145
     },
     "turnover_lookback_avg_daily_volume_asof_evt": {
       "missing": 9,
-      "total": 3475,
-      "missing_pct": 0.2589928057553957
+      "total": 3506,
+      "missing_pct": 0.2567027952082145
     },
     "volatility_lookback_asof_evt": {
       "missing": 9,
-      "total": 3475,
-      "missing_pct": 0.2589928057553957
+      "total": 3506,
+      "missing_pct": 0.2567027952082145
     },
     "turnover_lookback_window_start_asof_evt": {
       "missing": 2,
-      "total": 3475,
-      "missing_pct": 0.05755395683453237
+      "total": 3506,
+      "missing_pct": 0.057045065601825436
     },
     "turnover_lookback_window_end_asof_evt": {
       "missing": 2,
-      "total": 3475,
-      "missing_pct": 0.05755395683453237
+      "total": 3506,
+      "missing_pct": 0.057045065601825436
     },
     "ticker": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     },
     "company_name": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     },
     "gics_sector": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     },
     "gics_industry": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     },
     "trbc_industry": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     },
     "primary_exchange": {
-      "missing": 3475,
-      "total": 3475,
+      "missing": 3506,
+      "total": 3506,
       "missing_pct": 100.0
     },
     "exchange_mic": {
-      "missing": 3475,
-      "total": 3475,
+      "missing": 3506,
+      "total": 3506,
       "missing_pct": 100.0
     },
     "hq_country": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     },
     "hq_country_code": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     },
     "country_of_risk": {
-      "missing": 0,
-      "total": 3475,
-      "missing_pct": 0.0
+      "missing": 5,
+      "total": 3506,
+      "missing_pct": 0.1426126640045636
     },
     "exchange_country": {
-      "missing": 0,
-      "total": 3475,
-      "missing_pct": 0.0
+      "missing": 2,
+      "total": 3506,
+      "missing_pct": 0.057045065601825436
     },
     "retrieved_at_utc_company": {
       "missing": 0,
-      "total": 3475,
+      "total": 3506,
       "missing_pct": 0.0
     }
   }

@@ -1,7 +1,7 @@
 ==================== CONSISTENCY SUMMARY ====================
-Timestamp (UTC):                    2026-03-06T11:39:22.605648Z
-Markets JSONL updated:              /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/markets.jsonl
-Markets CSV updated:                /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/markets/markets.csv
+Timestamp (UTC):                    2026-03-06T13:14:08.417322Z
+Markets JSONL updated:              C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.jsonl
+Markets CSV updated:                C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.csv
 
 Lines scanned:                      639
 Markets parsed (valid JSON):        639
@@ -15,8 +15,8 @@ Unmatched (skip_reason set):        6
 Markets updated with val_* fields:  639
 
 Manual investigation outputs:
-  - /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/validation/unmatched.jsonl
-  - /Users/jasmine/Desktop/Polymarket-Earnings-Study/data/validation/unmatched.csv
+  - C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\validation\unmatched.jsonl
+  - C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\validation\unmatched.csv
 
 Batching:
   - symbology_chunk_size:           250
