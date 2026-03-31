@@ -1,77 +1,88 @@
 Polymarket Earnings — Historical Prices Fetch Summary
 ========================================================
-Run ID:            20260306T125010Z
-Generated (UTC):   2026-03-06 13:00:56Z
-Elapsed seconds:   646.135
+Run ID:              20260327T154841Z
+Generated (UTC):     2026-03-27 15:55:55Z
+Elapsed seconds:     434.093
 
 Mode
-- TEST:            False
+- TEST:              False
 
 Inputs
-- Markets JSONL:   C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.jsonl
-- Markets in file: 639
-- Markets processed:639
+- Markets JSONL:     C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.jsonl
+- Corporate JSONL:   C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\corporate_info\corporate_info_by_market.jsonl
+- Markets in file:   639
+- Markets processed: 639
+- Corporate rows:    639
 
-Resolution window (based on OBSERVED first/last price timestamps)
+Snapshot anchor window (based on earnings_release_datetime)
+- Earliest anchor (UTC): 2025-06-05 20:15:05Z
+- Latest anchor (UTC):   2026-03-05 21:15:00Z
+
+Fetched history window (based on observed first/last fetched price timestamps)
 - Earliest first price (UTC): 2025-06-03 21:50:06Z
 - Latest last price (UTC):    2026-03-06 00:25:25Z
 
 Outputs
 - Historical prices JSONL: C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\poly_prices.jsonl
 - Failed markets JSONL:    C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\failed_poly_markets.jsonl
-- Prices WIDE CSV:        C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\poly_prices_wide.csv
-- Prices LONG CSV:        C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\poly_prices_long.csv
-- Failed markets CSV:     C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\failed_poly_markets.csv
+- Prices WIDE CSV:         C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\poly_prices_wide.csv
+- Prices LONG CSV:         C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\poly_prices_long.csv
+- Failed markets CSV:      C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\failed_poly_markets.csv
 - Summary TXT:             C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\summary.txt
 
 Results
-- Successful markets written: 639
-- Failed markets:             0
+- Successful markets written: 632
+- Failed markets:             7
+
+Corporate info joins
+- market_id: 632
 
 Failure reasons (hard failures only)
-- (none)
+- missing_or_invalid_earnings_release_datetime: 6
+- no_snapshot_prices_found: 1
 
 Quality stats (not failures)
-- Markets with partial missing snapshots: 635
-- Markets with YES+NO complement violations: 39
+- Markets with partial missing snapshots: 630
+- Markets with YES+NO complement violations: 4
 - YES+NO complement tolerance: 0.05
 
 Missing snapshot counts (not failures)
 YES missing:
-- 4w: 635
-- 3w: 619
-- 2w: 496
-- 1w: 188
-- 6d: 100
-- 5d: 52
-- 4d: 32
-- 3d: 17
-- 2d: 3
+- 4w: 630
+- 3w: 614
+- 2w: 516
+- 1w: 201
+- 6d: 125
+- 5d: 73
+- 4d: 39
+- 3d: 18
+- 2d: 6
 - 1d: 1
-- 12h: 1
+- 12h: 0
 - 6h: 0
 
 NO missing:
-- 4w: 635
-- 3w: 619
-- 2w: 496
-- 1w: 188
-- 6d: 100
-- 5d: 52
-- 4d: 32
-- 3d: 17
-- 2d: 3
+- 4w: 630
+- 3w: 614
+- 2w: 516
+- 1w: 201
+- 6d: 125
+- 5d: 73
+- 4d: 39
+- 3d: 18
+- 2d: 6
 - 1d: 1
-- 12h: 1
+- 12h: 0
 - 6h: 0
 
 Config (selected)
-- gamma_base:      https://gamma-api.polymarket.com
-- clob_base:       https://clob.polymarket.com
-- max_workers:     10
-- http_timeout:    25.0
-- retries:         3
-- retry_sleep_s:   0.8
-- fidelity_min:    5 minutes
-- fidelity_fallback:720 minutes
-- buffer_seconds:  7200
+- gamma_base:         https://gamma-api.polymarket.com
+- clob_base:          https://clob.polymarket.com
+- max_workers:        10
+- http_timeout:       25.0
+- retries:            3
+- retry_sleep_s:      0.8
+- fidelity_min:       5 minutes
+- fidelity_fallback:  720 minutes
+- buffer_seconds:     7200
+- anchor_field:       earnings_release_datetime

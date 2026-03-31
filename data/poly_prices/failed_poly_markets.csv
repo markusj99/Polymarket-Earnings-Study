@@ -1,1 +1,8 @@
-
+run_id,market_id,slug,reason,earnings_release_datetime_raw,corporate_info_join_method,yes_token_id,no_token_id,startTs,endTs,earnings_release_ts,observed_end_ts
+20260327T154841Z,1160450,moga-quarterly-earnings-nongaap-eps-01-23-2026-2pt19,missing_or_invalid_earnings_release_datetime,,market_id,,,,,,
+20260327T154841Z,599653,will-cnxc-beat-earnings-estimate-2025-09-25-2pt91,missing_or_invalid_earnings_release_datetime,,market_id,,,,,,
+20260327T154841Z,599654,will-kmx-beat-earnings-estimate-2025-09-25-1pt03,missing_or_invalid_earnings_release_datetime,,market_id,,,,,,
+20260327T154841Z,653003,frge-quarterly-earnings-gaap-eps-11-05-2025-neg1pt09,missing_or_invalid_earnings_release_datetime,,market_id,,,,,,
+20260327T154841Z,658508,eb-quarterly-earnings-gaap-eps-11-06-2025-neg0pt04,missing_or_invalid_earnings_release_datetime,,market_id,,,,,,
+20260327T154841Z,675496,urbn-quarterly-earnings-gaap-eps-11-25-2025-1pt18,missing_or_invalid_earnings_release_datetime,,market_id,,,,,,
+20260327T154841Z,899878,brze-quarterly-earnings-nongaap-eps-12-09-2025-0pt07,no_snapshot_prices_found,,,73592276728481968660366127297340476591927356952632355856475899188015746163037,9313847378855178845178976392116532061876267229647332800434025244531038349328,1765251940.0,1765325704.0,1765314300.0,1765325407.0

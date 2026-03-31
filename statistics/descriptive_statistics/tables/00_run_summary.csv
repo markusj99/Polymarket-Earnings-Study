@@ -1,2 +1,2 @@
 run_ts,n_markets_sample,n_sample_firms,n_snapshot_rows,n_markets_with_prices,output_dir
-20260311T160534,639,418,5357,639,statistics/descriptive_statistics
+20260329T185431,632,413,5225,632,statistics/descriptive_statistics

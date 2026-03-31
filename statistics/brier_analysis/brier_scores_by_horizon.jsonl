@@ -1,27 +1,27 @@
-{"horizon":"1w","horizon_seconds":604800,"model":"Polymarket","n":451,"mean":0.1641,"sd":0.2072,"ci_low":0.146,"ci_high":0.1842}
-{"horizon":"1w","horizon_seconds":604800,"model":"Dice (0.5)","n":451,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
-{"horizon":"1w","horizon_seconds":604800,"model":"Historical rate","n":451,"mean":0.1991,"sd":0.2364,"ci_low":0.1778,"ci_high":0.2202}
-{"horizon":"6d","horizon_seconds":518400,"model":"Polymarket","n":539,"mean":0.1637,"sd":0.2017,"ci_low":0.1465,"ci_high":0.1809}
-{"horizon":"6d","horizon_seconds":518400,"model":"Dice (0.5)","n":539,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
-{"horizon":"6d","horizon_seconds":518400,"model":"Historical rate","n":539,"mean":0.1931,"sd":0.234,"ci_low":0.1733,"ci_high":0.2132}
-{"horizon":"5d","horizon_seconds":432000,"model":"Polymarket","n":587,"mean":0.1586,"sd":0.2015,"ci_low":0.1421,"ci_high":0.1751}
-{"horizon":"5d","horizon_seconds":432000,"model":"Dice (0.5)","n":587,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
-{"horizon":"5d","horizon_seconds":432000,"model":"Historical rate","n":587,"mean":0.1967,"sd":0.2381,"ci_low":0.1758,"ci_high":0.2155}
-{"horizon":"4d","horizon_seconds":345600,"model":"Polymarket","n":607,"mean":0.1584,"sd":0.209,"ci_low":0.1415,"ci_high":0.1749}
-{"horizon":"4d","horizon_seconds":345600,"model":"Dice (0.5)","n":607,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
-{"horizon":"4d","horizon_seconds":345600,"model":"Historical rate","n":607,"mean":0.197,"sd":0.2382,"ci_low":0.1792,"ci_high":0.2158}
-{"horizon":"3d","horizon_seconds":259200,"model":"Polymarket","n":622,"mean":0.1567,"sd":0.2061,"ci_low":0.1418,"ci_high":0.173}
-{"horizon":"3d","horizon_seconds":259200,"model":"Dice (0.5)","n":622,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
-{"horizon":"3d","horizon_seconds":259200,"model":"Historical rate","n":622,"mean":0.1956,"sd":0.239,"ci_low":0.1781,"ci_high":0.2136}
-{"horizon":"2d","horizon_seconds":172800,"model":"Polymarket","n":636,"mean":0.1554,"sd":0.2077,"ci_low":0.1403,"ci_high":0.1725}
-{"horizon":"2d","horizon_seconds":172800,"model":"Dice (0.5)","n":636,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
-{"horizon":"2d","horizon_seconds":172800,"model":"Historical rate","n":636,"mean":0.1974,"sd":0.2396,"ci_low":0.1788,"ci_high":0.218}
-{"horizon":"1d","horizon_seconds":86400,"model":"Polymarket","n":638,"mean":0.1527,"sd":0.208,"ci_low":0.137,"ci_high":0.169}
-{"horizon":"1d","horizon_seconds":86400,"model":"Dice (0.5)","n":638,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
-{"horizon":"1d","horizon_seconds":86400,"model":"Historical rate","n":638,"mean":0.1977,"sd":0.2397,"ci_low":0.1802,"ci_high":0.216}
-{"horizon":"12h","horizon_seconds":43200,"model":"Polymarket","n":638,"mean":0.1513,"sd":0.2176,"ci_low":0.1354,"ci_high":0.1686}
-{"horizon":"12h","horizon_seconds":43200,"model":"Dice (0.5)","n":638,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
-{"horizon":"12h","horizon_seconds":43200,"model":"Historical rate","n":638,"mean":0.1977,"sd":0.2397,"ci_low":0.1802,"ci_high":0.216}
-{"horizon":"6h","horizon_seconds":21600,"model":"Polymarket","n":639,"mean":0.1322,"sd":0.2065,"ci_low":0.1165,"ci_high":0.1483}
-{"horizon":"6h","horizon_seconds":21600,"model":"Dice (0.5)","n":639,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
-{"horizon":"6h","horizon_seconds":21600,"model":"Historical rate","n":639,"mean":0.1983,"sd":0.2399,"ci_low":0.1794,"ci_high":0.218}
+{"horizon":"1w","horizon_seconds":604800,"model":"Polymarket","n":431,"mean":0.1684,"sd":0.2133,"ci_low":0.1483,"ci_high":0.1885}
+{"horizon":"1w","horizon_seconds":604800,"model":"Dice (0.5)","n":431,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
+{"horizon":"1w","horizon_seconds":604800,"model":"Historical rate","n":431,"mean":0.2012,"sd":0.2473,"ci_low":0.1784,"ci_high":0.2255}
+{"horizon":"6d","horizon_seconds":518400,"model":"Polymarket","n":507,"mean":0.1677,"sd":0.2053,"ci_low":0.1506,"ci_high":0.1854}
+{"horizon":"6d","horizon_seconds":518400,"model":"Dice (0.5)","n":507,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
+{"horizon":"6d","horizon_seconds":518400,"model":"Historical rate","n":507,"mean":0.1944,"sd":0.2429,"ci_low":0.1731,"ci_high":0.2159}
+{"horizon":"5d","horizon_seconds":432000,"model":"Polymarket","n":559,"mean":0.1611,"sd":0.2068,"ci_low":0.1443,"ci_high":0.1774}
+{"horizon":"5d","horizon_seconds":432000,"model":"Dice (0.5)","n":559,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
+{"horizon":"5d","horizon_seconds":432000,"model":"Historical rate","n":559,"mean":0.1957,"sd":0.2461,"ci_low":0.1766,"ci_high":0.2153}
+{"horizon":"4d","horizon_seconds":345600,"model":"Polymarket","n":593,"mean":0.1582,"sd":0.209,"ci_low":0.1419,"ci_high":0.1765}
+{"horizon":"4d","horizon_seconds":345600,"model":"Dice (0.5)","n":593,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
+{"horizon":"4d","horizon_seconds":345600,"model":"Historical rate","n":593,"mean":0.196,"sd":0.247,"ci_low":0.1769,"ci_high":0.2165}
+{"horizon":"3d","horizon_seconds":259200,"model":"Polymarket","n":614,"mean":0.1592,"sd":0.2095,"ci_low":0.1436,"ci_high":0.1767}
+{"horizon":"3d","horizon_seconds":259200,"model":"Dice (0.5)","n":614,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
+{"horizon":"3d","horizon_seconds":259200,"model":"Historical rate","n":614,"mean":0.1958,"sd":0.2483,"ci_low":0.1759,"ci_high":0.216}
+{"horizon":"2d","horizon_seconds":172800,"model":"Polymarket","n":626,"mean":0.1572,"sd":0.2106,"ci_low":0.1416,"ci_high":0.1738}
+{"horizon":"2d","horizon_seconds":172800,"model":"Dice (0.5)","n":626,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
+{"horizon":"2d","horizon_seconds":172800,"model":"Historical rate","n":626,"mean":0.196,"sd":0.2467,"ci_low":0.1772,"ci_high":0.2153}
+{"horizon":"1d","horizon_seconds":86400,"model":"Polymarket","n":631,"mean":0.1565,"sd":0.2091,"ci_low":0.1408,"ci_high":0.1739}
+{"horizon":"1d","horizon_seconds":86400,"model":"Dice (0.5)","n":631,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
+{"horizon":"1d","horizon_seconds":86400,"model":"Historical rate","n":631,"mean":0.1975,"sd":0.2446,"ci_low":0.1782,"ci_high":0.2174}
+{"horizon":"12h","horizon_seconds":43200,"model":"Polymarket","n":632,"mean":0.1535,"sd":0.2102,"ci_low":0.1382,"ci_high":0.1709}
+{"horizon":"12h","horizon_seconds":43200,"model":"Dice (0.5)","n":632,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
+{"horizon":"12h","horizon_seconds":43200,"model":"Historical rate","n":632,"mean":0.1966,"sd":0.2419,"ci_low":0.1781,"ci_high":0.2161}
+{"horizon":"6h","horizon_seconds":21600,"model":"Polymarket","n":632,"mean":0.1552,"sd":0.2175,"ci_low":0.1394,"ci_high":0.1735}
+{"horizon":"6h","horizon_seconds":21600,"model":"Dice (0.5)","n":632,"mean":0.25,"sd":0,"ci_low":0.25,"ci_high":0.25}
+{"horizon":"6h","horizon_seconds":21600,"model":"Historical rate","n":632,"mean":0.1964,"sd":0.2402,"ci_low":0.1781,"ci_high":0.2158}

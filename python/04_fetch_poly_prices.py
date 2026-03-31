@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-01_fetch_poly_prices.py
+04_fetch_poly_prices.py
 
 Polymarket Earnings — Historical Snapshot Prices (YES + NO)
 
@@ -9,27 +9,38 @@ What this script does
 ---------------------
 For each Polymarket orderbook market in an input JSONL file, this script fetches
 historical price series for the YES and NO outcome tokens from the Polymarket
-CLOB API and produces snapshot prices at fixed offsets before an anchor time.
+CLOB API and produces snapshot prices at fixed offsets before the company's
+earnings release time.
 
 Key behavior
 ------------
-- Snapshot anchor uses the **OBSERVED market end** = last timestamp found in
-  YES/NO history (instead of relying solely on Gamma endDate).
-- Snapshot targets are (observed_end_ts - offset_seconds).
-- Snapshot price is the last price with ts <= target_ts.
-- Complement check flags labels where |YES + NO - 1| > tolerance.
+- Snapshot anchor uses `earnings_release_datetime` from:
+    data/corporate_info/corporate_info_by_market.jsonl
+- Snapshot targets are:
+    (earnings_release_ts - offset_seconds)
+- Snapshot price is the last price with:
+    ts <= target_ts
+- Complement check flags labels where:
+    |YES + NO - 1| > tolerance
+- Query window is chosen to fully cover the snapshot horizon relative to the
+  earnings release anchor, while still allowing the fetch to extend through the
+  market's known close/resolution time when available.
 
 Outputs
 -------
-- poly_prices.jsonl   (success records)
-- failed_poly_markets.jsonl      (failure records)
-- summary.txt               (human-readable run summary)
+- poly_prices.jsonl           (success records)
+- failed_poly_markets.jsonl   (failure records)
+- poly_prices_wide.csv        (1 row per market)
+- poly_prices_long.csv        (1 row per market x snapshot)
+- failed_poly_markets.csv     (1 row per failure)
+- summary.txt                 (human-readable run summary)
 
 Notes for thesis/review
 -----------------------
-- Per-market outputs are JSONL (machine-readable).
-- Summary remains TXT (human-readable).
-- All timestamps in JSON outputs are UTC. Optional local debug fields are off by default.
+- Per-market outputs are JSONL + CSV.
+- Summary remains TXT.
+- All timestamps in JSON/CSV outputs are UTC.
+- Optional local debug fields are off by default.
 
 """
 
@@ -58,6 +69,7 @@ from tqdm import tqdm
 DEFAULT_PRICES_WIDE_CSV = "poly_prices_wide.csv"
 DEFAULT_PRICES_LONG_CSV = "poly_prices_long.csv"
 DEFAULT_FAILED_CSV = "failed_poly_markets.csv"
+
 
 # -------------------------
 # Snapshot spec (fixed)
@@ -125,6 +137,12 @@ def parse_iso_dt(s: Any) -> Optional[datetime]:
     """
     Parse an ISO-8601 string into an aware UTC datetime.
     Returns None on failure.
+
+    Important:
+    - If the input has no timezone, it is interpreted as UTC.
+    - This matches the corporate_info example where
+      earnings_release_datetime is stored without an explicit 'Z'
+      but represents UTC time.
     """
     if not s or not isinstance(s, str):
         return None
@@ -163,6 +181,7 @@ def atomic_write_jsonl(path: Path, rows: Iterable[Dict[str, Any]]) -> None:
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
     os.replace(tmp, path)
+
 
 def _to_json_str(x: Any) -> Optional[str]:
     """
@@ -212,7 +231,14 @@ def write_csv_outputs(
         row["no_token_id"] = r.get("no_token_id")
         row["generated_utc"] = r.get("generated_utc")
 
-        # Observed window
+        # Earnings anchor metadata
+        row["snapshot_anchor_type"] = r.get("snapshot_anchor_type")
+        row["earnings_release_datetime_raw"] = r.get("earnings_release_datetime_raw")
+        row["earnings_release_ts"] = r.get("earnings_release_ts")
+        row["earnings_release_utc"] = r.get("earnings_release_utc")
+        row["corporate_info_join_method"] = r.get("corporate_info_join_method")
+
+        # Observed window in fetched histories
         row["observed_start_ts"] = r.get("observed_start_ts")
         row["observed_end_ts"] = r.get("observed_end_ts")
         row["observed_start_utc"] = r.get("observed_start_utc")
@@ -222,8 +248,9 @@ def write_csv_outputs(
         # Query window
         row["query_start_ts"] = r.get("query_start_ts")
         row["query_end_ts"] = r.get("query_end_ts")
+        row["market_query_end_ts"] = r.get("market_query_end_ts")
 
-        # Quality checks (store as JSON strings)
+        # Quality checks
         row["complement_tolerance"] = r.get("complement_tolerance")
         row["complement_violations"] = _to_json_str(r.get("complement_violations"))
         row["missing_yes"] = _to_json_str(r.get("missing_yes"))
@@ -235,7 +262,6 @@ def write_csv_outputs(
         src_yes = r.get("snapshot_source_ts_yes") or {}
         src_no = r.get("snapshot_source_ts_no") or {}
 
-        # Snapshot columns
         for lab in snapshot_labels:
             row[f"yes_{lab}"] = prices_yes.get(lab)
             row[f"no_{lab}"] = prices_no.get(lab)
@@ -263,6 +289,11 @@ def write_csv_outputs(
             "market_id": r.get("market_id"),
             "slug": r.get("slug"),
             "generated_utc": r.get("generated_utc"),
+            "snapshot_anchor_type": r.get("snapshot_anchor_type"),
+            "earnings_release_datetime_raw": r.get("earnings_release_datetime_raw"),
+            "earnings_release_ts": r.get("earnings_release_ts"),
+            "earnings_release_utc": r.get("earnings_release_utc"),
+            "corporate_info_join_method": r.get("corporate_info_join_method"),
             "observed_end_ts": r.get("observed_end_ts"),
             "observed_end_utc": r.get("observed_end_utc"),
             "complement_tolerance": r.get("complement_tolerance"),
@@ -280,7 +311,6 @@ def write_csv_outputs(
             row["price_yes"] = prices_yes.get(lab)
             row["price_no"] = prices_no.get(lab)
 
-            # convenience columns
             y = row["price_yes"]
             n = row["price_no"]
             row["yes_plus_no"] = (y + n) if (isinstance(y, (int, float)) and isinstance(n, (int, float))) else None
@@ -300,14 +330,12 @@ def write_csv_outputs(
     failed_rows: List[Dict[str, Any]] = []
     for f in failures:
         row = dict(f)
-        # store nested details safely
         for k, v in list(row.items()):
             if isinstance(v, (dict, list)):
                 row[k] = _to_json_str(v)
         failed_rows.append(row)
 
     pd.DataFrame(failed_rows).to_csv(out_failed_csv, index=False, encoding="utf-8")
-
 
 
 def atomic_write_text(path: Path, text: str) -> None:
@@ -339,6 +367,55 @@ def load_jsonl(path: Path) -> List[Dict[str, Any]]:
             except Exception:
                 continue
     return out
+
+
+# -------------------------
+# Corporate info helpers
+# -------------------------
+def build_corporate_info_lookup(
+    corporate_rows: List[Dict[str, Any]],
+) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]]:
+    """
+    Build lookups for corporate info rows.
+
+    Primary key:
+      - market_id
+    Fallback key:
+      - slug
+    """
+    by_market_id: Dict[str, Dict[str, Any]] = {}
+    by_slug: Dict[str, Dict[str, Any]] = {}
+
+    for row in corporate_rows:
+        mid = str(row.get("market_id", "")).strip()
+        slug = str(row.get("slug", "")).strip()
+
+        if mid:
+            by_market_id[mid] = row
+        if slug:
+            by_slug[slug] = row
+
+    return by_market_id, by_slug
+
+
+def resolve_corporate_info_row(
+    market_id: str,
+    slug: str,
+    corporate_by_market_id: Dict[str, Dict[str, Any]],
+    corporate_by_slug: Dict[str, Dict[str, Any]],
+) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+    """
+    Resolve the corporate info row for a market.
+
+    Join order:
+      1) market_id
+      2) slug
+    """
+    if market_id and market_id in corporate_by_market_id:
+        return corporate_by_market_id[market_id], "market_id"
+    if slug and slug in corporate_by_slug:
+        return corporate_by_slug[slug], "slug"
+    return None, None
 
 
 # -------------------------
@@ -397,7 +474,6 @@ def _request_json(
             }
 
             if resp.status_code in (429, 500, 502, 503, 504) and attempt < retries:
-                # exponential backoff with jitter
                 sleep_s = retry_sleep_s * (2 ** attempt) * (0.8 + 0.4 * random.random())
                 time.sleep(sleep_s)
                 continue
@@ -415,12 +491,20 @@ def _request_json(
     return None, last_err
 
 
-def gamma_get(cfg: Config, path: str, params: Optional[Dict[str, Any]] = None) -> Tuple[Optional[Any], Optional[Dict[str, Any]]]:
+def gamma_get(
+    cfg: Config,
+    path: str,
+    params: Optional[Dict[str, Any]] = None,
+) -> Tuple[Optional[Any], Optional[Dict[str, Any]]]:
     headers = {"Accept": "application/json", "User-Agent": cfg.user_agent}
     return _request_json("GET", f"{cfg.gamma_base}{path}", params, headers, cfg.http_timeout, cfg.retries, cfg.retry_sleep_s)
 
 
-def clob_get(cfg: Config, path: str, params: Optional[Dict[str, Any]] = None) -> Tuple[Optional[Any], Optional[Dict[str, Any]]]:
+def clob_get(
+    cfg: Config,
+    path: str,
+    params: Optional[Dict[str, Any]] = None,
+) -> Tuple[Optional[Any], Optional[Dict[str, Any]]]:
     headers = {"Accept": "application/json", "User-Agent": cfg.user_agent}
     return _request_json("GET", f"{cfg.clob_base}{path}", params, headers, cfg.http_timeout, cfg.retries, cfg.retry_sleep_s)
 
@@ -477,7 +561,7 @@ def _normalize_epoch_seconds(t_raw: int) -> int:
     """
     CLOB sometimes returns ms timestamps; normalize to seconds.
     """
-    if t_raw > 10_000_000_000:  # very likely milliseconds
+    if t_raw > 10_000_000_000:
         return int(t_raw // 1000)
     return int(t_raw)
 
@@ -504,7 +588,11 @@ def build_series(history: List[Dict[str, Any]]) -> Tuple[List[int], List[float]]
     return [t for t, _ in pairs], [p for _, p in pairs]
 
 
-def pick_price_from_series(ts_list: List[int], p_list: List[float], target_ts: int) -> Tuple[Optional[float], Optional[int]]:
+def pick_price_from_series(
+    ts_list: List[int],
+    p_list: List[float],
+    target_ts: int,
+) -> Tuple[Optional[float], Optional[int]]:
     """
     Return the last price with ts <= target_ts (right-continuous step series).
     """
@@ -522,16 +610,14 @@ def any_price_present(prices: Dict[str, Optional[float]]) -> bool:
 
 def choose_query_end_ts(input_market: Dict[str, Any], gamma_detail: Dict[str, Any]) -> Optional[int]:
     """
-    Choose a conservative end timestamp (UTC epoch seconds) for querying CLOB history.
+    Choose a conservative market end timestamp (UTC epoch seconds) for querying
+    CLOB history.
 
-    We prefer the *latest* timestamp among known close/resolution/end fields to reduce the
-    risk of querying too early and missing late trading.
-
-    Returns None if no timestamps are available.
+    We prefer the latest timestamp among known close/resolution/end fields to
+    reduce the risk of querying too early and missing late trading.
     """
     candidates: List[datetime] = []
 
-    # From input JSONL
     candidates += [
         parse_iso_dt(input_market.get("endDate")),
         parse_iso_dt(input_market.get("closedTime")),
@@ -539,7 +625,6 @@ def choose_query_end_ts(input_market: Dict[str, Any], gamma_detail: Dict[str, An
         parse_iso_dt(input_market.get("resolutionTime")),
     ]
 
-    # From Gamma detail (field names vary across datasets)
     for k in ("endDate", "closedTime", "resolvedTime", "resolutionTime", "resolveTime", "end_time", "closeTime"):
         candidates.append(parse_iso_dt(gamma_detail.get(k)))
 
@@ -563,15 +648,30 @@ def choose_created_ts(input_market: Dict[str, Any], gamma_detail: Dict[str, Any]
     return int(min(dts).timestamp())
 
 
-def clamp_start_ts(end_ts: int, created_ts: Optional[int], buffer_seconds: int) -> int:
+def clamp_start_ts(anchor_ts: int, created_ts: Optional[int], buffer_seconds: int) -> int:
     """
-    Compute a start_ts that covers all snapshot offsets (max offset + buffer)
-    while not going before market creation time (when available).
+    Compute a start_ts that covers all snapshot offsets relative to the
+    earnings-release anchor, while not going before market creation time
+    when creation time is known.
     """
-    start_ts = end_ts - MAX_OFFSET_SECONDS - buffer_seconds
+    start_ts = anchor_ts - MAX_OFFSET_SECONDS - buffer_seconds
     if created_ts is not None:
         start_ts = max(start_ts, created_ts)
     return max(0, start_ts)
+
+
+def choose_fetch_end_ts(anchor_ts: int, market_query_end_ts: Optional[int], buffer_seconds: int) -> int:
+    """
+    Compute the end_ts used in the CLOB history request.
+
+    We always ensure the fetch extends at least a bit beyond the earnings
+    release time, and when the market's close/resolution time is known we
+    extend to that later timestamp.
+    """
+    min_end_ts = anchor_ts + buffer_seconds
+    if market_query_end_ts is None:
+        return min_end_ts
+    return max(min_end_ts, market_query_end_ts)
 
 
 def fetch_prices_history_token(
@@ -612,7 +712,6 @@ def fetch_prices_history_token(
 
     last_http_err: Optional[Dict[str, Any]] = None
 
-    # Range queries (only if we have start/end)
     if start_ts is not None and end_ts is not None:
         for fid in fids:
             hist, e = try_call(
@@ -625,7 +724,6 @@ def fetch_prices_history_token(
             if hist is not None and len(hist) > 0:
                 return hist, None
 
-    # interval=max
     for fid in fids:
         hist, e = try_call({"market": token_id, "interval": "max", "fidelity": int(fid)}, f"max_fid_{fid}")
         if e is not None:
@@ -634,18 +732,15 @@ def fetch_prices_history_token(
         if hist is not None and len(hist) > 0:
             return hist, None
 
-    # Range without fidelity (if possible)
     if start_ts is not None and end_ts is not None:
         hist3, e3 = try_call({"market": token_id, "startTs": int(start_ts), "endTs": int(end_ts)}, "range_no_fid")
         if e3 is None and hist3 is not None and len(hist3) > 0:
             return hist3, None
 
-    # interval=max without fidelity
     hist4, e4 = try_call({"market": token_id, "interval": "max"}, "max_no_fid")
     if e4 is None and hist4 is not None and len(hist4) > 0:
         return hist4, None
 
-    # If any attempt succeeded (err=None) but returned empty history, treat as success with [].
     for a in attempts:
         if a.get("err") is None and isinstance(a.get("history_len"), int):
             return [], None
@@ -656,7 +751,13 @@ def fetch_prices_history_token(
 # -------------------------
 # Worker
 # -------------------------
-def process_market(cfg: Config, m: Dict[str, Any], run_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+def process_market(
+    cfg: Config,
+    m: Dict[str, Any],
+    run_id: str,
+    corporate_by_market_id: Dict[str, Dict[str, Any]],
+    corporate_by_slug: Dict[str, Dict[str, Any]],
+) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
     """
     Process a single market record.
 
@@ -667,16 +768,61 @@ def process_market(cfg: Config, m: Dict[str, Any], run_id: str) -> Tuple[Optiona
     slug = str(m.get("slug", "")).strip()
 
     if not mid or not slug:
-        return None, {"run_id": run_id, "market_id": mid or None, "slug": slug or None, "reason": "missing_id_or_slug"}
+        return None, {
+            "run_id": run_id,
+            "market_id": mid or None,
+            "slug": slug or None,
+            "reason": "missing_id_or_slug",
+        }
+
+    # 0) Resolve earnings release anchor from corporate info
+    corp_row, join_method = resolve_corporate_info_row(mid, slug, corporate_by_market_id, corporate_by_slug)
+    if corp_row is None:
+        return None, {
+            "run_id": run_id,
+            "market_id": mid,
+            "slug": slug,
+            "reason": "missing_corporate_info_match",
+        }
+
+    earnings_release_raw = corp_row.get("earnings_release_datetime")
+    earnings_release_dt = parse_iso_dt(earnings_release_raw)
+    if earnings_release_dt is None:
+        return None, {
+            "run_id": run_id,
+            "market_id": mid,
+            "slug": slug,
+            "reason": "missing_or_invalid_earnings_release_datetime",
+            "earnings_release_datetime_raw": earnings_release_raw,
+            "corporate_info_join_method": join_method,
+        }
+
+    anchor_end_ts = int(earnings_release_dt.timestamp())
 
     # 1) Gamma market detail (required for token ids)
     detail, derr = gamma_get(cfg, f"/markets/{mid}")
     if derr or not isinstance(detail, dict):
-        return None, {"run_id": run_id, "market_id": mid, "slug": slug, "reason": "gamma_market_detail_failed", "error": derr}
+        return None, {
+            "run_id": run_id,
+            "market_id": mid,
+            "slug": slug,
+            "reason": "gamma_market_detail_failed",
+            "error": derr,
+            "earnings_release_datetime_raw": earnings_release_raw,
+            "earnings_release_ts": anchor_end_ts,
+        }
 
     enable_ob = detail.get("enableOrderBook")
     if enable_ob is not True:
-        return None, {"run_id": run_id, "market_id": mid, "slug": slug, "reason": "not_orderbook_market", "enableOrderBook": enable_ob}
+        return None, {
+            "run_id": run_id,
+            "market_id": mid,
+            "slug": slug,
+            "reason": "not_orderbook_market",
+            "enableOrderBook": enable_ob,
+            "earnings_release_datetime_raw": earnings_release_raw,
+            "earnings_release_ts": anchor_end_ts,
+        }
 
     yes_token_id, no_token_id = get_yes_no_token_ids(detail)
     if not yes_token_id or not no_token_id:
@@ -687,19 +833,29 @@ def process_market(cfg: Config, m: Dict[str, Any], run_id: str) -> Tuple[Optiona
             "reason": "missing_yes_or_no_token_id",
             "yes_token_id": yes_token_id,
             "no_token_id": no_token_id,
+            "earnings_release_datetime_raw": earnings_release_raw,
+            "earnings_release_ts": anchor_end_ts,
         }
 
     # 2) Choose query window for CLOB fetch
-    query_end_ts = choose_query_end_ts(m, detail)
+    market_query_end_ts = choose_query_end_ts(m, detail)
     created_ts = choose_created_ts(m, detail)
 
-    # If we can't determine any end time, we fall back to interval=max only.
-    if query_end_ts is not None:
-        start_ts = clamp_start_ts(query_end_ts, created_ts, cfg.buffer_seconds)
-        end_ts = query_end_ts
-    else:
-        start_ts = None
-        end_ts = None
+    start_ts = clamp_start_ts(anchor_end_ts, created_ts, cfg.buffer_seconds)
+    end_ts = choose_fetch_end_ts(anchor_end_ts, market_query_end_ts, cfg.buffer_seconds)
+
+    if start_ts > end_ts:
+        return None, {
+            "run_id": run_id,
+            "market_id": mid,
+            "slug": slug,
+            "reason": "invalid_query_window",
+            "startTs": start_ts,
+            "endTs": end_ts,
+            "created_ts": created_ts,
+            "market_query_end_ts": market_query_end_ts,
+            "earnings_release_ts": anchor_end_ts,
+        }
 
     # 3) Fetch histories
     yes_hist, yes_err = fetch_prices_history_token(cfg, yes_token_id, start_ts, end_ts)
@@ -712,6 +868,7 @@ def process_market(cfg: Config, m: Dict[str, Any], run_id: str) -> Tuple[Optiona
             "yes_token_id": yes_token_id,
             "startTs": start_ts,
             "endTs": end_ts,
+            "earnings_release_ts": anchor_end_ts,
             "error": yes_err,
         }
 
@@ -725,10 +882,11 @@ def process_market(cfg: Config, m: Dict[str, Any], run_id: str) -> Tuple[Optiona
             "no_token_id": no_token_id,
             "startTs": start_ts,
             "endTs": end_ts,
+            "earnings_release_ts": anchor_end_ts,
             "error": no_err,
         }
 
-    # 4) Build series + compute OBSERVED window
+    # 4) Build series + compute observed fetched window
     yes_ts, yes_ps = build_series(yes_hist)
     no_ts, no_ps = build_series(no_hist)
 
@@ -752,6 +910,7 @@ def process_market(cfg: Config, m: Dict[str, Any], run_id: str) -> Tuple[Optiona
             "no_token_id": no_token_id,
             "startTs": start_ts,
             "endTs": end_ts,
+            "earnings_release_ts": anchor_end_ts,
         }
 
     observed_start_ts = min(start_candidates) if start_candidates else None
@@ -760,10 +919,7 @@ def process_market(cfg: Config, m: Dict[str, Any], run_id: str) -> Tuple[Optiona
     if observed_start_ts is not None:
         observed_span_hours = round((observed_end_ts - observed_start_ts) / 3600.0, 6)
 
-    # Anchor snapshots to observed end (last discovered price)
-    anchor_end_ts = observed_end_ts
-
-    # 5) Compute snapshots
+    # 5) Compute snapshots relative to earnings release anchor
     prices_yes: Dict[str, Optional[float]] = {}
     prices_no: Dict[str, Optional[float]] = {}
     missing_yes: List[str] = []
@@ -799,6 +955,7 @@ def process_market(cfg: Config, m: Dict[str, Any], run_id: str) -> Tuple[Optiona
             "no_token_id": no_token_id,
             "startTs": start_ts,
             "endTs": end_ts,
+            "earnings_release_ts": anchor_end_ts,
             "observed_end_ts": observed_end_ts,
         }
 
@@ -813,7 +970,6 @@ def process_market(cfg: Config, m: Dict[str, Any], run_id: str) -> Tuple[Optiona
         if abs(s - 1.0) > cfg.complement_tolerance:
             complement_violations.append({"label": label, "yes": y, "no": n, "sum": s})
 
-    # Debug timestamp formatting
     obs_start_dt = ts_to_dt(observed_start_ts)
     obs_end_dt = ts_to_dt(observed_end_ts)
 
@@ -825,12 +981,20 @@ def process_market(cfg: Config, m: Dict[str, Any], run_id: str) -> Tuple[Optiona
         "no_token_id": no_token_id,
         "generated_utc": fmt_dt_utc(datetime.now(timezone.utc)),
 
-        # Query metadata (for reproducibility)
+        # Earnings anchor metadata
+        "snapshot_anchor_type": "earnings_release_datetime",
+        "earnings_release_datetime_raw": earnings_release_raw,
+        "earnings_release_ts": anchor_end_ts,
+        "earnings_release_utc": fmt_dt_utc(earnings_release_dt),
+        "corporate_info_join_method": join_method,
+
+        # Query metadata
         "gamma_detail_enableOrderBook": enable_ob,
         "query_start_ts": start_ts,
         "query_end_ts": end_ts,
+        "market_query_end_ts": market_query_end_ts,
 
-        # Observed window (authoritative for snapshots)
+        # Observed fetched window
         "observed_start_ts": observed_start_ts,
         "observed_end_ts": observed_end_ts,
         "observed_start_utc": fmt_dt_utc(obs_start_dt),
@@ -854,15 +1018,16 @@ def process_market(cfg: Config, m: Dict[str, Any], run_id: str) -> Tuple[Optiona
         "complement_violations": complement_violations,
     }
 
-    # Optional local-time debug fields (off by default)
     if cfg.include_local_debug_fields:
         zi = _get_zoneinfo(cfg.local_tz_name)
         if zi is not None:
+
             def _fmt_local(dt: Optional[datetime]) -> str:
                 if dt is None:
                     return "N/A"
                 return dt.astimezone(zi).strftime("%Y-%m-%d %H:%M:%S%z")
 
+            record["earnings_release_local"] = _fmt_local(earnings_release_dt)
             record["observed_start_local"] = _fmt_local(obs_start_dt)
             record["observed_end_local"] = _fmt_local(obs_end_dt)
             record["local_tz"] = cfg.local_tz_name
@@ -874,11 +1039,17 @@ def process_market(cfg: Config, m: Dict[str, Any], run_id: str) -> Tuple[Optiona
 # CLI / Main
 # -------------------------
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Fetch Polymarket YES/NO historical snapshot prices (JSONL outputs + TXT summary).")
+    p = argparse.ArgumentParser(
+        description=(
+            "Fetch Polymarket YES/NO historical snapshot prices. "
+            "Snapshots are anchored to earnings_release_datetime from corporate_info_by_market.jsonl."
+        )
+    )
 
     p.add_argument("--input", type=str, default=None, help="Input markets JSONL path.")
-    p.add_argument("--out-dir", type=str, default=None, help="Output directory for JSONL + summary.txt")
-    p.add_argument("--data-root", type=str, default=None, help="Project data root. If omitted, tries a Windows default then ./data")
+    p.add_argument("--corporate-info", type=str, default=None, help="Corporate info JSONL path.")
+    p.add_argument("--out-dir", type=str, default=None, help="Output directory for JSONL + CSV + summary.txt")
+    p.add_argument("--data-root", type=str, default=None, help="Project data root. Defaults to ../data relative to this script.")
     p.add_argument("--out-prices-wide-csv", type=str, default=DEFAULT_PRICES_WIDE_CSV)
     p.add_argument("--out-prices-long-csv", type=str, default=DEFAULT_PRICES_LONG_CSV)
     p.add_argument("--out-failed-csv", type=str, default=DEFAULT_FAILED_CSV)
@@ -892,20 +1063,35 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     p.add_argument("--retry-sleep", type=float, default=0.8)
 
     p.add_argument("--price-fidelity-min", type=int, default=5, help="Default fidelity in minutes.")
-    p.add_argument("--min-fidelity-closed-min", type=int, default=60 * 12, help="Fallback fidelity in minutes (closed markets).")
-    p.add_argument("--buffer-seconds", type=int, default=2 * 3600, help="Extra buffer around snapshot window (seconds).")
+    p.add_argument(
+        "--min-fidelity-closed-min",
+        type=int,
+        default=60 * 12,
+        help="Fallback fidelity in minutes (closed markets).",
+    )
+    p.add_argument(
+        "--buffer-seconds",
+        type=int,
+        default=2 * 3600,
+        help="Extra buffer around the earnings-anchor snapshot window (seconds).",
+    )
 
     p.add_argument("--complement-tolerance", type=float, default=0.05)
 
-    p.add_argument("--include-local-debug-fields", action="store_true", help="Include local time debug fields (not recommended for final datasets).")
+    p.add_argument(
+        "--include-local-debug-fields",
+        action="store_true",
+        help="Include local time debug fields (not recommended for final datasets).",
+    )
     p.add_argument("--local-tz", type=str, default="Europe/Stockholm")
 
     p.add_argument("--test", action="store_true", help="Limit number of markets (quick dev runs).")
     p.add_argument("--test-max-markets", type=int, default=15)
 
-    p.add_argument("--user-agent", type=str, default="polymarket-historical-prices/2.0")
+    p.add_argument("--user-agent", type=str, default="polymarket-historical-prices/3.0")
 
     return p.parse_args(argv)
+
 
 def _default_data_root(script_dir: Path) -> Path:
     """
@@ -913,8 +1099,6 @@ def _default_data_root(script_dir: Path) -> Path:
       - Script location: Corporate_Earnings/python/01_fetch_poly_prices.py
       - Data root:       Corporate_Earnings/data
     """
-    # script_dir = .../Corporate_Earnings/python
-    # data_root  = .../Corporate_Earnings/data
     return (script_dir.parent / "data").resolve()
 
 
@@ -931,9 +1115,11 @@ def main(argv: Optional[List[str]] = None) -> None:
     data_root.mkdir(parents=True, exist_ok=True)
 
     default_input = data_root / "markets" / "markets.jsonl"
+    default_corporate_info = data_root / "corporate_info" / "corporate_info_by_market.jsonl"
     default_out_dir = data_root / "poly_prices"
 
     input_path = Path(args.input).expanduser().resolve() if args.input else default_input
+    corporate_info_path = Path(args.corporate_info).expanduser().resolve() if args.corporate_info else default_corporate_info
     out_dir = Path(args.out_dir).expanduser().resolve() if args.out_dir else default_out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -967,17 +1153,21 @@ def main(argv: Optional[List[str]] = None) -> None:
     run_id = run_started.strftime("%Y%m%dT%H%M%SZ")
 
     markets = load_jsonl(input_path)
+    corporate_rows = load_jsonl(corporate_info_path)
+    corporate_by_market_id, corporate_by_slug = build_corporate_info_lookup(corporate_rows)
+
     total_before = len(markets)
 
     if cfg.test_mode:
         markets = markets[: max(0, cfg.test_max_markets)]
 
     tqdm.write(f"[{fmt_dt_utc(run_started)}] Run {run_id} starting")
-    tqdm.write(f"- Input:  {input_path} ({total_before} rows; processing {len(markets)})")
-    tqdm.write(f"- Output: {out_dir}")
-    tqdm.write(f"- Workers: {cfg.max_workers} | timeout={cfg.http_timeout}s | retries={cfg.retries}")
-    tqdm.write(f"- Fidelity: {cfg.price_fidelity_min}m (fallback {cfg.min_fidelity_closed_min}m)")
-    tqdm.write(f"- Complement tolerance: {cfg.complement_tolerance}")
+    tqdm.write(f"- Markets input:    {input_path} ({total_before} rows; processing {len(markets)})")
+    tqdm.write(f"- Corporate input:  {corporate_info_path} ({len(corporate_rows)} rows)")
+    tqdm.write(f"- Output:           {out_dir}")
+    tqdm.write(f"- Workers:          {cfg.max_workers} | timeout={cfg.http_timeout}s | retries={cfg.retries}")
+    tqdm.write(f"- Fidelity:         {cfg.price_fidelity_min}m (fallback {cfg.min_fidelity_closed_min}m)")
+    tqdm.write(f"- Complement tol.:  {cfg.complement_tolerance}")
 
     successes: List[Dict[str, Any]] = []
     failures: List[Dict[str, Any]] = []
@@ -987,51 +1177,70 @@ def main(argv: Optional[List[str]] = None) -> None:
     missing_no_counts = Counter()
     complement_violation_markets = 0
     partial_missing_markets = 0
+    corporate_join_counts = Counter()
 
     observed_starts: List[int] = []
     observed_ends: List[int] = []
+    earnings_release_anchors: List[int] = []
+
+    def register_result(ok: Optional[Dict[str, Any]], fail: Optional[Dict[str, Any]]) -> None:
+        nonlocal complement_violation_markets, partial_missing_markets
+
+        if ok is not None:
+            successes.append(ok)
+
+            if isinstance(ok.get("observed_start_ts"), int):
+                observed_starts.append(int(ok["observed_start_ts"]))
+            if isinstance(ok.get("observed_end_ts"), int):
+                observed_ends.append(int(ok["observed_end_ts"]))
+            if isinstance(ok.get("earnings_release_ts"), int):
+                earnings_release_anchors.append(int(ok["earnings_release_ts"]))
+
+            join_method = str(ok.get("corporate_info_join_method", "")).strip()
+            if join_method:
+                corporate_join_counts[join_method] += 1
+
+            my = ok.get("missing_yes") or []
+            mn = ok.get("missing_no") or []
+            if my or mn:
+                partial_missing_markets += 1
+                for lab in my:
+                    missing_yes_counts[lab] += 1
+                for lab in mn:
+                    missing_no_counts[lab] += 1
+
+            cv = ok.get("complement_violations") or []
+            if cv:
+                complement_violation_markets += 1
+
+        if fail is not None:
+            failures.append(fail)
+            fail_reason_counts[fail.get("reason", "unknown")] += 1
 
     if cfg.max_workers <= 1:
         it = tqdm(markets, desc="Fetching snapshots", unit="market", dynamic_ncols=True)
         for m in it:
-            ok, fail = process_market(cfg, m, run_id)
-            if ok is not None:
-                successes.append(ok)
-            if fail is not None:
-                failures.append(fail)
+            ok, fail = process_market(cfg, m, run_id, corporate_by_market_id, corporate_by_slug)
+            register_result(ok, fail)
+            it.set_postfix(
+                {
+                    "ok": len(successes),
+                    "fail": len(failures),
+                    "partial": partial_missing_markets,
+                    "comp_viols": complement_violation_markets,
+                }
+            )
     else:
         with ThreadPoolExecutor(max_workers=cfg.max_workers) as ex:
-            futures = [ex.submit(process_market, cfg, m, run_id) for m in markets]
+            futures = [
+                ex.submit(process_market, cfg, m, run_id, corporate_by_market_id, corporate_by_slug)
+                for m in markets
+            ]
             with tqdm(total=len(futures), desc="Fetching snapshots", unit="market", dynamic_ncols=True) as pbar:
                 for fut in as_completed(futures):
                     ok, fail = fut.result()
                     pbar.update(1)
-
-                    if ok is not None:
-                        successes.append(ok)
-
-                        if isinstance(ok.get("observed_start_ts"), int):
-                            observed_starts.append(int(ok["observed_start_ts"]))
-                        if isinstance(ok.get("observed_end_ts"), int):
-                            observed_ends.append(int(ok["observed_end_ts"]))
-
-                        my = ok.get("missing_yes") or []
-                        mn = ok.get("missing_no") or []
-                        if my or mn:
-                            partial_missing_markets += 1
-                            for lab in my:
-                                missing_yes_counts[lab] += 1
-                            for lab in mn:
-                                missing_no_counts[lab] += 1
-
-                        cv = ok.get("complement_violations") or []
-                        if cv:
-                            complement_violation_markets += 1
-
-                    if fail is not None:
-                        failures.append(fail)
-                        fail_reason_counts[fail.get("reason", "unknown")] += 1
-
+                    register_result(ok, fail)
                     pbar.set_postfix(
                         {
                             "ok": len(successes),
@@ -1041,7 +1250,6 @@ def main(argv: Optional[List[str]] = None) -> None:
                         }
                     )
 
-    # Deterministic ordering for reproducibility
     successes.sort(key=lambda r: (str(r.get("market_id", "")), str(r.get("slug", ""))))
     failures.sort(key=lambda r: (str(r.get("market_id", "")), str(r.get("slug", "")), str(r.get("reason", ""))))
 
@@ -1062,41 +1270,57 @@ def main(argv: Optional[List[str]] = None) -> None:
     obs_earliest_dt = ts_to_dt(min(observed_starts)) if observed_starts else None
     obs_latest_dt = ts_to_dt(max(observed_ends)) if observed_ends else None
 
+    anchor_earliest_dt = ts_to_dt(min(earnings_release_anchors)) if earnings_release_anchors else None
+    anchor_latest_dt = ts_to_dt(max(earnings_release_anchors)) if earnings_release_anchors else None
+
     # -------------------------
-    # TXT Summary (human-readable)
+    # TXT Summary
     # -------------------------
     lines: List[str] = []
     lines.append("Polymarket Earnings — Historical Prices Fetch Summary")
     lines.append("=" * 56)
-    lines.append(f"Run ID:            {run_id}")
-    lines.append(f"Generated (UTC):   {fmt_dt_utc(run_finished)}")
-    lines.append(f"Elapsed seconds:   {elapsed_s}")
+    lines.append(f"Run ID:              {run_id}")
+    lines.append(f"Generated (UTC):     {fmt_dt_utc(run_finished)}")
+    lines.append(f"Elapsed seconds:     {elapsed_s}")
     lines.append("")
     lines.append("Mode")
-    lines.append(f"- TEST:            {cfg.test_mode}")
+    lines.append(f"- TEST:              {cfg.test_mode}")
     if cfg.test_mode:
-        lines.append(f"- TEST_MAX_MARKETS:{cfg.test_max_markets}")
+        lines.append(f"- TEST_MAX_MARKETS:  {cfg.test_max_markets}")
     lines.append("")
     lines.append("Inputs")
-    lines.append(f"- Markets JSONL:   {input_path}")
-    lines.append(f"- Markets in file: {total_before}")
-    lines.append(f"- Markets processed:{len(markets)}")
+    lines.append(f"- Markets JSONL:     {input_path}")
+    lines.append(f"- Corporate JSONL:   {corporate_info_path}")
+    lines.append(f"- Markets in file:   {total_before}")
+    lines.append(f"- Markets processed: {len(markets)}")
+    lines.append(f"- Corporate rows:    {len(corporate_rows)}")
     lines.append("")
-    lines.append("Resolution window (based on OBSERVED first/last price timestamps)")
+    lines.append("Snapshot anchor window (based on earnings_release_datetime)")
+    lines.append(f"- Earliest anchor (UTC): {fmt_dt_utc(anchor_earliest_dt)}")
+    lines.append(f"- Latest anchor (UTC):   {fmt_dt_utc(anchor_latest_dt)}")
+    lines.append("")
+    lines.append("Fetched history window (based on observed first/last fetched price timestamps)")
     lines.append(f"- Earliest first price (UTC): {fmt_dt_utc(obs_earliest_dt)}")
     lines.append(f"- Latest last price (UTC):    {fmt_dt_utc(obs_latest_dt)}")
     lines.append("")
     lines.append("Outputs")
     lines.append(f"- Historical prices JSONL: {out_prices_jsonl}")
     lines.append(f"- Failed markets JSONL:    {out_failed_jsonl}")
-    lines.append(f"- Prices WIDE CSV:        {out_prices_wide_csv}")
-    lines.append(f"- Prices LONG CSV:        {out_prices_long_csv}")
-    lines.append(f"- Failed markets CSV:     {out_failed_csv}")
+    lines.append(f"- Prices WIDE CSV:         {out_prices_wide_csv}")
+    lines.append(f"- Prices LONG CSV:         {out_prices_long_csv}")
+    lines.append(f"- Failed markets CSV:      {out_failed_csv}")
     lines.append(f"- Summary TXT:             {out_summary_txt}")
     lines.append("")
     lines.append("Results")
     lines.append(f"- Successful markets written: {len(successes)}")
     lines.append(f"- Failed markets:             {len(failures)}")
+    lines.append("")
+    lines.append("Corporate info joins")
+    if corporate_join_counts:
+        for k, v in corporate_join_counts.most_common():
+            lines.append(f"- {k}: {v}")
+    else:
+        lines.append("- (none)")
     lines.append("")
     lines.append("Failure reasons (hard failures only)")
     if fail_reason_counts:
@@ -1120,15 +1344,16 @@ def main(argv: Optional[List[str]] = None) -> None:
         lines.append(f"- {lab}: {int(missing_no_counts.get(lab, 0))}")
     lines.append("")
     lines.append("Config (selected)")
-    lines.append(f"- gamma_base:      {cfg.gamma_base}")
-    lines.append(f"- clob_base:       {cfg.clob_base}")
-    lines.append(f"- max_workers:     {cfg.max_workers}")
-    lines.append(f"- http_timeout:    {cfg.http_timeout}")
-    lines.append(f"- retries:         {cfg.retries}")
-    lines.append(f"- retry_sleep_s:   {cfg.retry_sleep_s}")
-    lines.append(f"- fidelity_min:    {cfg.price_fidelity_min} minutes")
-    lines.append(f"- fidelity_fallback:{cfg.min_fidelity_closed_min} minutes")
-    lines.append(f"- buffer_seconds:  {cfg.buffer_seconds}")
+    lines.append(f"- gamma_base:         {cfg.gamma_base}")
+    lines.append(f"- clob_base:          {cfg.clob_base}")
+    lines.append(f"- max_workers:        {cfg.max_workers}")
+    lines.append(f"- http_timeout:       {cfg.http_timeout}")
+    lines.append(f"- retries:            {cfg.retries}")
+    lines.append(f"- retry_sleep_s:      {cfg.retry_sleep_s}")
+    lines.append(f"- fidelity_min:       {cfg.price_fidelity_min} minutes")
+    lines.append(f"- fidelity_fallback:  {cfg.min_fidelity_closed_min} minutes")
+    lines.append(f"- buffer_seconds:     {cfg.buffer_seconds}")
+    lines.append(f"- anchor_field:       earnings_release_datetime")
     lines.append("")
 
     summary_txt = "\n".join(lines)
@@ -1140,6 +1365,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     tqdm.write(f"- Prices WIDE CSV: {out_prices_wide_csv}")
     tqdm.write(f"- Prices LONG CSV: {out_prices_long_csv}")
     tqdm.write(f"- Failed markets CSV: {out_failed_csv}")
+
 
 if __name__ == "__main__":
     main()

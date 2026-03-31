@@ -116,7 +116,6 @@
 {"ric":"KHC.N","n_markets":2}
 {"ric":"KKR","n_markets":2}
 {"ric":"KMI","n_markets":2}
-{"ric":"KMX","n_markets":2}
 {"ric":"KO","n_markets":2}
 {"ric":"KR","n_markets":2}
 {"ric":"LH","n_markets":2}
@@ -199,7 +198,6 @@
 {"ric":"UNFI.N","n_markets":2}
 {"ric":"UNP","n_markets":2}
 {"ric":"UNTY.N","n_markets":2}
-{"ric":"URBN.N","n_markets":2}
 {"ric":"USB","n_markets":2}
 {"ric":"USFD.N","n_markets":2}
 {"ric":"VSCO.N","n_markets":2}
@@ -242,7 +240,6 @@
 {"ric":"BOX","n_markets":1}
 {"ric":"BP","n_markets":1}
 {"ric":"BRKA","n_markets":1}
-{"ric":"BRZE.N","n_markets":1}
 {"ric":"BTM.N","n_markets":1}
 {"ric":"BX","n_markets":1}
 {"ric":"BYND.N","n_markets":1}
@@ -263,7 +260,6 @@
 {"ric":"CI","n_markets":1}
 {"ric":"CL","n_markets":1}
 {"ric":"CLX","n_markets":1}
-{"ric":"CNXC.N","n_markets":1}
 {"ric":"COF","n_markets":1}
 {"ric":"COUR.N","n_markets":1}
 {"ric":"CPB.N","n_markets":1}
@@ -283,7 +279,6 @@
 {"ric":"DOW","n_markets":1}
 {"ric":"DY","n_markets":1}
 {"ric":"EA.N","n_markets":1}
-{"ric":"EB","n_markets":1}
 {"ric":"ETOR.N","n_markets":1}
 {"ric":"EVR","n_markets":1}
 {"ric":"EWBC.N","n_markets":1}
@@ -293,7 +288,6 @@
 {"ric":"FEMY.N","n_markets":1}
 {"ric":"FIG","n_markets":1}
 {"ric":"FIVE.N","n_markets":1}
-{"ric":"FRGE.N","n_markets":1}
 {"ric":"FRO","n_markets":1}
 {"ric":"FSK","n_markets":1}
 {"ric":"GAMB.N","n_markets":1}
@@ -318,6 +312,7 @@
 {"ric":"JBLU.N","n_markets":1}
 {"ric":"KBH","n_markets":1}
 {"ric":"KFY","n_markets":1}
+{"ric":"KMX","n_markets":1}
 {"ric":"KSS","n_markets":1}
 {"ric":"LEN","n_markets":1}
 {"ric":"LEVI.N","n_markets":1}
@@ -331,7 +326,6 @@
 {"ric":"MCHP.N","n_markets":1}
 {"ric":"MKTX.N","n_markets":1}
 {"ric":"MLKN.N","n_markets":1}
-{"ric":"MOG.A","n_markets":1}
 {"ric":"MRK","n_markets":1}
 {"ric":"MRVL.N","n_markets":1}
 {"ric":"MSCI.N","n_markets":1}
@@ -406,6 +400,7 @@
 {"ric":"UBSI.N","n_markets":1}
 {"ric":"UNH","n_markets":1}
 {"ric":"UPS","n_markets":1}
+{"ric":"URBN.N","n_markets":1}
 {"ric":"USAR.N","n_markets":1}
 {"ric":"V","n_markets":1}
 {"ric":"VIK","n_markets":1}

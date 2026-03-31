@@ -78,14 +78,14 @@ BRIER_COLS = [
     "slug",  # join key
     "horizon",
     "horizon_seconds",
-    "p_hist_asof_end_minus_1d",
+    "p_hist_leakage_safe",
     "snapshot_dt_utc",
     "p_polymarket_yes",
     "p_dice_0p5",
     "loss_polymarket",
     "loss_dice",
     "loss_hist",
-    "seconds_before_close",
+    "seconds_before_event",
     "status"
 ]
 
@@ -94,14 +94,13 @@ BRIER_COLS = [
 BRIER_PIVOT_VARS = [
     "p_polymarket_yes",
     "p_dice_0p5",
-    "p_hist_asof_end_minus_1d",
+    "p_hist_leakage_safe",
     "loss_polymarket",
     "loss_dice",
     "loss_hist",
-    "seconds_before_close",
+    "seconds_before_event",
     "snapshot_dt_utc",
 ]
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -189,7 +188,7 @@ def canonical_brier_per_slug_horizon(brier: pd.DataFrame) -> pd.DataFrame:
     Reduce brier to exactly 1 row per (slug, horizon) for the WIDE dataset.
 
     Rule:
-      1) minimize abs(seconds_before_close - horizon_seconds)
+      1) minimize abs(seconds_before_event - horizon_seconds)
       2) tie-breaker: latest snapshot_dt_utc
     """
     b = brier.copy()
@@ -200,10 +199,10 @@ def canonical_brier_per_slug_horizon(brier: pd.DataFrame) -> pd.DataFrame:
 
     b["snapshot_dt_utc"] = pd.to_datetime(b["snapshot_dt_utc"], errors="coerce", utc=True)
     b["horizon_seconds"] = pd.to_numeric(b["horizon_seconds"], errors="coerce")
-    b["seconds_before_close"] = pd.to_numeric(b["seconds_before_close"], errors="coerce")
+    b["seconds_before_event"] = pd.to_numeric(b["seconds_before_event"], errors="coerce")
 
     # Compute abs difference; if missing, treat as very large so it loses unless all are missing
-    b["abs_diff"] = (b["seconds_before_close"] - b["horizon_seconds"]).abs()
+    b["abs_diff"] = (b["seconds_before_event"] - b["horizon_seconds"]).abs()
     b["abs_diff"] = b["abs_diff"].fillna(float("inf"))
 
     # Sort so "best" row is first per group

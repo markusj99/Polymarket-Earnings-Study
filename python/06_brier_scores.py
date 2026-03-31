@@ -9,28 +9,53 @@ This script computes Brier losses from Polymarket YES token snapshot prices,
 and writes ONE ROW PER (market × horizon), including rich diagnostics.
 
 For each (market, horizon), we record:
-- Market metadata (id/slug/ticker, close time, outcome y)
+- Market metadata (id/slug/ticker, earnings release time, market close time, outcome y)
 - Polymarket join method (by market_id, fallback slug)
 - Snapshot timestamp (source preferred, else target)
-- p_polymarket_yes, p_dice_0p5, p_hist_asof_end_minus_1d (leakage-safe)
+- p_polymarket_yes, p_dice_0p5, p_hist_leakage_safe
 - Per-row losses: (p - y)^2 for polymarket, dice, historical
 - Flags + reasons when data is missing/invalid
 
+Historical baseline
+-------------------
+The historical-rate model is now leakage-safe at EACH horizon.
+
+For market i and horizon h, the historical cutoff is:
+
+    cutoff_i,h = earnings_release_datetime_i - horizon_h - historical_margin
+
+with default historical_margin = 2 hours.
+
+Example:
+- 6h horizon  -> cutoff = earnings_release_datetime - 8 hours
+- 2d horizon  -> cutoff = earnings_release_datetime - 2 days - 2 hours
+
+The historical probability for market i at horizon h is then:
+
+    p_hist_i,h =
+        (# YES among prior markets with umaEndDate <= cutoff_i,h)
+        /
+        (# prior markets with umaEndDate <= cutoff_i,h)
+
+If no prior resolved markets are available by that cutoff, we use 0.5.
+
 We ALSO write an aggregated "by horizon" summary computed from rows where
-Polymarket is usable (to keep baselines comparable to Polymarket on the
-same sample, as in the original script).
+Polymarket is usable, so baselines are evaluated on the same sample.
 
 INPUTS
 ------
 1) Market outcomes + market close datetime:
-   Corporate_Earnings/data/markets/markets.jsonl
+   data/markets/markets.jsonl
 
 2) Polymarket snapshot YES prices by horizon:
-   Corporate_Earnings/data/poly_prices/poly_prices.jsonl
+   data/poly_prices/poly_prices.jsonl
+
+3) Earnings release datetime by market:
+   data/corporate_info/corporate_info_by_market.jsonl
 
 OUTPUTS
 -------
-Written to: Corporate_Earnings/data/brier_scores/
+Written to: data/brier_scores/
 
 Detailed (market × horizon):
 - brier_scores_market_horizon.csv
@@ -44,14 +69,18 @@ Aggregated (by horizon, derived from usable polymarket rows):
 
 USAGE
 -----
-python Corporate_Earnings/06_brier_scores_detailed.py
+python 06_brier_scores_detailed.py
 
 Optional arguments:
   --exclude-horizons "4w,3w,2w"
+  --historical-margin-hours 2
 
 Notes
 -----
 - All timestamps are treated as UTC.
+- earnings_release_datetime is used as the event anchor for horizon timing.
+- umaEndDate is used as the availability timestamp for whether a prior market's
+  realized outcome would have been available to the historical model.
 """
 
 from __future__ import annotations
@@ -61,11 +90,11 @@ import csv
 import json
 import math
 import re
+from bisect import bisect_right
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
-from bisect import bisect_right
 
 UTC = timezone.utc
 
@@ -81,9 +110,11 @@ def find_project_root(explicit: Optional[str] = None) -> Path:
     A valid project root is a directory that contains:
       - data/markets/markets.jsonl
       - data/poly_prices/poly_prices.jsonl
+      - data/corporate_info/corporate_info_by_market.jsonl
 
     Backward compatible:
-      - If a directory contains Corporate_Earnings/data/... it returns that Corporate_Earnings folder.
+      - If a directory contains Corporate_Earnings/data/... it returns that
+        Corporate_Earnings folder.
 
     You can also force it with --project-root.
     """
@@ -91,13 +122,13 @@ def find_project_root(explicit: Optional[str] = None) -> Path:
         return (
             (p / "data" / "markets" / "markets.jsonl").exists()
             and (p / "data" / "poly_prices" / "poly_prices.jsonl").exists()
+            and (p / "data" / "corporate_info" / "corporate_info_by_market.jsonl").exists()
         )
 
     if explicit:
         p = Path(explicit).expanduser().resolve()
         if is_valid_root(p):
             return p
-        # Backward compatible structure: explicit points to parent of Corporate_Earnings
         ce = p / "Corporate_Earnings"
         if is_valid_root(ce):
             return ce
@@ -105,10 +136,10 @@ def find_project_root(explicit: Optional[str] = None) -> Path:
             f"--project-root was provided but is not a valid project root: {p}\n"
             "Expected to find:\n"
             "  data/markets/markets.jsonl\n"
-            "  data/poly_prices/poly_prices.jsonl"
+            "  data/poly_prices/poly_prices.jsonl\n"
+            "  data/corporate_info/corporate_info_by_market.jsonl"
         )
 
-    # Search upward from this script's location
     start = Path(__file__).resolve()
     start_dir = start if start.is_dir() else start.parent
 
@@ -119,7 +150,6 @@ def find_project_root(explicit: Optional[str] = None) -> Path:
         if is_valid_root(ce):
             return ce
 
-    # Also try current working directory upward
     cwd = Path.cwd().resolve()
     for p in [cwd] + list(cwd.parents):
         if is_valid_root(p):
@@ -131,8 +161,11 @@ def find_project_root(explicit: Optional[str] = None) -> Path:
     raise FileNotFoundError(
         "Could not locate project root.\n"
         "Looked for:\n"
-        "  <root>/data/markets/markets.jsonl and <root>/data/poly_prices/poly_prices.jsonl\n"
-        "Fix: run from the repo root, move files to match the expected structure, or pass --project-root <path>."
+        "  <root>/data/markets/markets.jsonl\n"
+        "  <root>/data/poly_prices/poly_prices.jsonl\n"
+        "  <root>/data/corporate_info/corporate_info_by_market.jsonl\n"
+        "Fix: run from the repo root, move files to match the expected structure, "
+        "or pass --project-root <path>."
     )
 
 
@@ -145,7 +178,10 @@ def parse_iso_utc(ts: str) -> datetime:
     s = str(ts).strip()
     if s.endswith("Z"):
         s = s[:-1] + "+00:00"
-    return datetime.fromisoformat(s).astimezone(UTC)
+    dt = datetime.fromisoformat(s)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
 
 
 def parse_generated_utc(ts: Any) -> Optional[datetime]:
@@ -173,16 +209,16 @@ def parse_datetime_any_utc(x: Any) -> Optional[datetime]:
 
     Handles:
     - ISO strings (with Z/offset)
+    - ISO strings without timezone (treated as UTC)
     - UNIX seconds (int/float)
     - UNIX milliseconds (int/float, detected if large)
     """
     if x is None:
         return None
 
-    # Numeric epoch
     if isinstance(x, (int, float)) and math.isfinite(float(x)):
         v = float(x)
-        if v >= 1e12:  # ms
+        if v >= 1e12:
             v = v / 1000.0
         try:
             return datetime.fromtimestamp(v, tz=UTC)
@@ -193,7 +229,6 @@ def parse_datetime_any_utc(x: Any) -> Optional[datetime]:
     if not s:
         return None
 
-    # Numeric string epoch
     try:
         v = float(s)
         if math.isfinite(v):
@@ -203,7 +238,6 @@ def parse_datetime_any_utc(x: Any) -> Optional[datetime]:
     except Exception:
         pass
 
-    # ISO
     try:
         return parse_iso_utc(s)
     except Exception:
@@ -272,8 +306,10 @@ class MarketMeta:
     id: str
     slug: str
     ticker: str
-    uma_end_dt: datetime  # market close datetime (UTC)
-    y: int               # 1 if YES, 0 if NO
+    earnings_release_dt: datetime   # event anchor for horizon timing (UTC)
+    uma_end_dt: datetime            # market close/resolution availability proxy (UTC)
+    y: int                          # 1 if YES, 0 if NO
+    corporate_info_join_method: str
 
 
 @dataclass(frozen=True)
@@ -290,13 +326,11 @@ class PolyPricesRecord:
 # Loaders
 # ---------------------------------------------------------------------
 
-def load_markets_meta(path_jsonl: Path) -> Dict[str, MarketMeta]:
+def load_markets_raw(path_jsonl: Path) -> Dict[str, Dict[str, Any]]:
     """
-    Load resolved markets from markets.jsonl.
-
-    Uses umaEndDate as the market close time (UTC). If umaEndDate is missing, falls back to endDate.
+    Load raw resolved market rows from markets.jsonl keyed by market id.
     """
-    out: Dict[str, MarketMeta] = {}
+    out: Dict[str, Dict[str, Any]] = {}
 
     with path_jsonl.open("r", encoding="utf-8") as f:
         for line in f:
@@ -314,41 +348,139 @@ def load_markets_meta(path_jsonl: Path) -> Dict[str, MarketMeta]:
                 continue
 
             r = str(resolved).strip().lower()
-            if r == "yes":
-                y = 1
-            elif r == "no":
-                y = 0
-            else:
-                continue
-
-            end_raw = rec.get("umaEndDate")
-            if end_raw is None:
-                end_raw = rec.get("endDate")
-            end_dt = parse_datetime_any_utc(end_raw)
-            if end_dt is None:
+            if r not in {"yes", "no"}:
                 continue
 
             mid = str(rec.get("id", "")).strip()
             slug = str(rec.get("slug", "")).strip()
-            ticker = str(rec.get("ticker", "")).strip()
 
             if not mid or not slug:
                 continue
 
-            out[mid] = MarketMeta(id=mid, slug=slug, ticker=ticker, uma_end_dt=end_dt, y=y)
+            out[mid] = rec
 
     return out
 
 
-def load_poly_prices_latest(path_jsonl: Path) -> Tuple[Dict[str, PolyPricesRecord], Dict[str, PolyPricesRecord], List[str]]:
+def load_corporate_info_lookup(
+    path_jsonl: Path,
+) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]]:
     """
-    Load poly_prices.jsonl and keep the latest record per market_id (and per slug fallback),
-    based on generated_utc.
+    Load corporate_info_by_market.jsonl and build:
+    - lookup by market_id
+    - lookup by slug
+    """
+    by_mid: Dict[str, Dict[str, Any]] = {}
+    by_slug: Dict[str, Dict[str, Any]] = {}
+
+    with path_jsonl.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+
+            try:
+                rec = json.loads(line)
+            except Exception:
+                continue
+
+            mid = str(rec.get("market_id", "")).strip()
+            slug = str(rec.get("slug", "")).strip()
+
+            if mid:
+                by_mid[mid] = rec
+            if slug:
+                by_slug[slug] = rec
+
+    return by_mid, by_slug
+
+
+def load_markets_meta(
+    markets_path_jsonl: Path,
+    corporate_info_path_jsonl: Path,
+) -> Dict[str, MarketMeta]:
+    """
+    Load resolved markets and enrich them with earnings_release_datetime.
+
+    Join rule for corporate info:
+      1) market_id
+      2) slug
+
+    Timing fields:
+    - earnings_release_datetime is the anchor used for horizon timing
+    - umaEndDate is the timestamp used to decide whether a prior market's
+      realized outcome was already available to the historical model
+
+    Markets are skipped if:
+    - resolvedOutcome is not YES/NO
+    - earnings_release_datetime is missing/invalid
+    - umaEndDate is missing/invalid
+    - id or slug is missing
+    """
+    raw_markets = load_markets_raw(markets_path_jsonl)
+    corp_by_mid, corp_by_slug = load_corporate_info_lookup(corporate_info_path_jsonl)
+
+    out: Dict[str, MarketMeta] = {}
+
+    for mid, rec in raw_markets.items():
+        slug = str(rec.get("slug", "")).strip()
+        ticker = str(rec.get("ticker", "")).strip()
+
+        resolved = str(rec.get("resolvedOutcome", "")).strip().lower()
+        if resolved == "yes":
+            y = 1
+        elif resolved == "no":
+            y = 0
+        else:
+            continue
+
+        corp = None
+        join_method = "none"
+        if mid in corp_by_mid:
+            corp = corp_by_mid[mid]
+            join_method = "market_id"
+        elif slug in corp_by_slug:
+            corp = corp_by_slug[slug]
+            join_method = "slug"
+
+        if corp is None:
+            continue
+
+        earnings_release_dt = parse_datetime_any_utc(corp.get("earnings_release_datetime"))
+        if earnings_release_dt is None:
+            continue
+
+        uma_end_dt = parse_datetime_any_utc(rec.get("umaEndDate"))
+        if uma_end_dt is None:
+            uma_end_dt = parse_datetime_any_utc(rec.get("endDate"))
+        if uma_end_dt is None:
+            continue
+
+        out[mid] = MarketMeta(
+            id=mid,
+            slug=slug,
+            ticker=ticker,
+            earnings_release_dt=earnings_release_dt,
+            uma_end_dt=uma_end_dt,
+            y=y,
+            corporate_info_join_method=join_method,
+        )
+
+    return out
+
+
+def load_poly_prices_latest(
+    path_jsonl: Path,
+) -> Tuple[Dict[str, PolyPricesRecord], Dict[str, PolyPricesRecord], List[str]]:
+    """
+    Load poly_prices.jsonl and keep the latest record per market_id
+    (and per slug fallback), based on generated_utc.
 
     Returns:
       - by_market_id: latest record per market_id
       - by_slug: latest record per slug
-      - horizons: horizons found in prices_yes, ordered by preferred order when possible
+      - horizons: horizons found in prices_yes, ordered by preferred order
+        when possible
     """
     by_mid: Dict[str, PolyPricesRecord] = {}
     by_slug: Dict[str, PolyPricesRecord] = {}
@@ -452,51 +584,61 @@ def get_snapshot_dt(poly: PolyPricesRecord, horizon: str) -> Tuple[Optional[date
 
 
 # ---------------------------------------------------------------------
-# Historical baseline (as-of umaEndDate - 1 day), with counts
+# Historical baseline (leakage-safe by horizon + margin)
 # ---------------------------------------------------------------------
 
-def compute_hist_stats_by_market(markets: Dict[str, MarketMeta]) -> Dict[str, Dict[str, Any]]:
+def build_historical_prefix(markets: Dict[str, MarketMeta]) -> Dict[str, Any]:
     """
-    Compute p_hist_i for each market i using ONLY outcomes available as of:
+    Build sorted arrays and prefix sums for efficient historical-rate queries.
 
-        cutoff_i = umaEndDate_i - 1 day
+    Availability rule:
+      A prior market contributes to the historical baseline only if its
+      uma_end_dt <= cutoff.
 
-    p_hist_i = (# YES among markets with umaEndDate <= cutoff_i) / (count markets with umaEndDate <= cutoff_i)
-
-    If count == 0, use p_hist_i = 0.5.
-
-    Returns dict:
-      mid -> { "p_hist": float, "hist_yes": int, "hist_total": int, "cutoff_dt": datetime }
+    Returns a dict containing:
+      - end_list: sorted list of availability timestamps
+      - prefix_yes: cumulative YES counts over end_list
     """
-    items = sorted(((m.uma_end_dt, m.y, mid) for mid, m in markets.items()), key=lambda t: t[0])
+    items = sorted(
+        ((m.uma_end_dt, m.y, mid) for mid, m in markets.items()),
+        key=lambda t: t[0],
+    )
     end_list = [t[0] for t in items]
 
     prefix_yes: List[int] = []
     s = 0
-    for end_dt, y, _mid in items:
+    for _end_dt, y, _mid in items:
         s += int(y)
         prefix_yes.append(s)
 
-    def hist_up_to(cutoff: datetime) -> Tuple[float, int, int]:
-        pos = bisect_right(end_list, cutoff)  # number of markets with end_dt <= cutoff
-        if pos <= 0:
-            return 0.5, 0, 0
-        total = pos
-        yes = prefix_yes[pos - 1]
-        return yes / total, yes, total
+    return {
+        "end_list": end_list,
+        "prefix_yes": prefix_yes,
+    }
 
-    out: Dict[str, Dict[str, Any]] = {}
-    for mid, m in markets.items():
-        cutoff = m.uma_end_dt - timedelta(days=1)
-        p_hist, yes, total = hist_up_to(cutoff)
-        out[mid] = {
-            "p_hist": float(p_hist),
-            "hist_yes": int(yes),
-            "hist_total": int(total),
-            "cutoff_dt": cutoff,
-        }
 
-    return out
+def compute_hist_stats_for_cutoff(
+    hist_prefix: Dict[str, Any],
+    cutoff_dt: datetime,
+) -> Tuple[float, int, int]:
+    """
+    Compute historical YES rate using only markets with uma_end_dt <= cutoff_dt.
+
+    Returns:
+      (p_hist, hist_yes, hist_total)
+
+    If no prior resolved markets are available by cutoff_dt, returns (0.5, 0, 0).
+    """
+    end_list: List[datetime] = hist_prefix["end_list"]
+    prefix_yes: List[int] = hist_prefix["prefix_yes"]
+
+    pos = bisect_right(end_list, cutoff_dt)
+    if pos <= 0:
+        return 0.5, 0, 0
+
+    total = pos
+    yes = prefix_yes[pos - 1]
+    return yes / total, yes, total
 
 
 # ---------------------------------------------------------------------
@@ -508,6 +650,7 @@ def compute_brier_rows_market_horizon(
     poly_by_mid: Dict[str, PolyPricesRecord],
     poly_by_slug: Dict[str, PolyPricesRecord],
     horizons: List[str],
+    historical_margin: timedelta,
     exclude_horizons: Optional[Iterable[str]] = None,
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any], List[Dict[str, Any]]]:
     """
@@ -519,9 +662,8 @@ def compute_brier_rows_market_horizon(
     exclude = {h.strip() for h in (exclude_horizons or []) if h and str(h).strip()}
     horizons_use = [h for h in horizons if h not in exclude]
 
-    hist_stats = compute_hist_stats_by_market(markets)
+    hist_prefix = build_historical_prefix(markets)
 
-    # Diagnostics accumulators (by horizon)
     diag: Dict[str, Dict[str, Any]] = {}
     for h in horizons_use:
         diag[h] = {
@@ -532,6 +674,7 @@ def compute_brier_rows_market_horizon(
             "missing_price_at_horizon": 0,
             "invalid_price_range": 0,
             "missing_snapshot_time": 0,
+            "unparseable_horizon": 0,
             "usable_polymarket_n": 0,
             "sum_loss_polymarket": 0.0,
             "sum_loss_hist_on_pm_sample": 0.0,
@@ -541,17 +684,11 @@ def compute_brier_rows_market_horizon(
     detail_rows: List[Dict[str, Any]] = []
 
     for mid, m in markets.items():
-        hstat = hist_stats.get(mid, {"p_hist": 0.5, "hist_yes": 0, "hist_total": 0, "cutoff_dt": (m.uma_end_dt - timedelta(days=1))})
-        p_hist = float(hstat.get("p_hist", 0.5))
-        hist_yes = int(hstat.get("hist_yes", 0))
-        hist_total = int(hstat.get("hist_total", 0))
-        cutoff_dt = hstat.get("cutoff_dt")
-        if not isinstance(cutoff_dt, datetime):
-            cutoff_dt = m.uma_end_dt - timedelta(days=1)
-
         for h in horizons_use:
             d = diag[h]
             d["total_markets_considered"] += 1
+
+            h_seconds = horizon_to_seconds(h)
 
             poly = poly_by_mid.get(mid)
             join_method = None
@@ -567,7 +704,6 @@ def compute_brier_rows_market_horizon(
                     join_method = "none"
                     d["missing_poly_record"] += 1
 
-            # defaults
             p_pm = None
             snap_dt = None
             src_ts = None
@@ -600,7 +736,7 @@ def compute_brier_rows_market_horizon(
                         status = "invalid"
                         reason = "price_out_of_[0,1]"
                         d["invalid_price_range"] += 1
-                        p_pm = p_pm_f  # keep for debugging
+                        p_pm = p_pm_f
                     else:
                         p_pm = p_pm_f
                         snap_dt, src_ts, tgt_ts = get_snapshot_dt(poly, h)
@@ -614,16 +750,29 @@ def compute_brier_rows_market_horizon(
             y = int(m.y)
             resolved_outcome = "YES" if y == 1 else "NO"
 
-            # Always computable baselines
             p_dice = 0.5
             loss_dice = brier_loss(p_dice, y)
+
+            hist_cutoff_dt = None
+            hist_yes = 0
+            hist_total = 0
+            p_hist = 0.5
+
+            if h_seconds is None:
+                status = "invalid" if status == "ok" else status
+                reason = "unparseable_horizon" if not reason else reason
+                d["unparseable_horizon"] += 1
+            else:
+                hist_cutoff_dt = m.earnings_release_dt - timedelta(seconds=h_seconds) - historical_margin
+                p_hist, hist_yes, hist_total = compute_hist_stats_for_cutoff(hist_prefix, hist_cutoff_dt)
+
             loss_hist = brier_loss(p_hist, y)
 
             loss_pm = None
-            seconds_before_close = None
+            seconds_before_event = None
             if pm_ok and p_pm is not None and snap_dt is not None:
                 loss_pm = brier_loss(float(p_pm), y)
-                seconds_before_close = (m.uma_end_dt - snap_dt).total_seconds()
+                seconds_before_event = (m.earnings_release_dt - snap_dt).total_seconds()
 
                 d["usable_polymarket_n"] += 1
                 d["sum_loss_polymarket"] += float(loss_pm)
@@ -635,40 +784,50 @@ def compute_brier_rows_market_horizon(
                 "market_id": mid,
                 "slug": m.slug,
                 "ticker": m.ticker,
+
                 # outcome + times
                 "y": y,
                 "resolved_outcome": resolved_outcome,
+                "earnings_release_dt_utc": dt_iso(m.earnings_release_dt),
                 "uma_end_dt_utc": dt_iso(m.uma_end_dt),
+                "corporate_info_join_method": m.corporate_info_join_method,
+
                 # horizon
                 "horizon": h,
-                "horizon_seconds": horizon_to_seconds(h),
+                "horizon_seconds": h_seconds,
+                "historical_margin_seconds": int(historical_margin.total_seconds()),
+
                 # historical baseline internals
-                "hist_cutoff_dt_utc": dt_iso(cutoff_dt),
+                "hist_cutoff_dt_utc": dt_iso(hist_cutoff_dt),
                 "hist_total": hist_total,
                 "hist_yes": hist_yes,
-                "p_hist_asof_end_minus_1d": p_hist,
+                "p_hist_leakage_safe": p_hist,
+
                 # polymarket join & timestamps
                 "poly_join_method": join_method,
                 "poly_generated_dt_utc": dt_iso(poly.generated_dt) if poly is not None else None,
                 "snapshot_dt_utc": dt_iso(snap_dt),
                 "snapshot_source_ts_yes": src_ts,
                 "snapshot_targets_ts": tgt_ts,
+
                 # probabilities
                 "p_polymarket_yes": p_pm,
                 "p_dice_0p5": p_dice,
+
                 # losses
                 "loss_polymarket": loss_pm,
                 "loss_dice": loss_dice,
                 "loss_hist": loss_hist,
-                # sanity check timing
-                "seconds_before_close": seconds_before_close,
+
+                # timing sanity check against event anchor
+                "seconds_before_event": seconds_before_event,
+
                 # usability
                 "usable_polymarket": pm_ok,
                 "status": status,
                 "reason": reason,
             })
 
-    # Build summary rows by horizon from diagnostics sums
     summary_rows: List[Dict[str, Any]] = []
     for h in horizons_use:
         d = diag[h]
@@ -678,7 +837,7 @@ def compute_brier_rows_market_horizon(
             "n": n,
             "brier_polymarket": mean_sum_count(float(d["sum_loss_polymarket"]), n),
             "brier_dice_50_50": mean_sum_count(float(d["sum_loss_dice_on_pm_sample"]), n),
-            "brier_historical_asof_end_minus_1d": mean_sum_count(float(d["sum_loss_hist_on_pm_sample"]), n),
+            "brier_historical_leakage_safe": mean_sum_count(float(d["sum_loss_hist_on_pm_sample"]), n),
         })
 
     meta = {
@@ -687,7 +846,14 @@ def compute_brier_rows_market_horizon(
         "horizons_analyzed": horizons_use,
         "n_markets_resolved": len(markets),
         "detail_rows": "one row per (market × horizon), including missing/invalid rows with status/reason",
-        "historical_baseline_rule": "p_hist_i computed using markets with umaEndDate <= (umaEndDate_i - 1 day); if none, p_hist_i=0.5",
+        "historical_baseline_rule": (
+            "For market i and horizon h, p_hist_i,h is computed using only prior markets "
+            "with umaEndDate <= earnings_release_datetime_i - horizon_h - historical_margin; "
+            "if none, p_hist_i,h=0.5"
+        ),
+        "historical_margin_seconds": int(historical_margin.total_seconds()),
+        "event_anchor_rule": "earnings_release_datetime is the anchor for horizon timing",
+        "historical_availability_rule": "umaEndDate is used as the timestamp by which prior outcomes are considered available",
         "join_rule": "market_id primary; slug fallback",
         "snapshot_time_required_for_polymarket": "snapshot_source_ts_yes[h] else snapshot_targets_ts[h] must exist",
         "summary_rule": "by-horizon summary computed over rows with usable_polymarket=True (baselines on same sample)",
@@ -718,7 +884,6 @@ def write_csv(path: Path, rows: List[Dict[str, Any]]) -> None:
     if not rows:
         return
 
-    # stable-ish column order: union of keys in first-seen order
     fieldnames: List[str] = []
     seen = set()
     for r in rows:
@@ -744,48 +909,64 @@ def write_csv(path: Path, rows: List[Dict[str, Any]]) -> None:
 # ---------------------------------------------------------------------
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Compute detailed Brier rows per (market × horizon) + horizon summary.")
+    ap = argparse.ArgumentParser(
+        description="Compute detailed Brier rows per (market × horizon) with a leakage-safe historical baseline."
+    )
+    ap.add_argument(
+        "--project-root",
+        default=None,
+        help="Optional explicit project root.",
+    )
     ap.add_argument(
         "--exclude-horizons",
         default="",
         help="Comma-separated horizons to exclude (default: none). Example: '4w,3w,2w'",
     )
+    ap.add_argument(
+        "--historical-margin-hours",
+        type=float,
+        default=2.0,
+        help="Extra leakage-safety margin added to each horizon cutoff for the historical baseline. Default: 2 hours.",
+    )
     args = ap.parse_args()
 
-    root = find_project_root()
+    root = find_project_root(args.project_root)
 
     markets_path = root / "data" / "markets" / "markets.jsonl"
     poly_path = root / "data" / "poly_prices" / "poly_prices.jsonl"
+    corporate_info_path = root / "data" / "corporate_info" / "corporate_info_by_market.jsonl"
     out_dir = root / "data" / "brier_scores"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    markets = load_markets_meta(markets_path)
+    markets = load_markets_meta(markets_path, corporate_info_path)
     poly_by_mid, poly_by_slug, horizons_all = load_poly_prices_latest(poly_path)
 
     exclude = [h.strip() for h in str(args.exclude_horizons).split(",") if h.strip()]
+    historical_margin = timedelta(hours=float(args.historical_margin_hours))
 
     detail_rows, extra, summary_rows = compute_brier_rows_market_horizon(
         markets=markets,
         poly_by_mid=poly_by_mid,
         poly_by_slug=poly_by_slug,
         horizons=horizons_all,
+        historical_margin=historical_margin,
         exclude_horizons=exclude,
     )
 
-    # Console output: summary (compact)
     print("Brier summary by horizon (computed over usable_polymarket rows):")
     for r in summary_rows:
         h = r["horizon"]
         n = r["n"]
         pm = r["brier_polymarket"]
         di = r["brier_dice_50_50"]
-        hi = r["brier_historical_asof_end_minus_1d"]
+        hi = r["brier_historical_leakage_safe"]
+
         pm_s = "NA" if (not isinstance(pm, float) or not math.isfinite(pm)) else f"{pm:.6f}"
         di_s = "NA" if (not isinstance(di, float) or not math.isfinite(di)) else f"{di:.6f}"
         hi_s = "NA" if (not isinstance(hi, float) or not math.isfinite(hi)) else f"{hi:.6f}"
+
         print(f"  {h:>4} | n={n:>5} | PM={pm_s} | DICE={di_s} | HIST={hi_s}")
 
-    # Write detailed outputs
     detail_csv = out_dir / "brier_scores_market_horizon.csv"
     detail_json = out_dir / "brier_scores_market_horizon.json"
     detail_jsonl = out_dir / "brier_scores_market_horizon.jsonl"
@@ -799,7 +980,6 @@ def main() -> None:
     })
     write_jsonl(detail_jsonl, detail_rows)
 
-    # Write summary outputs (by horizon)
     summ_csv = out_dir / "brier_scores_by_horizon.csv"
     summ_json = out_dir / "brier_scores_by_horizon.json"
     summ_jsonl = out_dir / "brier_scores_by_horizon.jsonl"
