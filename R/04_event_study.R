@@ -71,7 +71,7 @@ required_packages <- c(
 
 check_required_packages <- function(pkgs = required_packages) {
   missing_pkgs <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]
-
+  
   if (length(missing_pkgs) > 0) {
     stop(
       paste0(
@@ -104,10 +104,10 @@ find_project_root <- function(root = NULL,
     }
     return(candidate)
   }
-
+  
   current <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
   candidates <- current
-
+  
   for (i in seq_len(max_up)) {
     parent <- dirname(candidates[length(candidates)])
     if (identical(parent, candidates[length(candidates)])) {
@@ -115,13 +115,13 @@ find_project_root <- function(root = NULL,
     }
     candidates <- c(candidates, parent)
   }
-
+  
   hit <- candidates[vapply(
     candidates,
     function(x) file.exists(file.path(x, marker)),
     logical(1)
   )]
-
+  
   if (length(hit) == 0L) {
     stop(
       paste0(
@@ -132,7 +132,7 @@ find_project_root <- function(root = NULL,
       call. = FALSE
     )
   }
-
+  
   normalizePath(hit[1], winslash = "/", mustWork = TRUE)
 }
 
@@ -141,10 +141,10 @@ find_project_root <- function(root = NULL,
 # -----------------------------------------------------------------------------
 sanitize_for_json <- function(df) {
   out <- df
-
+  
   for (nm in names(out)) {
     x <- out[[nm]]
-
+    
     if (inherits(x, c("POSIXct", "POSIXt"))) {
       out[[nm]] <- format(x, "%Y-%m-%d %H:%M:%S", tz = "UTC")
     } else if (inherits(x, "Date")) {
@@ -156,7 +156,7 @@ sanitize_for_json <- function(df) {
       out[[nm]] <- x
     }
   }
-
+  
   out
 }
 
@@ -183,7 +183,7 @@ add_significance_stars <- function(estimate, p_value) {
     p_value < 0.10 ~ "*",
     TRUE ~ ""
   )
-
+  
   paste0(sprintf("%.4f", estimate), stars)
 }
 
@@ -220,26 +220,26 @@ make_gt_table <- function(df, title, subtitle) {
 # -----------------------------------------------------------------------------
 parse_utc_datetime <- function(x) {
   x <- as.character(x)
-
+  
   parsed <- suppressWarnings(lubridate::ymd_hms(x, tz = "UTC", quiet = TRUE))
-
+  
   need_hm <- is.na(parsed) & !is.na(x)
   if (any(need_hm)) {
     parsed[need_hm] <- suppressWarnings(
       lubridate::ymd_hm(x[need_hm], tz = "UTC", quiet = TRUE)
     )
   }
-
+  
   parsed
 }
 
 classify_release_timing <- function(release_dt_ny) {
   stopifnot(inherits(release_dt_ny, c("POSIXct", "POSIXt")))
-
+  
   seconds <- lubridate::hour(release_dt_ny) * 3600 +
     lubridate::minute(release_dt_ny) * 60 +
     lubridate::second(release_dt_ny)
-
+  
   dplyr::case_when(
     is.na(seconds) ~ NA_character_,
     seconds < (9 * 3600 + 30 * 60) ~ "before_open",
@@ -251,37 +251,37 @@ classify_release_timing <- function(release_dt_ny) {
 select_purchase_date <- function(trading_dates, release_date, release_timing) {
   trading_dates <- sort(unique(as.Date(trading_dates)))
   trading_dates <- trading_dates[!is.na(trading_dates)]
-
+  
   if (length(trading_dates) == 0L || is.na(release_date) || is.na(release_timing)) {
     return(as.Date(NA))
   }
-
+  
   if (release_timing == "after_close") {
     eligible <- trading_dates[trading_dates <= release_date]
   } else {
     eligible <- trading_dates[trading_dates < release_date]
   }
-
+  
   if (length(eligible) == 0L) {
     return(as.Date(NA))
   }
-
+  
   max(eligible)
 }
 
 select_event_trading_date <- function(trading_dates, purchase_date) {
   trading_dates <- sort(unique(as.Date(trading_dates)))
   trading_dates <- trading_dates[!is.na(trading_dates)]
-
+  
   if (length(trading_dates) == 0L || is.na(purchase_date)) {
     return(as.Date(NA))
   }
-
+  
   eligible <- trading_dates[trading_dates > purchase_date]
   if (length(eligible) == 0L) {
     return(as.Date(NA))
   }
-
+  
   min(eligible)
 }
 
@@ -301,18 +301,18 @@ prepare_event_master <- function(dataset_long,
       release_date_ny = as.Date(.data$release_dt_ny),
       release_timing = classify_release_timing(.data$release_dt_ny)
     )
-
+  
   prices_prepped <- stock_prices |>
     dplyr::mutate(
       market_id = as.character(.data$market_id),
       date = as.Date(.data$date)
     )
-
+  
   price_date_map <- prices_prepped |>
     dplyr::distinct(.data$market_id, .data$date) |>
     dplyr::group_by(.data$market_id) |>
     dplyr::summarise(trading_dates = list(sort(unique(.data$date))), .groups = "drop")
-
+  
   events <- dataset_long_prepped |>
     dplyr::distinct(
       .data$market_id,
@@ -352,7 +352,7 @@ prepare_event_master <- function(dataset_long,
       signal_cutoff_utc = lubridate::with_tz(.data$signal_cutoff_ny, tzone = "UTC")
     ) |>
     dplyr::select(-trading_dates)
-
+  
   list(
     dataset_long_prepped = dataset_long_prepped,
     prices_prepped = prices_prepped,
@@ -368,7 +368,7 @@ select_polymarket_signal <- function(dataset_long_prepped,
   if (!signal_var %in% names(dataset_long_prepped)) {
     stop("Column not found in dataset_long: ", signal_var, call. = FALSE)
   }
-
+  
   signal_rows <- dataset_long_prepped |>
     dplyr::mutate(
       snapshot_dt_utc_parsed = parse_utc_datetime(.data$snapshot_dt_utc),
@@ -425,12 +425,12 @@ select_polymarket_signal <- function(dataset_long_prepped,
       dplyr::between(.data$signal_value, 0, 1),
       .data$observed_before_cutoff
     )
-
+  
   if (!allow_stale_signal) {
     signal_rows <- signal_rows |>
       dplyr::filter(.data$same_day_signal)
   }
-
+  
   selected <- signal_rows |>
     dplyr::arrange(
       .data$market_id,
@@ -440,7 +440,7 @@ select_polymarket_signal <- function(dataset_long_prepped,
     dplyr::group_by(.data$market_id) |>
     dplyr::slice(1L) |>
     dplyr::ungroup()
-
+  
   selected
 }
 
@@ -448,7 +448,7 @@ assign_signal_bins <- function(df,
                                breaks = seq(0, 1, by = 0.2),
                                labels = c("0.0-0.2", "0.2-0.4", "0.4-0.6", "0.6-0.8", "0.8-1.0")) {
   stopifnot(length(breaks) - 1L == length(labels))
-
+  
   out <- df
   out$signal_bin <- cut(
     out$signal_value,
@@ -457,7 +457,7 @@ assign_signal_bins <- function(df,
     right = FALSE,
     labels = labels
   )
-
+  
   # Ensure exactly 1.0 goes into the final bin.
   out$signal_bin[!is.na(out$signal_value) & out$signal_value == 1] <- tail(labels, 1)
   out$signal_bin <- forcats::fct_relevel(out$signal_bin, labels)
@@ -487,24 +487,24 @@ prepare_price_panel <- function(prices_prepped, selected_events) {
       by = "market_id"
     ) |>
     dplyr::arrange(.data$market_id, .data$date)
-
+  
   panel_list <- split(panel, panel$market_id)
   panel_out <- vector("list", length(panel_list))
-
+  
   for (i in seq_along(panel_list)) {
     df_i <- panel_list[[i]]
     df_i <- df_i[order(df_i$date), , drop = FALSE]
-
+    
     idx0 <- match(df_i$event_trading_date[1], df_i$date)
-
+    
     df_i$trading_index <- seq_len(nrow(df_i))
     df_i$stock_ret <- c(NA_real_, df_i$close[-1] / df_i$close[-nrow(df_i)] - 1)
     df_i$spx_ret <- c(NA_real_, df_i$spx_close[-1] / df_i$spx_close[-nrow(df_i)] - 1)
     df_i$event_day <- if (is.na(idx0)) NA_integer_ else df_i$trading_index - idx0
-
+    
     panel_out[[i]] <- df_i
   }
-
+  
   dplyr::bind_rows(panel_out)
 }
 
@@ -514,7 +514,7 @@ fit_market_model_one_event <- function(df,
                                        min_estimation_obs = 120L) {
   df <- df[order(df$date), , drop = FALSE]
   event_id <- df$market_id[1]
-
+  
   template_info <- tibble::tibble(
     market_id = event_id,
     signal_bin = as.character(df$signal_bin[1]),
@@ -529,12 +529,12 @@ fit_market_model_one_event <- function(df,
     sigma = NA_real_,
     status = "unknown"
   )
-
+  
   if (all(is.na(df$event_day))) {
     template_info$status <- "missing_event_day"
     return(list(info = template_info, ar = tibble::tibble()))
   }
-
+  
   estimation_df <- df |>
     dplyr::filter(
       !is.na(.data$event_day),
@@ -543,13 +543,13 @@ fit_market_model_one_event <- function(df,
       is.finite(.data$stock_ret),
       is.finite(.data$spx_ret)
     )
-
+  
   if (nrow(estimation_df) < min_estimation_obs) {
     template_info$est_n <- nrow(estimation_df)
     template_info$status <- "too_few_estimation_obs"
     return(list(info = template_info, ar = tibble::tibble()))
   }
-
+  
   event_df <- df |>
     dplyr::filter(
       !is.na(.data$event_day),
@@ -558,16 +558,16 @@ fit_market_model_one_event <- function(df,
       is.finite(.data$spx_ret)
     ) |>
     dplyr::arrange(.data$event_day)
-
+  
   if (nrow(event_df) != length(event_window) || !identical(event_df$event_day, event_window)) {
     template_info$est_n <- nrow(estimation_df)
     template_info$status <- "incomplete_event_window"
     return(list(info = template_info, ar = tibble::tibble()))
   }
-
+  
   fit <- stats::lm(stock_ret ~ spx_ret, data = estimation_df)
   expected <- as.numeric(stats::predict(fit, newdata = event_df))
-
+  
   event_df <- event_df |>
     dplyr::mutate(expected_ret = expected) |>
     dplyr::mutate(
@@ -581,19 +581,19 @@ fit_market_model_one_event <- function(df,
     dplyr::mutate(
       car_from_m5 = .data$car_from_m5_raw - baseline_m5
     )
-
+  
   # CAR from t = 0 is zero before the position starts earning post-release returns.
   event_df$car_from_0 <- 0
   post_event_days <- event_df$event_day >= 0
   event_df$car_from_0[post_event_days] <- cumsum(event_df$abnormal_ret[post_event_days])
-
+  
   model_sum <- summary(fit)
   template_info$est_n <- nrow(estimation_df)
   template_info$alpha <- unname(stats::coef(fit)[1])
   template_info$beta <- unname(stats::coef(fit)[2])
   template_info$sigma <- model_sum$sigma
   template_info$status <- "ok"
-
+  
   list(info = template_info, ar = event_df)
 }
 
@@ -602,10 +602,10 @@ estimate_all_events <- function(price_panel,
                                 estimation_window = c(-250, -30),
                                 min_estimation_obs = 120L) {
   by_event <- split(price_panel, price_panel$market_id)
-
+  
   info_list <- vector("list", length(by_event))
   ar_list <- vector("list", length(by_event))
-
+  
   for (i in seq_along(by_event)) {
     result_i <- fit_market_model_one_event(
       df = by_event[[i]],
@@ -613,11 +613,11 @@ estimate_all_events <- function(price_panel,
       estimation_window = estimation_window,
       min_estimation_obs = min_estimation_obs
     )
-
+    
     info_list[[i]] <- result_i$info
     ar_list[[i]] <- result_i$ar
   }
-
+  
   list(
     model_info = dplyr::bind_rows(info_list),
     abnormal_returns = dplyr::bind_rows(ar_list)
@@ -631,7 +631,7 @@ compute_caar_by_bin <- function(abnormal_returns) {
   if (nrow(abnormal_returns) == 0L) {
     return(tibble::tibble())
   }
-
+  
   event_level_paths <- abnormal_returns |>
     dplyr::select(
       market_id,
@@ -643,7 +643,7 @@ compute_caar_by_bin <- function(abnormal_returns) {
       car_from_m5,
       car_from_0
     )
-
+  
   event_level_paths |>
     dplyr::group_by(.data$signal_bin, .data$signal_bin_id, .data$event_day) |>
     dplyr::summarise(
@@ -684,13 +684,13 @@ compute_event_level_window_cars <- function(abnormal_returns,
   if (nrow(abnormal_returns) == 0L) {
     return(tibble::tibble())
   }
-
+  
   out <- vector("list", nrow(windows))
-
+  
   for (i in seq_len(nrow(windows))) {
     w <- windows[i, ]
     needed_days <- seq.int(w$start_day, w$end_day)
-
+    
     out[[i]] <- abnormal_returns |>
       dplyr::filter(.data$event_day %in% needed_days) |>
       dplyr::group_by(
@@ -722,7 +722,7 @@ compute_event_level_window_cars <- function(abnormal_returns,
       ) |>
       dplyr::select(-abnormal_return_raw)
   }
-
+  
   dplyr::bind_rows(out) |>
     dplyr::arrange(.data$signal_bin_id, .data$market_id, .data$start_day, .data$end_day)
 }
@@ -747,15 +747,15 @@ run_bin_mean_tests <- function(event_level_window_cars) {
   windows <- unique(event_level_window_cars$window_name)
   out <- list()
   idx <- 1L
-
+  
   for (w in windows) {
     df_w <- event_level_window_cars |>
       dplyr::filter(.data$window_name == w)
-
+    
     for (b in bins) {
       df_b <- df_w |>
         dplyr::filter(.data$signal_bin == b, !is.na(.data$abnormal_return))
-
+      
       if (nrow(df_b) == 0L) {
         out[[idx]] <- tibble::tibble(
           window_name = w,
@@ -789,11 +789,11 @@ run_bin_mean_tests <- function(event_level_window_cars) {
           n = nrow(df_b)
         )
       }
-
+      
       idx <- idx + 1L
     }
   }
-
+  
   dplyr::bind_rows(out)
 }
 
@@ -801,13 +801,13 @@ run_bin_difference_models <- function(event_level_window_cars,
                                       reference_bin = "0.0-0.2") {
   windows <- unique(event_level_window_cars$window_name)
   out <- vector("list", length(windows))
-
+  
   for (i in seq_along(windows)) {
     w <- windows[i]
     df_w <- event_level_window_cars |>
       dplyr::filter(.data$window_name == w, !is.na(.data$abnormal_return)) |>
       dplyr::mutate(signal_bin = stats::relevel(.data$signal_bin, ref = reference_bin))
-
+    
     if (nrow(df_w) == 0L) {
       out[[i]] <- tibble::tibble(
         window_name = w,
@@ -821,7 +821,7 @@ run_bin_difference_models <- function(event_level_window_cars,
       )
       next
     }
-
+    
     fit <- stats::lm(abnormal_return ~ signal_bin, data = df_w)
     tidy_fit <- robust_coeftest_to_df(fit) |>
       dplyr::mutate(
@@ -829,10 +829,10 @@ run_bin_difference_models <- function(event_level_window_cars,
         n = stats::nobs(fit),
         r_squared = summary(fit)$r.squared
       )
-
+    
     out[[i]] <- tidy_fit
   }
-
+  
   dplyr::bind_rows(out)
 }
 
@@ -840,17 +840,17 @@ build_mean_test_table <- function(mean_test_results,
                                   window_order = c("AR[0]", "CAR[0,1]", "CAR[0,3]", "CAR[0,5]", "CAR[-5,5]")) {
   bins <- unique(as.character(mean_test_results$bin))
   rows <- c(rbind(bins, rep("", length(bins))))
-
+  
   table_df <- tibble::tibble(term = rows)
-
+  
   for (w in window_order) {
     df_w <- mean_test_results |>
       dplyr::filter(.data$window_name == w) |>
       dplyr::mutate(bin = as.character(.data$bin))
-
+    
     col_values <- character(length(rows))
     ptr <- 1L
-
+    
     for (b in bins) {
       row_b <- df_w[df_w$bin == b, , drop = FALSE]
       if (nrow(row_b) == 0L) {
@@ -862,10 +862,10 @@ build_mean_test_table <- function(mean_test_results,
       }
       ptr <- ptr + 2L
     }
-
+    
     table_df[[w]] <- col_values
   }
-
+  
   table_df
 }
 
@@ -878,19 +878,19 @@ build_difference_table <- function(diff_results,
     "signal_bin0.6-0.8" = "0.6-0.8 minus 0.0-0.2",
     "signal_bin0.8-1.0" = "0.8-1.0 minus 0.0-0.2"
   )
-
+  
   row_terms <- unname(c(rbind(term_map, rep("", length(term_map)))))
   row_terms <- c(row_terms, "N", "R-squared")
   table_df <- tibble::tibble(term = row_terms)
-
+  
   for (w in window_order) {
     df_w <- diff_results |>
       dplyr::filter(.data$window_name == w)
-
+    
     term_sequence <- names(term_map)
     col_values <- character(length(row_terms))
     ptr <- 1L
-
+    
     for (tm in term_sequence) {
       row_tm <- df_w[df_w$term == tm, , drop = FALSE]
       if (nrow(row_tm) == 0L) {
@@ -902,7 +902,7 @@ build_difference_table <- function(diff_results,
       }
       ptr <- ptr + 2L
     }
-
+    
     if (nrow(df_w) > 0L) {
       col_values[length(row_terms) - 1L] <- as.character(df_w$n[1])
       col_values[length(row_terms)] <- sprintf("%.4f", df_w$r_squared[1])
@@ -910,10 +910,10 @@ build_difference_table <- function(diff_results,
       col_values[length(row_terms) - 1L] <- ""
       col_values[length(row_terms)] <- ""
     }
-
+    
     table_df[[w]] <- col_values
   }
-
+  
   table_df
 }
 
@@ -1037,10 +1037,10 @@ plot_caar_faceted <- function(caar_by_bin,
   if (nrow(caar_by_bin) == 0L) {
     return(invisible(NULL))
   }
-
+  
   bin_levels <- levels(caar_by_bin$signal_bin)
   names(colors) <- bin_levels
-
+  
   p <- ggplot2::ggplot(
     caar_by_bin,
     ggplot2::aes(
@@ -1093,7 +1093,7 @@ plot_caar_faceted <- function(caar_by_bin,
       panel.grid.minor = ggplot2::element_blank(),
       strip.text = ggplot2::element_text(face = "bold")
     )
-
+  
   ggplot2::ggsave(output_png, plot = p, width = 10, height = 8, dpi = 300)
   ggplot2::ggsave(output_pdf, plot = p, width = 10, height = 8)
   invisible(p)
@@ -1106,10 +1106,10 @@ plot_caar_combined <- function(caar_by_bin,
   if (nrow(caar_by_bin) == 0L) {
     return(invisible(NULL))
   }
-
+  
   bin_levels <- levels(caar_by_bin$signal_bin)
   names(colors) <- bin_levels
-
+  
   p <- ggplot2::ggplot(
     caar_by_bin,
     ggplot2::aes(
@@ -1146,7 +1146,7 @@ plot_caar_combined <- function(caar_by_bin,
       panel.grid.minor = ggplot2::element_blank(),
       legend.position = "bottom"
     )
-
+  
   ggplot2::ggsave(output_png, plot = p, width = 10, height = 6, dpi = 300)
   ggplot2::ggsave(output_pdf, plot = p, width = 10, height = 6)
   invisible(p)
@@ -1165,29 +1165,29 @@ run_polymarket_event_study <- function(root = NULL,
                                        market_tz = "America/New_York",
                                        color_palette = c("#808080", "#A9A9A9", "#E3170A", "#00008B", "#0000FF")) {
   check_required_packages()
-
+  
   ROOT <- find_project_root(root)
   source(file.path(ROOT, "R", "utils", "load_data.R"))
-
+  
   if (is.null(output_dir)) {
     output_dir <- file.path(ROOT, "statistics", "event_study")
   }
-
+  
   data_dir <- file.path(output_dir, "data")
   table_dir <- file.path(output_dir, "tables")
   figure_dir <- file.path(output_dir, "figures")
-
+  
   dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
   dir.create(table_dir, recursive = TRUE, showWarnings = FALSE)
   dir.create(figure_dir, recursive = TRUE, showWarnings = FALSE)
-
+  
   D <- load_project_data(ROOT)
   prep <- prepare_event_master(
     dataset_long = D$dataset_long,
     stock_prices = D$stock_prices,
     market_tz = market_tz
   )
-
+  
   selected_signals <- select_polymarket_signal(
     dataset_long_prepped = prep$dataset_long_prepped,
     events = prep$events,
@@ -1196,19 +1196,19 @@ run_polymarket_event_study <- function(root = NULL,
     signal_var = signal_var
   ) |>
     assign_signal_bins()
-
+  
   price_panel <- prepare_price_panel(
     prices_prepped = prep$prices_prepped,
     selected_events = selected_signals
   )
-
+  
   estimated <- estimate_all_events(
     price_panel = price_panel,
     event_window = event_window,
     estimation_window = estimation_window,
     min_estimation_obs = min_estimation_obs
   )
-
+  
   final_events <- selected_signals |>
     dplyr::inner_join(
       estimated$model_info |>
@@ -1223,15 +1223,15 @@ run_polymarket_event_study <- function(root = NULL,
         ),
       by = "market_id"
     )
-
+  
   abnormal_returns <- estimated$abnormal_returns |>
-     dplyr::semi_join(final_events |> dplyr::select(market_id), by = "market_id")
-
+    dplyr::semi_join(final_events |> dplyr::select(market_id), by = "market_id")
+  
   caar_by_bin <- compute_caar_by_bin(abnormal_returns)
   event_level_window_cars <- compute_event_level_window_cars(abnormal_returns)
   mean_test_results <- run_bin_mean_tests(event_level_window_cars)
   diff_results <- run_bin_difference_models(event_level_window_cars)
-
+  
   # ---------------------------------------------------------------------------
   # Diagnostics and sample-flow output
   # ---------------------------------------------------------------------------
@@ -1255,7 +1255,7 @@ run_polymarket_event_study <- function(root = NULL,
       dplyr::n_distinct(final_events$market_id)
     )
   )
-
+  
   # ---------------------------------------------------------------------------
   # Write tabular outputs (CSV + JSONL)
   # ---------------------------------------------------------------------------
@@ -1268,7 +1268,7 @@ run_polymarket_event_study <- function(root = NULL,
   write_csv_jsonl(event_level_window_cars, file.path(data_dir, "event_level_window_cars"))
   write_csv_jsonl(mean_test_results, file.path(data_dir, "bin_mean_tests"))
   write_csv_jsonl(diff_results, file.path(data_dir, "bin_difference_models"))
-
+  
   # ---------------------------------------------------------------------------
   # Regression-style HTML tables
   # ---------------------------------------------------------------------------
@@ -1282,7 +1282,7 @@ run_polymarket_event_study <- function(root = NULL,
       "Signals are selected at the last eligible pre-release close, using non-stale data by default."
     )
   )
-
+  
   diff_table_df <- build_difference_table(diff_results)
   diff_gt <- make_gt_table(
     diff_table_df,
@@ -1293,14 +1293,14 @@ run_polymarket_event_study <- function(root = NULL,
       "differences relative to that low-signal benchmark. HC3 robust standard errors are in parentheses."
     )
   )
-
+  
   gt::gtsave(mean_gt, file.path(table_dir, "event_study_bin_mean_table.html"))
   gt::gtsave(diff_gt, file.path(table_dir, "event_study_bin_difference_table.html"))
-
+  
   # Also save the display-ready table data in CSV/JSONL for reproducibility.
   write_csv_jsonl(mean_table_df, file.path(data_dir, "event_study_bin_mean_table_display"))
   write_csv_jsonl(diff_table_df, file.path(data_dir, "event_study_bin_difference_table_display"))
-
+  
   # ---------------------------------------------------------------------------
   # Figures
   # ---------------------------------------------------------------------------
@@ -1310,7 +1310,7 @@ run_polymarket_event_study <- function(root = NULL,
     output_pdf = file.path(figure_dir, "caar_by_bin_faceted.pdf"),
     colors = color_palette
   )
-
+  
   plot_caar_combined(
     caar_by_bin = caar_by_bin,
     output_png = file.path(figure_dir, "caar_by_bin_combined.png"),
@@ -1323,12 +1323,12 @@ run_polymarket_event_study <- function(root = NULL,
     output_dir = file.path(figure_dir, "individual_bins"),
     colors = color_palette
   )
-
+  
   # ---------------------------------------------------------------------------
   # Session info for reproducibility
   # ---------------------------------------------------------------------------
   utils::capture.output(sessionInfo(), file = file.path(output_dir, "session_info.txt"))
-
+  
   invisible(list(
     root = ROOT,
     output_dir = output_dir,

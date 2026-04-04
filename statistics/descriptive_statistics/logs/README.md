@@ -1,7 +1,7 @@
 # Descriptive Statistics Output
 
-- Run timestamp: **20260329T185431**
-- Generated at: **2026-03-29 18:54:43.977084**
+- Run timestamp: **20260404T093013**
+- Generated at: **2026-04-04 09:30:24.145505**
 - Script: `R/00_descriptive_statistics.R`
 - Output directory: `statistics/descriptive_statistics/`
 

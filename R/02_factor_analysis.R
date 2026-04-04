@@ -157,6 +157,114 @@ safe_log1p <- function(x) {
   ifelse(is.finite(x) & x >= 0, log1p(x), NA_real_)
 }
 
+winsorize_vec <- function(x, probs = c(0.05, 0.95)) {
+  x <- suppressWarnings(as.numeric(x))
+  qs <- stats::quantile(x, probs = probs, na.rm = TRUE, names = FALSE, type = 7)
+  x <- pmax(x, qs[1])
+  x <- pmin(x, qs[2])
+  x
+}
+
+bootstrap_ci_model <- function(
+    formula,
+    data,
+    fit_type = c("lm", "glm"),
+    link = NULL,
+    R = 250,
+    seed = 123,
+    conf_level = 0.95,
+    show_progress = TRUE,
+    progress_label = ""
+) {
+  fit_type <- match.arg(fit_type)
+  set.seed(seed)
+
+  original_fit <- if (fit_type == "lm") {
+    lm(formula, data = data)
+  } else {
+    glm(formula, data = data, family = quasibinomial(link = link))
+  }
+
+  term_names <- names(coef(original_fit))
+  boot_coefs <- matrix(
+    NA_real_,
+    nrow = R,
+    ncol = length(term_names),
+    dimnames = list(NULL, term_names)
+  )
+
+  start_time <- Sys.time()
+
+  if (isTRUE(show_progress)) {
+    cat("\nStarting bootstrap:", progress_label, "\n")
+    pb <- utils::txtProgressBar(min = 0, max = R, style = 3)
+    on.exit(close(pb), add = TRUE)
+  }
+
+  for (b in seq_len(R)) {
+    idx <- sample.int(nrow(data), size = nrow(data), replace = TRUE)
+    d_b <- data[idx, , drop = FALSE]
+
+    fit_b <- tryCatch(
+      suppressWarnings(
+        if (fit_type == "lm") {
+          lm(formula, data = d_b)
+        } else {
+          glm(formula, data = d_b, family = quasibinomial(link = link))
+        }
+      ),
+      error = function(e) NULL
+    )
+
+    if (!is.null(fit_b)) {
+      cf <- coef(fit_b)
+      boot_coefs[b, match(names(cf), term_names)] <- unname(cf)
+    }
+
+    if (isTRUE(show_progress)) {
+      utils::setTxtProgressBar(pb, b)
+
+      if (b %% 250 == 0 || b == R) {
+        elapsed_sec <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
+        sec_per_iter <- elapsed_sec / b
+        eta_sec <- sec_per_iter * (R - b)
+
+        cat(
+          sprintf(
+            "\n[%s] %d/%d | elapsed: %.1f min | ETA: %.1f min",
+            progress_label,
+            b, R,
+            elapsed_sec / 60,
+            eta_sec / 60
+          )
+        )
+        flush.console()
+      }
+    }
+  }
+
+  alpha <- 1 - conf_level
+
+  data.frame(
+    term = term_names,
+    conf.low_boot = apply(
+      boot_coefs, 2,
+      function(x) stats::quantile(
+        x, probs = alpha / 2, na.rm = TRUE, names = FALSE, type = 7
+      )
+    ),
+    conf.high_boot = apply(
+      boot_coefs, 2,
+      function(x) stats::quantile(
+        x, probs = 1 - alpha / 2, na.rm = TRUE, names = FALSE, type = 7
+      )
+    ),
+    n_boot = R,
+    n_boot_success = colSums(is.finite(boot_coefs)),
+    stringsAsFactors = FALSE
+  )
+}
+
 p_to_stars <- function(p) {
   ifelse(
     is.na(p), "",
@@ -467,10 +575,15 @@ run_glm_diagnostics <- function(model, model_name, output_dir) {
 # 3. Main analysis function
 # ------------------------------ #
 run_factor_analysis <- function(
-    selected_horizons = c("4d", "3d", "2d", "1d", "12h", "6h"),
+    selected_horizons = c("1w", "6d", "5d", "4d", "3d", "2d", "1d", "12h", "6h"),
     robustness_horizon = "6h",
     require_complete_panel_for_mean = FALSE,
-    output_dir = NULL
+    output_dir = NULL,
+    winsorize = TRUE,
+    winsor_probs = c(0.05, 0.95),
+    bootstrap_runs = 25000,
+    bootstrap_conf_level = 0.95,
+    bootstrap_seed = 123
 ) {
   project_root <- find_project_root(get_start_dir())
   
@@ -554,8 +667,18 @@ run_factor_analysis <- function(
     difftime(main_df$umaEndDate, main_df$acceptingOrdersTimestamp, units = "days")
   )
   
+  main_df$volume_per_analyst <- ifelse(
+    is.finite(suppressWarnings(as.numeric(main_df$volumeNum))) &
+      is.finite(suppressWarnings(as.numeric(main_df$analysts_covering_asof))) &
+      suppressWarnings(as.numeric(main_df$analysts_covering_asof)) > 0,
+    suppressWarnings(as.numeric(main_df$volumeNum)) /
+      suppressWarnings(as.numeric(main_df$analysts_covering_asof)),
+    NA_real_
+  )
+  
   xvars_raw <- c(
     "volumeNum",
+    "volume_per_analyst",
     "val_eikon_eps_stddev_estimate",
     "val_surprise",
     "market_cap_usd_asof",
@@ -628,6 +751,7 @@ run_factor_analysis <- function(
         if (length(z) == 0) NA_real_ else z[1]
       },
       volumeNum = first_non_missing(volumeNum),
+      volume_per_analyst = first_non_missing(volume_per_analyst),
       val_eikon_eps_stddev_estimate = first_non_missing(val_eikon_eps_stddev_estimate),
       val_surprise = first_non_missing(val_surprise),
       market_cap_usd_asof = first_non_missing(market_cap_usd_asof),
@@ -639,6 +763,7 @@ run_factor_analysis <- function(
     ) %>%
     mutate(
       log_volume = safe_log1p(volumeNum),
+      log_volume_per_analyst = safe_log1p(volume_per_analyst),
       eps_stddev = val_eikon_eps_stddev_estimate,
       surprise = val_surprise,
       log_market_cap = safe_log(market_cap_usd_asof),
@@ -647,6 +772,26 @@ run_factor_analysis <- function(
       log_volatility_6m = safe_log1p(volatility_6m),
       open_time_days = open_time_days
     )
+
+  if (isTRUE(winsorize)) {
+  winsor_vars <- c(
+    "log_volume",
+    "log_volume_per_analyst",
+    "eps_stddev",
+    "surprise",
+    "log_market_cap",
+    "analysts",
+    "log_turnover",
+    "log_volatility_6m",
+    "open_time_days"
+  )
+    
+    market_df[winsor_vars] <- lapply(
+      market_df[winsor_vars],
+      winsorize_vec,
+      probs = winsor_probs
+    )
+  }
   
   write.csv(
     market_df,
@@ -672,6 +817,7 @@ run_factor_analysis <- function(
   
   full_vars <- c(
     "log_volume",
+    "log_volume_per_analyst",
     "eps_stddev",
     "surprise",
     "log_market_cap",
@@ -682,15 +828,16 @@ run_factor_analysis <- function(
   )
   
   coef_map <- c(
-    "(Intercept)"    = "Constant",
-    "log_volume"     = "log(Polymarket volume + 1)",
-    "eps_stddev"     = "Std. dev. of analyst estimates",
-    "surprise"       = "Earnings surprise",
-    "log_market_cap" = "log(Market cap)",
-    "analysts"       = "Analysts covering",
-    "log_turnover"   = "log(6m avg. daily turnover + 1)",
-    "log_volatility_6m"  = "log(6m stock volatility)",
-    "open_time_days" = "Market open-to-resolution (days)"
+    "(Intercept)"            = "Constant",
+    "log_volume"             = "log(Polymarket volume + 1)",
+    "log_volume_per_analyst" = "log(Polymarket volume / analysts + 1)",
+    "eps_stddev"             = "Std. dev. of analyst estimates",
+    "surprise"               = "Earnings surprise",
+    "log_market_cap"         = "log(Market cap)",
+    "analysts"               = "Analysts covering",
+    "log_turnover"           = "log(6m avg. daily turnover + 1)",
+    "log_volatility_6m"      = "log(6m stock volatility)",
+    "open_time_days"         = "Market open-to-resolution (days)"
   )
   
   # ------------------------------ #
@@ -708,13 +855,6 @@ run_factor_analysis <- function(
   
   target_ex_ante_df <- market_df[complete.cases(market_df[, c("loss_target", ex_ante_vars)]), ]
   target_full_df    <- market_df[complete.cases(market_df[, c("loss_target", full_vars)]), ]
-  
-  exclude_obs <- c(74, 388, 500, 628)
-  
-  mean_ex_ante_df   <- mean_ex_ante_df[-intersect(exclude_obs, seq_len(nrow(mean_ex_ante_df))), , drop = FALSE]
-  mean_full_df      <- mean_full_df[-intersect(exclude_obs, seq_len(nrow(mean_full_df))), , drop = FALSE]
-  target_ex_ante_df <- target_ex_ante_df[-intersect(exclude_obs, seq_len(nrow(target_ex_ante_df))), , drop = FALSE]
-  target_full_df    <- target_full_df[-intersect(exclude_obs, seq_len(nrow(target_full_df))), , drop = FALSE]
   
   if (nrow(mean_ex_ante_df) == 0 || nrow(mean_full_df) == 0 ||
       nrow(target_ex_ante_df) == 0 || nrow(target_full_df) == 0) {
@@ -816,6 +956,186 @@ run_factor_analysis <- function(
   vcov_mean_full_probit      <- sandwich::vcovHC(model_mean_full_probit, type = "HC3")
   vcov_target_ex_ante_probit <- sandwich::vcovHC(model_target_ex_ante_probit, type = "HC3")
   vcov_target_full_probit    <- sandwich::vcovHC(model_target_full_probit, type = "HC3")
+
+  cat("\nRunning bootstrap confidence intervals...\n")
+
+  bootstrap_results <- bind_rows(
+    bootstrap_ci_model(
+      formula_mean_ex_ante, mean_ex_ante_df,
+      fit_type = "lm",
+      R = bootstrap_runs,
+      seed = bootstrap_seed + 1,
+      conf_level = bootstrap_conf_level,
+      show_progress = TRUE,
+      progress_label = "OLS Mean loss | Ex-ante"
+    ) %>% mutate(
+      model_class = "OLS",
+      model = "Mean loss | Ex-ante",
+      .before = 1
+    ),
+    
+    bootstrap_ci_model(
+      formula_mean_full, mean_full_df,
+      fit_type = "lm",
+      R = bootstrap_runs,
+      seed = bootstrap_seed + 2,
+      conf_level = bootstrap_conf_level,
+      show_progress = TRUE,
+      progress_label = "OLS Mean loss | Full"
+    ) %>% mutate(
+      model_class = "OLS",
+      model = "Mean loss | Full",
+      .before = 1
+    ),
+    
+    bootstrap_ci_model(
+      formula_target_ex_ante, target_ex_ante_df,
+      fit_type = "lm",
+      R = bootstrap_runs,
+      seed = bootstrap_seed + 3,
+      conf_level = bootstrap_conf_level,
+      show_progress = TRUE,
+      progress_label = paste0("OLS Loss at ", robustness_horizon, " | Ex-ante")
+    ) %>% mutate(
+      model_class = "OLS",
+      model = paste0("Loss at ", robustness_horizon, " | Ex-ante"),
+      .before = 1
+    ),
+    
+    bootstrap_ci_model(
+      formula_target_full, target_full_df,
+      fit_type = "lm",
+      R = bootstrap_runs,
+      seed = bootstrap_seed + 4,
+      conf_level = bootstrap_conf_level,
+      show_progress = TRUE,
+      progress_label = paste0("OLS Loss at ", robustness_horizon, " | Full")
+    ) %>% mutate(
+      model_class = "OLS",
+      model = paste0("Loss at ", robustness_horizon, " | Full"),
+      .before = 1
+    ),
+    
+    bootstrap_ci_model(
+      formula_mean_ex_ante, mean_ex_ante_df,
+      fit_type = "glm",
+      link = "logit",
+      R = bootstrap_runs,
+      seed = bootstrap_seed + 5,
+      conf_level = bootstrap_conf_level,
+      show_progress = TRUE,
+      progress_label = "Logit Mean loss | Ex-ante"
+    ) %>% mutate(
+      model_class = "Fractional logit",
+      model = "Mean loss | Ex-ante",
+      .before = 1
+    ),
+    
+    bootstrap_ci_model(
+      formula_mean_full, mean_full_df,
+      fit_type = "glm",
+      link = "logit",
+      R = bootstrap_runs,
+      seed = bootstrap_seed + 6,
+      conf_level = bootstrap_conf_level,
+      show_progress = TRUE,
+      progress_label = "Logit Mean loss | Full"
+    ) %>% mutate(
+      model_class = "Fractional logit",
+      model = "Mean loss | Full",
+      .before = 1
+    ),
+    
+    bootstrap_ci_model(
+      formula_target_ex_ante, target_ex_ante_df,
+      fit_type = "glm",
+      link = "logit",
+      R = bootstrap_runs,
+      seed = bootstrap_seed + 7,
+      conf_level = bootstrap_conf_level,
+      show_progress = TRUE,
+      progress_label = paste0("Logit Loss at ", robustness_horizon, " | Ex-ante")
+    ) %>% mutate(
+      model_class = "Fractional logit",
+      model = paste0("Loss at ", robustness_horizon, " | Ex-ante"),
+      .before = 1
+    ),
+    
+    bootstrap_ci_model(
+      formula_target_full, target_full_df,
+      fit_type = "glm",
+      link = "logit",
+      R = bootstrap_runs,
+      seed = bootstrap_seed + 8,
+      conf_level = bootstrap_conf_level,
+      show_progress = TRUE,
+      progress_label = paste0("Logit Loss at ", robustness_horizon, " | Full")
+    ) %>% mutate(
+      model_class = "Fractional logit",
+      model = paste0("Loss at ", robustness_horizon, " | Full"),
+      .before = 1
+    ),
+    
+    bootstrap_ci_model(
+      formula_mean_ex_ante, mean_ex_ante_df,
+      fit_type = "glm",
+      link = "probit",
+      R = bootstrap_runs,
+      seed = bootstrap_seed + 9,
+      conf_level = bootstrap_conf_level,
+      show_progress = TRUE,
+      progress_label = "Probit Mean loss | Ex-ante"
+    ) %>% mutate(
+      model_class = "Fractional probit",
+      model = "Mean loss | Ex-ante",
+      .before = 1
+    ),
+    
+    bootstrap_ci_model(
+      formula_mean_full, mean_full_df,
+      fit_type = "glm",
+      link = "probit",
+      R = bootstrap_runs,
+      seed = bootstrap_seed + 10,
+      conf_level = bootstrap_conf_level,
+      show_progress = TRUE,
+      progress_label = "Probit Mean loss | Full"
+    ) %>% mutate(
+      model_class = "Fractional probit",
+      model = "Mean loss | Full",
+      .before = 1
+    ),
+    
+    bootstrap_ci_model(
+      formula_target_ex_ante, target_ex_ante_df,
+      fit_type = "glm",
+      link = "probit",
+      R = bootstrap_runs,
+      seed = bootstrap_seed + 11,
+      conf_level = bootstrap_conf_level,
+      show_progress = TRUE,
+      progress_label = paste0("Probit Loss at ", robustness_horizon, " | Ex-ante")
+    ) %>% mutate(
+      model_class = "Fractional probit",
+      model = paste0("Loss at ", robustness_horizon, " | Ex-ante"),
+      .before = 1
+    ),
+    
+    bootstrap_ci_model(
+      formula_target_full, target_full_df,
+      fit_type = "glm",
+      link = "probit",
+      R = bootstrap_runs,
+      seed = bootstrap_seed + 12,
+      conf_level = bootstrap_conf_level,
+      show_progress = TRUE,
+      progress_label = paste0("Probit Loss at ", robustness_horizon, " | Full")
+    ) %>% mutate(
+      model_class = "Fractional probit",
+      model = paste0("Loss at ", robustness_horizon, " | Full"),
+      .before = 1
+    )
+  )
   
   # ------------------------------ #
   # 10. Console regression tables
@@ -1077,6 +1397,16 @@ run_factor_analysis <- function(
         grepl("Full$", model) ~ "Full",
         TRUE ~ "Other"
       )
+    ) %>%
+    left_join(
+      bootstrap_results,
+      by = c("model_class", "model", "term")
+    ) %>%
+    mutate(
+      conf.low_hc3 = conf.low,
+      conf.high_hc3 = conf.high,
+      conf.low = conf.low_boot,
+      conf.high = conf.high_boot
     )
   
   fit_results <- bind_rows(
@@ -1123,6 +1453,16 @@ run_factor_analysis <- function(
     fit_results,
     file.path(output_dir, "factor_analysis_model_fit.jsonl")
   )
+
+    write.csv(
+    bootstrap_results,
+    file.path(output_dir, "factor_analysis_bootstrap_coefficients.csv"),
+    row.names = FALSE
+  )
+  write_jsonl(
+    bootstrap_results,
+    file.path(output_dir, "factor_analysis_bootstrap_coefficients.jsonl")
+  )
   
   # ------------------------------ #
   # 12B. Diagnostics for OLS + GLM
@@ -1154,6 +1494,7 @@ run_factor_analysis <- function(
         term_label,
         levels = rev(c(
           "log(Polymarket volume + 1)",
+          "log(Polymarket volume / analysts + 1)",
           "Std. dev. of analyst estimates",
           "Earnings surprise",
           "log(Market cap)",
@@ -1238,7 +1579,8 @@ run_factor_analysis <- function(
     height = 14,
     dpi = 300
   )
-  
+
+  cat("Bootstrap percentile confidence intervals based on ", bootstrap_runs, " resamples were added.\n", sep = "")
   cat("\nSaved outputs to:\n")
   cat(normalizePath(output_dir, winslash = "/", mustWork = FALSE), "\n", sep = "")
   cat("\nDone.\n")

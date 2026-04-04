@@ -104,7 +104,7 @@ fmt_ci <- function(lo, hi, digits = 4) {
   sprintf(paste0("[%.", digits, "f, %.", digits, "f]"), lo, hi)
 }
 
-bootstrap_mean_ci <- function(x, n_boot = 5000, conf = 0.95, seed = 1L) {
+bootstrap_mean_ci <- function(x, n_boot = 25000, conf = 0.95, seed = 1L) {
   x <- as.numeric(x)
   x <- x[is.finite(x)]
   
@@ -152,7 +152,7 @@ bootstrap_mean_ci <- function(x, n_boot = 5000, conf = 0.95, seed = 1L) {
   )
 }
 
-run_paired_robustness <- function(x, conf = 0.95, n_boot = 5000, seed = 1L) {
+run_paired_robustness <- function(x, conf = 0.95, n_boot = 25000, seed = 1L) {
   x <- as.numeric(x)
   x <- x[is.finite(x)]
   
@@ -243,7 +243,7 @@ run_paired_robustness <- function(x, conf = 0.95, n_boot = 5000, seed = 1L) {
   )
 }
 
-summarise_paired_diff <- function(x, conf = 0.95, n_boot = 5000, seed = 1L) {
+summarise_paired_diff <- function(x, conf = 0.95, n_boot = 25000, seed = 1L) {
   x <- as.numeric(x)
   x <- x[is.finite(x)]
   
@@ -380,7 +380,7 @@ sig_stars <- function(p) {
   )
 }
 
-boot_mean_ci_by_id <- function(df, id_col, value_col, n_boot = 2000, conf = 0.95, seed = 1) {
+boot_mean_ci_by_id <- function(df, id_col, value_col, n_boot = 25000, conf = 0.95, seed = 1) {
   set.seed(seed)
   
   id_sym <- rlang::ensym(id_col)
@@ -507,7 +507,7 @@ brier_summary <- loss_long %>%
   dplyr::mutate(
     stats = purrr::map(
       data,
-      ~ boot_mean_ci_by_id(.x, id_col = id, value_col = loss, n_boot = 2000, conf = 0.95, seed = 1)
+      ~ boot_mean_ci_by_id(.x, id_col = id, value_col = loss, n_boot = 25000, conf = 0.95, seed = 1)
     )
   ) %>%
   dplyr::select(-data) %>%
@@ -538,7 +538,7 @@ brier_pretty <- brier_summary %>%
 brier_gt <- make_gt_table(
   brier_pretty,
   title = "Brier Score by horizon (mean with 95% CI)",
-  subtitle = "CI is cluster bootstrap over market ids; sample restricted to complete cases (status == 'ok')",
+  subtitle = "CI is cluster bootstrap over market ids; sample restricted to complete cases.",
   note = "Cell format: mean [CI_low, CI_high].",
   rowname_col = "horizon"
 )
@@ -779,7 +779,7 @@ robustness_tbl <- diff_long %>%
     test = purrr::map2(
       data,
       seed,
-      ~ run_paired_robustness(.x$diff, conf = 0.95, n_boot = 5000, seed = .y)
+      ~ run_paired_robustness(.x$diff, conf = 0.95, n_boot = 25000, seed = .y)
     )
   ) %>%
   dplyr::select(-data, -seed) %>%
@@ -858,7 +858,7 @@ p <- ggplot(plot_df, aes(x = horizon, y = mean, group = model, color = model)) +
     x = "Time snapshot / horizon",
     y = "Brier Score (mean of (p - y)^2)",
     color = "Model",
-    caption = "CIs are cluster bootstrap over market ids; sample restricted to rows with all 3 models available (status == 'ok')."
+    caption = "CIs are cluster bootstrap over market ids; sample restricted to rows with all 3 models available."
   ) +
   theme_minimal(base_size = 12) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
