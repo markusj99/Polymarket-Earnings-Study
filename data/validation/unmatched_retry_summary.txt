@@ -1,0 +1,15 @@
+==================== UNMATCHED RETRY SUMMARY ====================
+Timestamp (UTC):                  2026-04-12T12:44:49.043781Z
+Base script:                      C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\python\01_check_consistency.py
+Unmatched input:                  C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\validation\unmatched.jsonl
+Rows retried:                     18
+Matched on retry:                 16
+Still unmatched:                  2
+Write-back enabled:               True
+Markets updated in place:         16
+
+Matched JSONL:                    C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\validation\unmatched_retry_matched.jsonl
+Matched CSV:                      C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\validation\unmatched_retry_matched.csv
+Still unmatched JSONL:            C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\validation\unmatched_retry_still_unmatched.jsonl
+Still unmatched CSV:              C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\validation\unmatched_retry_still_unmatched.csv
+===============================================================

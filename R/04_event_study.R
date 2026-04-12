@@ -215,6 +215,23 @@ make_gt_table <- function(df, title, subtitle) {
     )
 }
 
+make_difference_table_subtitle <- function(reference_bin) {
+  paste(
+    "Cross-sectional OLS with one row per event. Dependent variable is the event-level abnormal return",
+    "for the stated horizon. The intercept is the", paste0(reference_bin, " Polymarket bin"),
+    "and other coefficients are differences relative to that benchmark.",
+    "HC3 robust standard errors are in parentheses."
+  )
+}
+
+make_mean_table_subtitle <- function(bin_description) {
+  paste(
+    "Cell entries are mean abnormal returns estimated with an event-study market model.",
+    "Rows are the five", bin_description, "Polymarket bins. Standard errors are shown in parentheses.",
+    "Signals are selected at the last eligible pre-release close, using non-stale data by default."
+  )
+}
+
 # -----------------------------------------------------------------------------
 # Date-time parsing and event-time logic
 # -----------------------------------------------------------------------------
@@ -462,6 +479,17 @@ assign_signal_bins <- function(df,
   out$signal_bin[!is.na(out$signal_value) & out$signal_value == 1] <- tail(labels, 1)
   out$signal_bin <- forcats::fct_relevel(out$signal_bin, labels)
   out$signal_bin_id <- as.integer(out$signal_bin)
+  out
+}
+
+assign_signal_bins_equal_frequency <- function(df,
+                                               n_bins = 5L,
+                                               labels = paste0("Q", seq_len(n_bins))) {
+  stopifnot(length(labels) == n_bins)
+  
+  out <- df
+  out$signal_bin_id <- dplyr::ntile(out$signal_value, n_bins)
+  out$signal_bin <- factor(labels[out$signal_bin_id], levels = labels)
   out
 }
 
@@ -798,8 +826,13 @@ run_bin_mean_tests <- function(event_level_window_cars) {
 }
 
 run_bin_difference_models <- function(event_level_window_cars,
-                                      reference_bin = "0.0-0.2") {
+                                      reference_bin = NULL) {
   windows <- unique(event_level_window_cars$window_name)
+  
+  if (is.null(reference_bin)) {
+    reference_bin <- levels(event_level_window_cars$signal_bin)[1]
+  }
+  
   out <- vector("list", length(windows))
   
   for (i in seq_along(windows)) {
@@ -811,6 +844,7 @@ run_bin_difference_models <- function(event_level_window_cars,
     if (nrow(df_w) == 0L) {
       out[[i]] <- tibble::tibble(
         window_name = w,
+        reference_bin = reference_bin,
         term = character(),
         estimate = numeric(),
         std_error = numeric(),
@@ -826,6 +860,7 @@ run_bin_difference_models <- function(event_level_window_cars,
     tidy_fit <- robust_coeftest_to_df(fit) |>
       dplyr::mutate(
         window_name = w,
+        reference_bin = reference_bin,
         n = stats::nobs(fit),
         r_squared = summary(fit)$r.squared
       )
@@ -871,15 +906,29 @@ build_mean_test_table <- function(mean_test_results,
 
 build_difference_table <- function(diff_results,
                                    window_order = c("AR[0]", "CAR[0,1]", "CAR[0,3]", "CAR[0,5]", "CAR[-5,5]")) {
-  term_map <- c(
-    "(Intercept)" = "Constant (0.0-0.2 bin)",
-    "signal_bin0.2-0.4" = "0.2-0.4 minus 0.0-0.2",
-    "signal_bin0.4-0.6" = "0.4-0.6 minus 0.0-0.2",
-    "signal_bin0.6-0.8" = "0.6-0.8 minus 0.0-0.2",
-    "signal_bin0.8-1.0" = "0.8-1.0 minus 0.0-0.2"
+  reference_bins <- unique(stats::na.omit(diff_results$reference_bin))
+  
+  if (length(reference_bins) != 1L) {
+    stop(
+      "build_difference_table() requires exactly one reference bin in diff_results.",
+      call. = FALSE
+    )
+  }
+  
+  reference_bin <- reference_bins[1]
+  
+  term_sequence <- c(
+    "(Intercept)",
+    unique(diff_results$term[diff_results$term != "(Intercept)"])
   )
   
-  row_terms <- unname(c(rbind(term_map, rep("", length(term_map)))))
+  term_labels <- c(
+    paste0("Constant (", reference_bin, " bin)"),
+    paste0(sub("^signal_bin", "", term_sequence[-1]), " minus ", reference_bin)
+  )
+  names(term_labels) <- term_sequence
+  
+  row_terms <- unname(c(rbind(term_labels, rep("", length(term_labels)))))
   row_terms <- c(row_terms, "N", "R-squared")
   table_df <- tibble::tibble(term = row_terms)
   
@@ -887,7 +936,6 @@ build_difference_table <- function(diff_results,
     df_w <- diff_results |>
       dplyr::filter(.data$window_name == w)
     
-    term_sequence <- names(term_map)
     col_values <- character(length(row_terms))
     ptr <- 1L
     
@@ -1102,6 +1150,7 @@ plot_caar_faceted <- function(caar_by_bin,
 plot_caar_combined <- function(caar_by_bin,
                                output_png,
                                output_pdf,
+                               subtitle_text = "Combined view across all five Polymarket bins.",
                                colors = c("#808080", "#A9A9A9", "#E3170A", "#00008B", "#0000FF")) {
   if (nrow(caar_by_bin) == 0L) {
     return(invisible(NULL))
@@ -1134,7 +1183,7 @@ plot_caar_combined <- function(caar_by_bin,
     ggplot2::scale_y_continuous(labels = scales::percent_format(accuracy = 0.1)) +
     ggplot2::labs(
       title = "CAAR by Polymarket price bin",
-      subtitle = "Combined view across all five equal-width Polymarket bins.",
+      subtitle = subtitle_text,
       x = "Event day",
       y = "CAAR from t = -5",
       color = "Polymarket bin",
@@ -1227,6 +1276,31 @@ run_polymarket_event_study <- function(root = NULL,
   abnormal_returns <- estimated$abnormal_returns |>
     dplyr::semi_join(final_events |> dplyr::select(market_id), by = "market_id")
   
+  # ---------------------------------------------------------------------------
+  # Equal-frequency bin robustness test
+  # ---------------------------------------------------------------------------
+  final_events_eqfreq <- final_events |>
+    dplyr::select(-signal_bin, -signal_bin_id) |>
+    assign_signal_bins_equal_frequency()
+  
+  abnormal_returns_eqfreq <- abnormal_returns |>
+    dplyr::select(-signal_bin, -signal_bin_id) |>
+    dplyr::left_join(
+      final_events_eqfreq |>
+        dplyr::select(.data$market_id, .data$signal_bin, .data$signal_bin_id),
+      by = "market_id"
+    )
+  
+  caar_by_bin_eqfreq <- compute_caar_by_bin(abnormal_returns_eqfreq)
+  event_level_window_cars_eqfreq <- compute_event_level_window_cars(abnormal_returns_eqfreq)
+  
+  mean_test_results_eqfreq <- run_bin_mean_tests(event_level_window_cars_eqfreq)
+  
+  diff_results_eqfreq <- run_bin_difference_models(
+    event_level_window_cars_eqfreq,
+    reference_bin = "Q1"
+  )
+  
   caar_by_bin <- compute_caar_by_bin(abnormal_returns)
   event_level_window_cars <- compute_event_level_window_cars(abnormal_returns)
   mean_test_results <- run_bin_mean_tests(event_level_window_cars)
@@ -1265,9 +1339,14 @@ run_polymarket_event_study <- function(root = NULL,
   write_csv_jsonl(estimated$model_info, file.path(data_dir, "event_model_diagnostics"))
   write_csv_jsonl(abnormal_returns, file.path(data_dir, "abnormal_returns_event_window"))
   write_csv_jsonl(caar_by_bin, file.path(data_dir, "caar_by_bin"))
+  write_csv_jsonl(caar_by_bin_eqfreq, file.path(data_dir, "caar_by_bin_equal_frequency"))
   write_csv_jsonl(event_level_window_cars, file.path(data_dir, "event_level_window_cars"))
   write_csv_jsonl(mean_test_results, file.path(data_dir, "bin_mean_tests"))
   write_csv_jsonl(diff_results, file.path(data_dir, "bin_difference_models"))
+  write_csv_jsonl(mean_test_results_eqfreq, file.path(data_dir, "bin_mean_tests_equal_frequency"))
+  write_csv_jsonl(diff_results_eqfreq, file.path(data_dir, "bin_difference_models_equal_frequency"))
+  write_csv_jsonl(event_level_window_cars_eqfreq, file.path(data_dir, "event_level_window_cars_equal_frequency"))
+  write_csv_jsonl(abnormal_returns_eqfreq, file.path(data_dir, "abnormal_returns_event_window_equal_frequency"))
   
   # ---------------------------------------------------------------------------
   # Regression-style HTML tables
@@ -1276,30 +1355,62 @@ run_polymarket_event_study <- function(root = NULL,
   mean_gt <- make_gt_table(
     mean_table_df,
     title = "Abnormal returns by Polymarket price bin",
-    subtitle = paste(
-      "Cell entries are mean abnormal returns estimated with an event-study market model.",
-      "Rows are the five equal-width Polymarket bins. Standard errors are shown in parentheses.",
-      "Signals are selected at the last eligible pre-release close, using non-stale data by default."
-    )
+    subtitle = make_mean_table_subtitle("equal-width")
   )
+  
+  mean_table_df_eqfreq <- build_mean_test_table(mean_test_results_eqfreq)
+  mean_gt_eqfreq <- make_gt_table(
+    mean_table_df_eqfreq,
+    title = "Abnormal returns by Polymarket price bin (equal-frequency bins)",
+    subtitle = make_mean_table_subtitle("equal-frequency")
+  )
+  
+  diff_reference_bin <- unique(stats::na.omit(diff_results$reference_bin))
+  if (length(diff_reference_bin) != 1L) {
+    stop("Expected exactly one reference bin in diff_results.", call. = FALSE)
+  }
   
   diff_table_df <- build_difference_table(diff_results)
   diff_gt <- make_gt_table(
     diff_table_df,
     title = "Cross-bin differences in abnormal returns: OLS",
-    subtitle = paste(
-      "Cross-sectional OLS with one row per event. Dependent variable is the event-level abnormal return",
-      "for the stated horizon. The intercept is the 0.0-0.2 Polymarket bin and other coefficients are",
-      "differences relative to that low-signal benchmark. HC3 robust standard errors are in parentheses."
-    )
+    subtitle = make_difference_table_subtitle(diff_reference_bin)
+  )
+  
+  diff_reference_bin_eqfreq <- unique(stats::na.omit(diff_results_eqfreq$reference_bin))
+  if (length(diff_reference_bin_eqfreq) != 1L) {
+    stop("Expected exactly one reference bin in diff_results_eqfreq.", call. = FALSE)
+  }
+  
+  diff_table_df_eqfreq <- build_difference_table(diff_results_eqfreq)
+  diff_gt_eqfreq <- make_gt_table(
+    diff_table_df_eqfreq,
+    title = "Cross-bin differences in abnormal returns: OLS (equal-frequency bins)",
+    subtitle = make_difference_table_subtitle(diff_reference_bin_eqfreq)
   )
   
   gt::gtsave(mean_gt, file.path(table_dir, "event_study_bin_mean_table.html"))
+  gt::gtsave(
+    mean_gt_eqfreq,
+    file.path(table_dir, "event_study_bin_mean_table_equal_frequency.html")
+  )
   gt::gtsave(diff_gt, file.path(table_dir, "event_study_bin_difference_table.html"))
+  gt::gtsave(
+    diff_gt_eqfreq,
+    file.path(table_dir, "event_study_bin_difference_table_equal_frequency.html")
+  )
   
   # Also save the display-ready table data in CSV/JSONL for reproducibility.
   write_csv_jsonl(mean_table_df, file.path(data_dir, "event_study_bin_mean_table_display"))
   write_csv_jsonl(diff_table_df, file.path(data_dir, "event_study_bin_difference_table_display"))
+  write_csv_jsonl(
+    mean_table_df_eqfreq,
+    file.path(data_dir, "event_study_bin_mean_table_equal_frequency_display")
+  )
+  write_csv_jsonl(
+    diff_table_df_eqfreq,
+    file.path(data_dir, "event_study_bin_difference_table_equal_frequency_display")
+  )
   
   # ---------------------------------------------------------------------------
   # Figures
@@ -1315,12 +1426,34 @@ run_polymarket_event_study <- function(root = NULL,
     caar_by_bin = caar_by_bin,
     output_png = file.path(figure_dir, "caar_by_bin_combined.png"),
     output_pdf = file.path(figure_dir, "caar_by_bin_combined.pdf"),
+    subtitle_text = "Combined view across all five equal-width Polymarket bins.",
     colors = color_palette
   )
   
   plot_caar_individual_bins(
     caar_by_bin = caar_by_bin,
     output_dir = file.path(figure_dir, "individual_bins"),
+    colors = color_palette
+  )
+  
+  plot_caar_faceted(
+    caar_by_bin = caar_by_bin_eqfreq,
+    output_png = file.path(figure_dir, "caar_by_bin_faceted_equal_frequency.png"),
+    output_pdf = file.path(figure_dir, "caar_by_bin_faceted_equal_frequency.pdf"),
+    colors = color_palette
+  )
+  
+  plot_caar_combined(
+    caar_by_bin = caar_by_bin_eqfreq,
+    output_png = file.path(figure_dir, "caar_by_bin_combined_equal_frequency.png"),
+    output_pdf = file.path(figure_dir, "caar_by_bin_combined_equal_frequency.pdf"),
+    subtitle_text = "Combined view across all five equal-frequency Polymarket bins.",
+    colors = color_palette
+  )
+  
+  plot_caar_individual_bins(
+    caar_by_bin = caar_by_bin_eqfreq,
+    output_dir = file.path(figure_dir, "individual_bins_equal_frequency"),
     colors = color_palette
   )
   
@@ -1339,7 +1472,11 @@ run_polymarket_event_study <- function(root = NULL,
     caar_by_bin = caar_by_bin,
     event_level_window_cars = event_level_window_cars,
     mean_test_results = mean_test_results,
-    diff_results = diff_results
+    diff_results = diff_results,
+    caar_by_bin_eqfreq = caar_by_bin_eqfreq,
+    event_level_window_cars_eqfreq = event_level_window_cars_eqfreq,
+    mean_test_results_eqfreq = mean_test_results_eqfreq,
+    diff_results_eqfreq = diff_results_eqfreq
   ))
 }
 

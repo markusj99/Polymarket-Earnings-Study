@@ -10,14 +10,17 @@ Where it lives
 Place this file in:
   Polymarket-Earnings-Study/run_all.py
 
-Expected script location
-------------------------
-All other Python scripts are expected in:
+Expected script locations
+-------------------------
+Most pipeline scripts are expected in:
   Polymarket-Earnings-Study/python/
+
+Final statistics runner is expected at:
+  Polymarket-Earnings-Study/run_statistics.py
 
 Behavior
 --------
-- Runs the pipeline scripts one-by-one (00 -> 07) via subprocess.
+- Runs the pipeline scripts one-by-one (00 -> 08) via subprocess.
 - Uses sys.executable to ensure the same interpreter/venv is used.
 - Ensures scripts run with cwd set to the project root so relative paths work.
 
@@ -40,6 +43,9 @@ Different scripts in this repo expect the app key in different ways:
    - In your logs it failed with rc=2 when run_all passed flag-only '--app-key'.
    - In practice, this step typically needs the *value* form as well.
    - Therefore we pass '--app-key <value>' for step 05.
+
+5) Step 08 (run_statistics.py):
+   - No app-key args are passed by default.
 
 Therefore, when --app-key is provided to run_all.py:
 - It is always injected into the environment as EIKON_APP_KEY and APP_KEY.
@@ -81,9 +87,9 @@ class ScriptSpec:
     Attributes
     ----------
     code : str
-        Human-friendly step code (e.g., "00", "01").
-    filename : str
-        Script filename under Polymarket-Earnings-Study/python/
+        Human-friendly step code (e.g., "00", "01", "08").
+    relative_path : str
+        Script path relative to Polymarket-Earnings-Study/
     needs_app_key : bool
         If True, this step is skipped unless --app-key is provided to run_all.py.
     app_key_cli_mode : str
@@ -93,27 +99,30 @@ class ScriptSpec:
           - "value": pass '--app-key <value>' (only if a script truly supports it)
     """
     code: str
-    filename: str
+    relative_path: str
     needs_app_key: bool = False
     app_key_cli_mode: str = "none"  # "none" | "flag" | "value"
 
 
 PIPELINE: List[ScriptSpec] = [
     # 00/01: DO NOT accept '--app-key' on CLI; use env injection only.
-    ScriptSpec("00", "00_fetch_closed_markets.py", needs_app_key=True, app_key_cli_mode="none"),
-    ScriptSpec("01", "01_fetch_poly_prices.py", needs_app_key=True, app_key_cli_mode="none"),
+    ScriptSpec("00", "python/00_fetch_closed_markets.py", needs_app_key=True, app_key_cli_mode="none"),
+    ScriptSpec("01", "python/01_fetch_poly_prices.py", needs_app_key=True, app_key_cli_mode="none"),
 
     # 02-03: require '--app-key' flag-only to signal "read from env".
-    ScriptSpec("02", "02_check_consistency.py", needs_app_key=False, app_key_cli_mode="flag"),
-    ScriptSpec("03", "03_fetch_corp_info.py", needs_app_key=False, app_key_cli_mode="flag"),
+    ScriptSpec("02", "python/02_check_consistency.py", needs_app_key=False, app_key_cli_mode="flag"),
+    ScriptSpec("03", "python/03_fetch_corp_info.py", needs_app_key=False, app_key_cli_mode="flag"),
 
     # 04-05: require '--app-key <value>' (04 explicitly does; 05 failed with flag-only).
-    ScriptSpec("04", "04_fetch_stock_prices.py", needs_app_key=False, app_key_cli_mode="value"),
-    ScriptSpec("05", "05_heckman_selection_fetch_universe.py", needs_app_key=False, app_key_cli_mode="value"),
+    ScriptSpec("04", "python/04_fetch_stock_prices.py", needs_app_key=False, app_key_cli_mode="value"),
+    ScriptSpec("05", "python/05_heckman_selection_fetch_universe.py", needs_app_key=False, app_key_cli_mode="value"),
 
     # 06/07: do not pass app key args by default (they should rely on produced files).
-    ScriptSpec("06", "06_brier_scores.py", needs_app_key=False, app_key_cli_mode="none"),
-    ScriptSpec("07", "07_create_dataset.py", needs_app_key=False, app_key_cli_mode="none"),
+    ScriptSpec("06", "python/06_brier_scores.py", needs_app_key=False, app_key_cli_mode="none"),
+    ScriptSpec("07", "python/07_create_dataset.py", needs_app_key=False, app_key_cli_mode="none"),
+
+    # 08: final stats runner at project root.
+    ScriptSpec("08", "run_statistics.py", needs_app_key=False, app_key_cli_mode="none"),
 ]
 
 
@@ -126,9 +135,9 @@ def _project_root() -> Path:
     return Path(__file__).resolve().parent
 
 
-def _scripts_dir() -> Path:
-    """Return Polymarket-Earnings-Study/python/."""
-    return _project_root() / "python"
+def _resolve_script_path(spec: ScriptSpec) -> Path:
+    """Return the absolute path for a pipeline step."""
+    return _project_root() / Path(spec.relative_path)
 
 
 def _now_utc_compact() -> str:
@@ -214,11 +223,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = build_arg_parser().parse_args(argv)
 
     root = _project_root()
-    py_dir = _scripts_dir()
 
     print(f"[run_all] {_now_utc_compact()}  Starting pipeline")
     print(f"[run_all] Project root: {root}")
-    print(f"[run_all] Scripts dir : {py_dir}")
+    print("[run_all] Pipeline steps are resolved relative to the project root.")
 
     if args.app_key is None:
         print("[run_all] NOTE: --app-key not provided. Will SKIP steps that require it.")
@@ -238,38 +246,43 @@ def main(argv: Optional[List[str]] = None) -> int:
     n_total = len(PIPELINE)
 
     for i, spec in enumerate(PIPELINE, start=1):
-        script_path = py_dir / spec.filename
+        script_path = _resolve_script_path(spec)
 
         # Missing file => skip (but record it)
         if not script_path.exists():
-            print(f"[run_all] ({i}/{n_total}) MISSING {spec.code} {spec.filename} (expected at {script_path})")
-            results.append({"code": spec.code, "name": spec.filename, "status": "MISSING", "rc": None, "seconds": 0.0})
+            print(
+                f"[run_all] ({i}/{n_total}) MISSING {spec.code} {spec.relative_path} "
+                f"(expected at {script_path})"
+            )
+            results.append(
+                {"code": spec.code, "name": spec.relative_path, "status": "MISSING", "rc": None, "seconds": 0.0}
+            )
             continue
 
         # Gate: steps that require --app-key
         if spec.needs_app_key and not args.app_key:
-            print(f"[run_all] ({i}/{n_total}) SKIP    {spec.code} {spec.filename} (needs --app-key)")
+            print(f"[run_all] ({i}/{n_total}) SKIP    {spec.code} {spec.relative_path} (needs --app-key)")
             results.append(
-                {"code": spec.code, "name": spec.filename, "status": "SKIPPED_NO_APP_KEY", "rc": None, "seconds": 0.0}
+                {"code": spec.code, "name": spec.relative_path, "status": "SKIPPED_NO_APP_KEY", "rc": None, "seconds": 0.0}
             )
             continue
 
         # Build args for subprocess (per-script mode)
         sub_args: List[str] = _build_script_args(spec, args.app_key)
 
-        print(f"[run_all] ({i}/{n_total}) RUN     {spec.code} {spec.filename}")
+        print(f"[run_all] ({i}/{n_total}) RUN     {spec.code} {spec.relative_path}")
 
         if args.dry_run:
-            results.append({"code": spec.code, "name": spec.filename, "status": "DRY_RUN", "rc": 0, "seconds": 0.0})
+            results.append({"code": spec.code, "name": spec.relative_path, "status": "DRY_RUN", "rc": 0, "seconds": 0.0})
             continue
 
         rc, dt = _run_subprocess(script_path, sub_args, env)
         if rc == 0:
-            print(f"[run_all] ({i}/{n_total}) OK      {spec.code} {spec.filename}  ({_fmt_secs(dt)})")
-            results.append({"code": spec.code, "name": spec.filename, "status": "OK", "rc": rc, "seconds": dt})
+            print(f"[run_all] ({i}/{n_total}) OK      {spec.code} {spec.relative_path}  ({_fmt_secs(dt)})")
+            results.append({"code": spec.code, "name": spec.relative_path, "status": "OK", "rc": rc, "seconds": dt})
         else:
-            print(f"[run_all] ({i}/{n_total}) FAIL    {spec.code} {spec.filename}  (rc={rc}, {_fmt_secs(dt)})")
-            results.append({"code": spec.code, "name": spec.filename, "status": "FAIL", "rc": rc, "seconds": dt})
+            print(f"[run_all] ({i}/{n_total}) FAIL    {spec.code} {spec.relative_path}  (rc={rc}, {_fmt_secs(dt)})")
+            results.append({"code": spec.code, "name": spec.relative_path, "status": "FAIL", "rc": rc, "seconds": dt})
             if args.stop_on_failure:
                 print("[run_all] stop-on-failure enabled -> exiting now.")
                 break

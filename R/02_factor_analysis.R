@@ -689,6 +689,40 @@ run_factor_analysis <- function(
   )
   
   main_keep <- main_df[, c("market_id", "horizon", xvars_raw)]
+
+    # ---------------------------------------------------------------------------
+  # Repeated-market variables at the firm level
+  # Replace "ticker" with your actual firm identifier column if needed
+  # ---------------------------------------------------------------------------
+  firm_id_col <- "ticker"
+
+  if (!firm_id_col %in% names(main_df)) {
+    stop(
+      "Missing firm identifier column in complete_dataset_long.csv: ",
+      firm_id_col,
+      call. = FALSE
+    )
+  }
+
+  main_df$firm_id <- as.character(main_df[[firm_id_col]])
+  main_df$earnings_release_datetime <- parse_datetime_utc(main_df$earnings_release_datetime)
+
+  # Use the event ordering variable that best reflects the earnings event sequence.
+  market_repeat_df <- main_df %>%
+    group_by(market_id) %>%
+    summarise(
+      firm_id = first_non_missing(firm_id),
+      market_order_time = first_non_missing(earnings_release_datetime),
+      .groups = "drop"
+    ) %>%
+    arrange(firm_id, market_order_time, market_id) %>%
+    group_by(firm_id) %>%
+    mutate(
+      firm_market_number = dplyr::row_number(),
+      prior_markets_for_firm = firm_market_number - 1L,
+      post_first_market = as.integer(firm_market_number > 1L)
+    ) %>%
+    ungroup()
   
   brier_keep_cols <- c("market_id", "horizon", "loss_polymarket")
   optional_brier_cols <- c("usable_polymarket", "status")
@@ -773,6 +807,19 @@ run_factor_analysis <- function(
       open_time_days = open_time_days
     )
 
+    market_df <- market_df %>%
+    left_join(
+      market_repeat_df %>%
+        select(
+          market_id,
+          firm_id,
+          firm_market_number,
+          prior_markets_for_firm,
+          post_first_market
+        ),
+      by = "market_id"
+    )
+
   if (isTRUE(winsorize)) {
   winsor_vars <- c(
     "log_volume",
@@ -812,7 +859,8 @@ run_factor_analysis <- function(
     "analysts",
     "log_turnover",
     "log_volatility_6m",
-    "open_time_days"
+    "open_time_days".
+    "post_first_market"
   )
   
   full_vars <- c(
@@ -824,7 +872,8 @@ run_factor_analysis <- function(
     "analysts",
     "log_turnover",
     "log_volatility_6m",
-    "open_time_days"
+    "open_time_days",
+    "post_first_market"
   )
   
   coef_map <- c(
@@ -837,7 +886,8 @@ run_factor_analysis <- function(
     "analysts"               = "Analysts covering",
     "log_turnover"           = "log(6m avg. daily turnover + 1)",
     "log_volatility_6m"      = "log(6m stock volatility)",
-    "open_time_days"         = "Market open-to-resolution (days)"
+    "open_time_days"         = "Market open-to-resolution (days)",
+    "post_first_market"     = "After first firm market"
   )
   
   # ------------------------------ #
@@ -1501,7 +1551,8 @@ run_factor_analysis <- function(
           "Analysts covering",
           "log(6m avg. daily turnover + 1)",
           "log(6m stock volatility)",
-          "Market open-to-resolution (days)"
+          "Market open-to-resolution (days)",
+          "After first firm market"
         ))
       ),
       model_plot = factor(

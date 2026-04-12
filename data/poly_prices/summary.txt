@@ -1,8 +1,8 @@
 Polymarket Earnings — Historical Prices Fetch Summary
 ========================================================
-Run ID:              20260327T154841Z
-Generated (UTC):     2026-03-27 15:55:55Z
-Elapsed seconds:     434.093
+Run ID:              20260412T131653Z
+Generated (UTC):     2026-04-12 13:23:49Z
+Elapsed seconds:     415.88
 
 Mode
 - TEST:              False
@@ -10,17 +10,17 @@ Mode
 Inputs
 - Markets JSONL:     C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.jsonl
 - Corporate JSONL:   C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\corporate_info\corporate_info_by_market.jsonl
-- Markets in file:   639
-- Markets processed: 639
-- Corporate rows:    639
+- Markets in file:   695
+- Markets processed: 695
+- Corporate rows:    695
 
 Snapshot anchor window (based on earnings_release_datetime)
 - Earliest anchor (UTC): 2025-06-05 20:15:05Z
-- Latest anchor (UTC):   2026-03-05 21:15:00Z
+- Latest anchor (UTC):   2026-04-09 20:05:00Z
 
 Fetched history window (based on observed first/last fetched price timestamps)
 - Earliest first price (UTC): 2025-06-03 21:50:06Z
-- Latest last price (UTC):    2026-03-06 00:25:25Z
+- Latest last price (UTC):    2026-04-09 23:50:48Z
 
 Outputs
 - Historical prices JSONL: C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\poly_prices.jsonl
@@ -31,48 +31,48 @@ Outputs
 - Summary TXT:             C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\summary.txt
 
 Results
-- Successful markets written: 632
+- Successful markets written: 688
 - Failed markets:             7
 
 Corporate info joins
-- market_id: 632
+- market_id: 688
 
 Failure reasons (hard failures only)
-- missing_or_invalid_earnings_release_datetime: 6
-- no_snapshot_prices_found: 1
+- missing_or_invalid_earnings_release_datetime: 5
+- no_snapshot_prices_found: 2
 
 Quality stats (not failures)
-- Markets with partial missing snapshots: 630
-- Markets with YES+NO complement violations: 4
+- Markets with partial missing snapshots: 686
+- Markets with YES+NO complement violations: 5
 - YES+NO complement tolerance: 0.05
 
 Missing snapshot counts (not failures)
 YES missing:
-- 4w: 630
-- 3w: 614
-- 2w: 516
-- 1w: 201
-- 6d: 125
-- 5d: 73
-- 4d: 39
-- 3d: 18
-- 2d: 6
-- 1d: 1
-- 12h: 0
+- 4w: 686
+- 3w: 669
+- 2w: 552
+- 1w: 211
+- 6d: 134
+- 5d: 79
+- 4d: 44
+- 3d: 23
+- 2d: 11
+- 1d: 6
+- 12h: 5
 - 6h: 0
 
 NO missing:
-- 4w: 630
-- 3w: 614
-- 2w: 516
-- 1w: 201
-- 6d: 125
-- 5d: 73
-- 4d: 39
-- 3d: 18
-- 2d: 6
-- 1d: 1
-- 12h: 0
+- 4w: 686
+- 3w: 669
+- 2w: 552
+- 1w: 211
+- 6d: 134
+- 5d: 79
+- 4d: 44
+- 3d: 23
+- 2d: 11
+- 1d: 6
+- 12h: 5
 - 6h: 0
 
 Config (selected)

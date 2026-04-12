@@ -1,14 +1,14 @@
 Polymarket Corporate Earnings — Stock Prices Fetch Summary (PER-MARKET, FAST MODE)
-Generated at (UTC): 2026-03-06T13:16:54.433748Z
+Generated at (UTC): 2026-04-12T13:13:28.983725Z
 
 Input:  C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\corporate_info\corporate_info_by_market.jsonl
 Output: C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\stock_prices
 
-Input rows:       639
-Markets parsed:   639
-Unique RICs seen: 418
-RICs in cache:    417 (includes benchmark if fetched)
-Output rows:      113023
+Input rows:       695
+Markets parsed:   695
+Unique RICs seen: 422
+RICs in cache:    422 (includes benchmark if fetched)
+Output rows:      123388
 
 Per-market calendar window: pre_days=250, post_days=10
 Bucket mode: month
@@ -18,10 +18,10 @@ Throttle after batch: 0.0s
 Benchmark (S&P500):
   RIC:   .SPX
   Start: 2025-01-01
-  End:   2026-03-06 (today at runtime)
+  End:   2026-04-12 (today at runtime)
 
 WINDOW / MARKET ISSUES
-- RIC FRGE.N market_id=653003: NO_TS_DATA
+- RIC EB.N market_id=658508: NO_TS_DATA
 - RIC WMT.N market_id=675511: empty window after filtering [2025-03-15..2025-11-30]
-- RIC MOG.A market_id=1160450: NO_TS_DATA
+- RIC EB.N market_id=1387100: NO_TS_DATA
 

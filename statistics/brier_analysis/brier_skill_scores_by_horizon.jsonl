@@ -1,9 +1,0 @@
-{"horizon":"1w","horizon_seconds":604800,"n":431,"BS_polymarket":0.1684,"BS_dice":0.25,"BS_hist":0.2012,"BSS_vs_dice":0.3265,"BSS_vs_hist":0.163}
-{"horizon":"6d","horizon_seconds":518400,"n":507,"BS_polymarket":0.1677,"BS_dice":0.25,"BS_hist":0.1944,"BSS_vs_dice":0.329,"BSS_vs_hist":0.137}
-{"horizon":"5d","horizon_seconds":432000,"n":559,"BS_polymarket":0.1611,"BS_dice":0.25,"BS_hist":0.1957,"BSS_vs_dice":0.3554,"BSS_vs_hist":0.1766}
-{"horizon":"4d","horizon_seconds":345600,"n":593,"BS_polymarket":0.1582,"BS_dice":0.25,"BS_hist":0.196,"BSS_vs_dice":0.3674,"BSS_vs_hist":0.193}
-{"horizon":"3d","horizon_seconds":259200,"n":614,"BS_polymarket":0.1592,"BS_dice":0.25,"BS_hist":0.1958,"BSS_vs_dice":0.3634,"BSS_vs_hist":0.187}
-{"horizon":"2d","horizon_seconds":172800,"n":626,"BS_polymarket":0.1572,"BS_dice":0.25,"BS_hist":0.196,"BSS_vs_dice":0.3713,"BSS_vs_hist":0.1981}
-{"horizon":"1d","horizon_seconds":86400,"n":631,"BS_polymarket":0.1565,"BS_dice":0.25,"BS_hist":0.1975,"BSS_vs_dice":0.3739,"BSS_vs_hist":0.2076}
-{"horizon":"12h","horizon_seconds":43200,"n":632,"BS_polymarket":0.1535,"BS_dice":0.25,"BS_hist":0.1966,"BSS_vs_dice":0.3859,"BSS_vs_hist":0.2192}
-{"horizon":"6h","horizon_seconds":21600,"n":632,"BS_polymarket":0.1552,"BS_dice":0.25,"BS_hist":0.1964,"BSS_vs_dice":0.3792,"BSS_vs_hist":0.21}

@@ -1,10 +1,10 @@
 Polymarket Earnings Resolved Markets — Summary
 ====================================================
-Generated (UTC): 2026-03-06 12:50:08Z
+Generated (UTC): 2026-04-12 10:39:40Z
 Mode: incremental
 write_csv: True
 Existing loaded: 0 (parse_errors=0)
-New markets added this run: 639
+New markets added this run: 695
 
 Outputs
 - Markets JSONL:     C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.jsonl
@@ -14,35 +14,35 @@ Outputs
 
 Resolution time range (based on endDate)
 - Earliest resolved: 2025-06-05 00:00:00Z
-- Latest resolved:   2026-03-05 22:00:00Z
+- Latest resolved:   2026-04-09 21:00:00Z
 
 Counts (overall output)
-- Total resolved markets saved: 639
-- Total Yes: 468
-- Total No:  171
+- Total resolved markets saved: 695
+- Total Yes: 505
+- Total No:  190
 
 This run (scan/fetch/build)
-- Scanned closed earnings-tag markets: 644
+- Scanned closed earnings-tag markets: 700
 - Skipped already-known markets:       0
-- Candidates after filter:             639
-- Details fetched OK:                  639
+- Candidates after filter:             695
+- Details fetched OK:                  695
 - Detail errors:                       0
-- New resolved markets built:          639 (Yes=468, No=171)
+- New resolved markets built:          695 (Yes=505, No=190)
 - Discarded markets logged:            5
 
 Discard reasons (this run)
 - no_ticker_detected: 5
 
 volumeNum stats (overall output)
-- count:  635
-- min:    948.9809319999999
+- count:  641
+- min:    1336.252219
 - max:    995129.929459
-- mean:   26944.054593064564
-- median: 13380.224797
+- mean:   27179.1677620234
+- median: 13533.491876
 
 Run metadata
 - Cancelled: False (stage=finalize)
-- Elapsed seconds: 958.821
+- Elapsed seconds: 459.193
 - Page limit: 200
 - Max workers: 15
 - END_DATE_MIN: None

@@ -209,10 +209,27 @@ class FatalEikonNetworkError(RuntimeError):
     """Raised when Eikon repeatedly returns 500 'Network Error' and fail-fast is enabled."""
 
 
-# Eikon RICs can be case-sensitive. Berkshire Hathaway Class A is BRKa in Eikon.
+# There seems to be a problem with some of the earnings releases. The script fails to fetch all the earnings even though they exist in LSEG.
+# It also seems that even after adding the correct RIC, it still doesn't find the correct earnings release.
+# I constructed another script to fetch the missing releases, however, it does require some manual work.
 TICKER_TO_RIC_OVERRIDES: Dict[str, str] = {
     "BRK.A": "BRKa",
-    # Optional (if you ever see it): "BRK.B": "BRKb",
+    "MOG.A": "MOGa",
+    "FRGE": "FRGE.N^C26",
+    "BYND": "BYND.OQ",
+    "MRX": "MRX.OQ",
+    "STUB": "STUB.N",
+    "GPRO": "GPRO.OQ",
+    "BIRD": "BIRD.OQ",
+    "GAMB": "GAMB.OQ",
+    "PXLW": "PXLW.OQ",
+    "BZFD": "BZFD.OQ",
+    "PLBY": "PLBY.OQ",
+    "GETY": "GETY.N",
+    "WB": "WB.OQ",
+    "PDD": "PDD.OQ",
+    "BABA": "BABA.N",
+    "NMAX": "NMAX.N"
 }
 
 
@@ -637,24 +654,35 @@ def _looks_like_eikon_network_error(exc: Exception) -> bool:
     s = str(exc)
     return ("Error code 500" in s and "Network Error" in s) or ('"message":"Network Error"' in s)
 
-
 def eikon_retry_get_data(
-    instruments: List[str],
-    fields: List[str],
-    parameters: Dict[str, Any],
-    *,
-    retries: int,
-    fail_fast: bool,
-) -> Tuple[Optional[Any], Optional[Any]]:
-    last_exc: Optional[Exception] = None
+    instruments, fields, parameters, *, retries, fail_fast
+):
+    last_exc = None
     network_error_seen = False
 
     for attempt in range(retries):
         try:
-            df, err = ek.get_data(instruments, fields, parameters=parameters)  # type: ignore
+            df, err = ek.get_data(instruments, fields, parameters=parameters)
+            if err is not None:
+                LOG.error(
+                    "ek.get_data returned err | attempt=%d | n=%d | sample=%s | err=%r",
+                    attempt + 1,
+                    len(instruments),
+                    instruments[:10],
+                    err,
+                )
             return df, err
         except Exception as exc:
             last_exc = exc
+            LOG.exception(
+                "ek.get_data exception | attempt=%d/%d | n=%d | sample=%s | fields=%s | params=%s",
+                attempt + 1,
+                retries,
+                len(instruments),
+                instruments[:10],
+                fields,
+                parameters,
+            )
             if _looks_like_eikon_network_error(exc):
                 network_error_seen = True
             time.sleep(EIKON_RETRY_BASE_SLEEP * (2 ** attempt))
@@ -666,7 +694,6 @@ def eikon_retry_get_data(
         )
 
     return None, last_exc
-
 
 def _merge_err(a: Any, b: Any) -> Any:
     if a is None:
@@ -754,23 +781,23 @@ def chunked(xs: List[str], n: int) -> Iterable[List[str]]:
 # Robust symbology (batched + bisect on failure)
 # =========================
 
-def _safe_get_symbology_df(symbols: List[str], *, best_match: bool) -> Optional[Any]:
-    """
-    Robust ek.get_symbology:
-    - Try the batch.
-    - If it raises, bisect and salvage.
-    """
+def _safe_get_symbology_df(symbols, *, best_match):
     if not symbols:
         return None
 
     try:
-        return ek.get_symbology(  # type: ignore
+        return ek.get_symbology(
             symbols,
             from_symbol_type="ticker",
             to_symbol_type="RIC",
             best_match=best_match,
         )
     except Exception:
+        LOG.exception(
+            "ek.get_symbology exception | n=%d | sample=%s",
+            len(symbols),
+            symbols[:10],
+        )
         if len(symbols) <= 1:
             return None
         mid = len(symbols) // 2
@@ -1979,6 +2006,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 2
     except Exception as exc:
         LOG.error("Fatal error: %s", exc)
+        return 2
+    except Exception:
+        LOG.exception("Fatal error")
         return 2
 
     printable = (

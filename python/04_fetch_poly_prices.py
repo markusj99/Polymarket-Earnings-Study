@@ -256,6 +256,8 @@ def write_csv_outputs(
         row["missing_yes"] = _to_json_str(r.get("missing_yes"))
         row["missing_no"] = _to_json_str(r.get("missing_no"))
 
+        row["snapshot_anchor_source"] = r.get("snapshot_anchor_source")
+
         prices_yes = r.get("prices_yes") or {}
         prices_no = r.get("prices_no") or {}
         targets = r.get("snapshot_targets_ts") or {}
@@ -297,6 +299,7 @@ def write_csv_outputs(
             "observed_end_ts": r.get("observed_end_ts"),
             "observed_end_utc": r.get("observed_end_utc"),
             "complement_tolerance": r.get("complement_tolerance"),
+            "snapshot_anchor_source": r.get("snapshot_anchor_source"),
         }
 
         for lab, off in SNAPSHOTS:
@@ -530,6 +533,32 @@ def parse_json_list_maybe(v: Any) -> Optional[List[Any]]:
                 return None
     return None
 
+def resolve_anchor_dt(
+    corp_row: Optional[Dict[str, Any]],
+    input_market: Dict[str, Any],
+    gamma_detail: Optional[Dict[str, Any]] = None,
+) -> Tuple[Optional[datetime], Optional[str], Optional[str]]:
+    """
+    Resolve the snapshot anchor datetime.
+
+    Priority:
+      1) corporate_info.earnings_release_datetime
+      2) input market endDate
+      3) gamma detail endDate
+    """
+    candidates = [
+        ("corporate_info.earnings_release_datetime", (corp_row or {}).get("earnings_release_datetime")),
+        ("input_market.endDate", input_market.get("endDate")),
+        ("gamma_detail.endDate", (gamma_detail or {}).get("endDate")),
+    ]
+
+    for source, raw in candidates:
+        dt = parse_iso_dt(raw)
+        if dt is not None:
+            return dt, raw, source
+
+    return None, None, None
+
 
 def get_yes_no_token_ids(detail: Dict[str, Any]) -> Tuple[Optional[str], Optional[str]]:
     """
@@ -683,25 +712,36 @@ def fetch_prices_history_token(
     """
     Fetch price history for a CLOB token.
 
-    Strategy:
-      1) Try range query (startTs/endTs) at fidelity_min, then fallback fidelity_closed
-      2) Try interval=max at fidelity_min, then fallback fidelity_closed
-      3) Try range without fidelity
-      4) Try interval=max without fidelity
-
-    Returns:
-      - (history_list, None) on success (history may be empty list)
-      - (None, error_dict) on hard failure
+    Try several variants, then choose the non-empty history whose first point is earliest.
+    If tied, prefer the one with more points.
     """
     attempts: List[Dict[str, Any]] = []
+    candidates: List[Dict[str, Any]] = []
 
     def try_call(params: Dict[str, Any], tag: str) -> Tuple[Optional[List[Dict[str, Any]]], Optional[Dict[str, Any]]]:
         payload, err = clob_get(cfg, "/prices-history", params=params)
         rec: Dict[str, Any] = {"tag": tag, "params": params, "err": err}
+
         if isinstance(payload, dict) and isinstance(payload.get("history"), list):
-            rec["history_len"] = len(payload["history"])
+            hist = payload["history"]
+            rec["history_len"] = len(hist)
             attempts.append(rec)
-            return payload["history"], None
+
+            if hist:
+                ts_list, _ = build_series(hist)
+                if ts_list:
+                    candidates.append(
+                        {
+                            "tag": tag,
+                            "params": params,
+                            "hist": hist,
+                            "first_ts": ts_list[0],
+                            "last_ts": ts_list[-1],
+                            "count": len(ts_list),
+                        }
+                    )
+            return hist, None
+
         rec["payload_type"] = type(payload).__name__ if payload is not None else None
         attempts.append(rec)
         return None, err or {"error": "unexpected_payload", "payload_preview": _preview_payload(payload, 500)}
@@ -714,39 +754,45 @@ def fetch_prices_history_token(
 
     if start_ts is not None and end_ts is not None:
         for fid in fids:
-            hist, e = try_call(
+            _, e = try_call(
                 {"market": token_id, "startTs": int(start_ts), "endTs": int(end_ts), "fidelity": int(fid)},
                 f"range_fid_{fid}",
             )
             if e is not None:
                 last_http_err = e
-                continue
-            if hist is not None and len(hist) > 0:
-                return hist, None
 
     for fid in fids:
-        hist, e = try_call({"market": token_id, "interval": "max", "fidelity": int(fid)}, f"max_fid_{fid}")
+        _, e = try_call({"market": token_id, "interval": "all", "fidelity": int(fid)}, f"all_fid_{fid}")
         if e is not None:
             last_http_err = e
-            continue
-        if hist is not None and len(hist) > 0:
-            return hist, None
+
+    for fid in fids:
+        _, e = try_call({"market": token_id, "interval": "max", "fidelity": int(fid)}, f"max_fid_{fid}")
+        if e is not None:
+            last_http_err = e
 
     if start_ts is not None and end_ts is not None:
-        hist3, e3 = try_call({"market": token_id, "startTs": int(start_ts), "endTs": int(end_ts)}, "range_no_fid")
-        if e3 is None and hist3 is not None and len(hist3) > 0:
-            return hist3, None
+        _, e = try_call({"market": token_id, "startTs": int(start_ts), "endTs": int(end_ts)}, "range_no_fid")
+        if e is not None:
+            last_http_err = e
 
-    hist4, e4 = try_call({"market": token_id, "interval": "max"}, "max_no_fid")
-    if e4 is None and hist4 is not None and len(hist4) > 0:
-        return hist4, None
+    _, e = try_call({"market": token_id, "interval": "all"}, "all_no_fid")
+    if e is not None:
+        last_http_err = e
+
+    _, e = try_call({"market": token_id, "interval": "max"}, "max_no_fid")
+    if e is not None:
+        last_http_err = e
+
+    if candidates:
+        candidates.sort(key=lambda x: (x["first_ts"], -x["count"]))
+        return candidates[0]["hist"], None
 
     for a in attempts:
         if a.get("err") is None and isinstance(a.get("history_len"), int):
             return [], None
 
     return None, {"last_http_error": last_http_err, "attempts": attempts}
-
 
 # -------------------------
 # Worker
@@ -785,21 +831,7 @@ def process_market(
             "reason": "missing_corporate_info_match",
         }
 
-    earnings_release_raw = corp_row.get("earnings_release_datetime")
-    earnings_release_dt = parse_iso_dt(earnings_release_raw)
-    if earnings_release_dt is None:
-        return None, {
-            "run_id": run_id,
-            "market_id": mid,
-            "slug": slug,
-            "reason": "missing_or_invalid_earnings_release_datetime",
-            "earnings_release_datetime_raw": earnings_release_raw,
-            "corporate_info_join_method": join_method,
-        }
-
-    anchor_end_ts = int(earnings_release_dt.timestamp())
-
-    # 1) Gamma market detail (required for token ids)
+    # 1) Gamma market detail (required for token ids, and can also provide endDate fallback)
     detail, derr = gamma_get(cfg, f"/markets/{mid}")
     if derr or not isinstance(detail, dict):
         return None, {
@@ -808,8 +840,18 @@ def process_market(
             "slug": slug,
             "reason": "gamma_market_detail_failed",
             "error": derr,
-            "earnings_release_datetime_raw": earnings_release_raw,
-            "earnings_release_ts": anchor_end_ts,
+            "corporate_info_join_method": join_method,
+        }
+
+    earnings_release_dt, earnings_release_raw, anchor_source = resolve_anchor_dt(corp_row, m, detail)
+    if earnings_release_dt is None:
+        return None, {
+            "run_id": run_id,
+            "market_id": mid,
+            "slug": slug,
+            "reason": "missing_or_invalid_earnings_release_datetime",
+            "earnings_release_datetime_raw": (corp_row or {}).get("earnings_release_datetime"),
+            "corporate_info_join_method": join_method,
         }
 
     enable_ob = detail.get("enableOrderBook")
@@ -957,6 +999,7 @@ def process_market(
             "endTs": end_ts,
             "earnings_release_ts": anchor_end_ts,
             "observed_end_ts": observed_end_ts,
+            "snapshot_anchor_source": anchor_source,
         }
 
     # Complement diagnostics
@@ -982,7 +1025,7 @@ def process_market(
         "generated_utc": fmt_dt_utc(datetime.now(timezone.utc)),
 
         # Earnings anchor metadata
-        "snapshot_anchor_type": "earnings_release_datetime",
+        "snapshot_anchor_type": "resolved_anchor_datetime",
         "earnings_release_datetime_raw": earnings_release_raw,
         "earnings_release_ts": anchor_end_ts,
         "earnings_release_utc": fmt_dt_utc(earnings_release_dt),
@@ -1016,6 +1059,7 @@ def process_market(
         # Quality checks
         "complement_tolerance": cfg.complement_tolerance,
         "complement_violations": complement_violations,
+        "snapshot_anchor_source": anchor_source,
     }
 
     if cfg.include_local_debug_fields:
