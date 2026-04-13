@@ -1,0 +1,5 @@
+{"step":"Unique events in dataset_long","n":695}
+{"step":"Events with matching daily price history","n":692}
+{"step":"Events with a derived purchase date and event trading date","n":686}
+{"step":"Events with a non-stale same-day Polymarket signal by the purchase cutoff","n":678}
+{"step":"Events with sufficient estimation data and a complete [-5, +5] event window","n":639}

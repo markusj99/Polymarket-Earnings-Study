@@ -1,0 +1,104 @@
+=============== HECKMAN UNIVERSE REPORT ===============
+Generated at (UTC): 2026-04-12T14:55:39Z
+=======================================================
+
+Observed window from markets.jsonl
+----------------------------------
+Markets JSONL:             C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\markets\markets.jsonl
+Excluded outlier start:    2025-06-03
+Markets total / used:      695 / 694
+Observed start / end:      2025-09-15 .. 2026-04-09
+As-of rule:               event_date - 2 days
+
+SCREEN stats (separate MIC passes)
+----------------------------------
+Requested exchange MICs:     XNYS, XASE, XNAS, XNGS, XNMS, XNCM
+Expanded exchange MICs:      XNYS, XASE, XNAS, XNGS, XNMS, XNCM
+Page size per MIC:           1000
+Max pages per MIC:           25
+Max instruments per MIC:     25000
+Raw unique RICs from screen: 6514
+  - US equities on XNYS        pages=1   rics=2132   stop=paging_ignored_returned_full_set_on_page1
+  - US equities on XASE        pages=1   rics=272    stop=short_last_page
+  - US equities on XNAS        pages=1   rics=1      stop=short_last_page
+  - US equities on XNGS        pages=1   rics=1267   stop=paging_ignored_returned_full_set_on_page1
+  - US equities on XNMS        pages=1   rics=1466   stop=paging_ignored_returned_full_set_on_page1
+  - US equities on XNCM        pages=1   rics=1376   stop=paging_ignored_returned_full_set_on_page1
+
+Seed-universe expansion summary
+-------------------------------
+Polymarket seed file:               C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\complete_dataset_long.jsonl
+Raw screen RICs:                    6514
+Raw Polymarket-seed RICs:           0
+Combined raw seed RICs:             6514
+Static metadata rows (raw):         6514
+Static metadata rows (normalized):  6514
+U.S. equities kept from static:     6497
+Final U.S.-equity RIC universe:     6497
+Downstream U.S.-equity RICs used:   6497
+
+Output counts
+-------------
+Companies rows written:             6497
+Event rows written:                 10124
+PV rows normalized:                 1636957
+Market-cap series rows:             1773648
+Analyst series rows:                124982
+
+Top problems / warnings
+-----------------------
+[US equities on XNYS] SCREEN appears to ignore StartNum/EndNum (page1 rows=2132 > page_size=1000). Stopping after page 1 to avoid repeats.
+[US equities on XNGS] SCREEN appears to ignore StartNum/EndNum (page1 rows=1267 > page_size=1000). Stopping after page 1 to avoid repeats.
+[US equities on XNMS] SCREEN appears to ignore StartNum/EndNum (page1 rows=1466 > page_size=1000). Stopping after page 1 to avoid repeats.
+[US equities on XNCM] SCREEN appears to ignore StartNum/EndNum (page1 rows=1376 > page_size=1000). Stopping after page 1 to avoid repeats.
+Complete dataset file not found: C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\complete_dataset_long.jsonl
+batch_err size=120 err=[{'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 56}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 56}]
+batch_err size=120 err=[{'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 57}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 57}]
+batch_err size=120 err=[{'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 95}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 95}]
+batch_err size=120 err=[{'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 107}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 107}]
+batch_err size=120 err=[{'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 35}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 35}, {'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 52}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 52}]
+batch_err size=120 err=[{'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 98}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 98}]
+batch_err size=120 err=[{'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 50}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 50}]
+batch_err size=120 err=[{'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 18}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 18}]
+batch_err size=120 err=[{'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 17}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 17}]
+batch_err size=120 err=[{'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 33}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 33}]
+batch_err size=120 err=[{'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 49}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 49}]
+batch_err size=120 err=[{'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 61}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 61}]
+batch_err size=120 err=[{'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 85}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 85}]
+batch_err size=120 err=[{'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 26}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 26}]
+batch_err size=120 err=[{'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 14}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 14}]
+batch_err size=120 err=[{'code': 416, 'col': 7, 'message': "Unable to collect data for the field 'TR.ExchangeMarketIdCode' and some specific identifier(s).", 'row': 37}, {'code': 416, 'col': 11, 'message': "Unable to collect data for the field 'TR.ExchangeCountry' and some specific identifier(s).", 'row': 37}]
+(none from mcap/analysts series fetch)
+(none from pv fetch)
+(none from events fetch)
+
+Missing values (top 60 columns)
+-------------------------------
+exchange_mic                                  missing=   10124 / 10124    (100.00%)
+primary_exchange                              missing=   10124 / 10124    (100.00%)
+analysts_covering_asof_evt                    missing=    1793 / 10124    ( 17.71%)
+turnover_lookback_avg_daily_volume_asof_evt   missing=      55 / 10124    (  0.54%)
+turnover_lookback_sum_volume_asof_evt         missing=      55 / 10124    (  0.54%)
+volatility_lookback_asof_evt                  missing=      55 / 10124    (  0.54%)
+market_cap_usd_asof_evt                       missing=       6 / 10124    (  0.06%)
+turnover_lookback_window_end_asof_evt         missing=       4 / 10124    (  0.04%)
+turnover_lookback_window_start_asof_evt       missing=       4 / 10124    (  0.04%)
+asof_date                                     missing=       0 / 10124    (  0.00%)
+company_name                                  missing=       0 / 10124    (  0.00%)
+country_of_risk                               missing=       0 / 10124    (  0.00%)
+event_date                                    missing=       0 / 10124    (  0.00%)
+event_time                                    missing=       0 / 10124    (  0.00%)
+event_title                                   missing=       0 / 10124    (  0.00%)
+event_type                                    missing=       0 / 10124    (  0.00%)
+exchange_country                              missing=       0 / 10124    (  0.00%)
+gics_industry                                 missing=       0 / 10124    (  0.00%)
+gics_sector                                   missing=       0 / 10124    (  0.00%)
+hq_country                                    missing=       0 / 10124    (  0.00%)
+hq_country_code                               missing=       0 / 10124    (  0.00%)
+observed_window_end_utc                       missing=       0 / 10124    (  0.00%)
+observed_window_start_utc                     missing=       0 / 10124    (  0.00%)
+retrieved_at_utc                              missing=       0 / 10124    (  0.00%)
+retrieved_at_utc_company                      missing=       0 / 10124    (  0.00%)
+ric                                           missing=       0 / 10124    (  0.00%)
+ticker                                        missing=       0 / 10124    (  0.00%)
+trbc_industry                                 missing=       0 / 10124    (  0.00%)

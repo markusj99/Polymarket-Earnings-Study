@@ -1,8 +1,8 @@
 Polymarket Earnings — Historical Prices Fetch Summary
 ========================================================
-Run ID:              20260412T131653Z
-Generated (UTC):     2026-04-12 13:23:49Z
-Elapsed seconds:     415.88
+Run ID:              20260412T141052Z
+Generated (UTC):     2026-04-12 14:17:29Z
+Elapsed seconds:     397.287
 
 Mode
 - TEST:              False
@@ -31,48 +31,48 @@ Outputs
 - Summary TXT:             C:\Users\lasts\Desktop\Polymarket\Polymarket-Earnings-Study\data\poly_prices\summary.txt
 
 Results
-- Successful markets written: 688
-- Failed markets:             7
+- Successful markets written: 684
+- Failed markets:             11
 
 Corporate info joins
-- market_id: 688
+- market_id: 684
 
 Failure reasons (hard failures only)
+- no_snapshot_prices_found: 6
 - missing_or_invalid_earnings_release_datetime: 5
-- no_snapshot_prices_found: 2
 
 Quality stats (not failures)
-- Markets with partial missing snapshots: 686
+- Markets with partial missing snapshots: 682
 - Markets with YES+NO complement violations: 5
 - YES+NO complement tolerance: 0.05
 
 Missing snapshot counts (not failures)
 YES missing:
-- 4w: 686
-- 3w: 669
-- 2w: 552
-- 1w: 211
-- 6d: 134
-- 5d: 79
-- 4d: 44
-- 3d: 23
-- 2d: 11
-- 1d: 6
-- 12h: 5
+- 4w: 682
+- 3w: 665
+- 2w: 547
+- 1w: 206
+- 6d: 129
+- 5d: 74
+- 4d: 39
+- 3d: 18
+- 2d: 6
+- 1d: 1
+- 12h: 0
 - 6h: 0
 
 NO missing:
-- 4w: 686
-- 3w: 669
-- 2w: 552
-- 1w: 211
-- 6d: 134
-- 5d: 79
-- 4d: 44
-- 3d: 23
-- 2d: 11
-- 1d: 6
-- 12h: 5
+- 4w: 682
+- 3w: 665
+- 2w: 547
+- 1w: 206
+- 6d: 129
+- 5d: 74
+- 4d: 39
+- 3d: 18
+- 2d: 6
+- 1d: 1
+- 12h: 0
 - 6h: 0
 
 Config (selected)

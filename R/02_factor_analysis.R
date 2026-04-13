@@ -132,15 +132,42 @@ to_logical_safe <- function(x) {
   x_chr %in% c("true", "t", "1", "yes", "y")
 }
 
-parse_datetime_utc <- function(x) {
-  as.POSIXct(x, tz = "UTC", tryFormats = c(
+parse_datetime_utc <- function(x, colname = deparse(substitute(x))) {
+  x <- trimws(as.character(x))
+  x[x %in% c("", "NA", "N/A", "NULL", "null")] <- NA_character_
+  
+  # Normalize timezone offsets like +00:00 -> +0000
+  x <- sub("([+-][0-9]{2}):([0-9]{2})$", "\\1\\2", x)
+  
+  fmts <- c(
     "%Y-%m-%dT%H:%M:%OSZ",
     "%Y-%m-%dT%H:%M:%OS%z",
     "%Y-%m-%d %H:%M:%OS%z",
-    "%Y-%m-%d %H:%M:%OS"
-  ))
+    "%Y-%m-%d %H:%M:%OS",
+    "%Y-%m-%d"
+  )
+  
+  out <- rep(as.POSIXct(NA, tz = "UTC"), length(x))
+  
+  for (fmt in fmts) {
+    idx <- !is.na(x) & is.na(out)
+    if (any(idx)) {
+      parsed <- as.POSIXct(x[idx], format = fmt, tz = "UTC")
+      out[idx] <- parsed
+    }
+  }
+  
+  bad <- unique(x[!is.na(x) & is.na(out)])
+  if (length(bad) > 0) {
+    stop(
+      "Unparseable datetime values in ", colname, ": ",
+      paste(utils::head(bad, 10), collapse = " | "),
+      call. = FALSE
+    )
+  }
+  
+  out
 }
-
 first_non_missing <- function(x) {
   x <- x[!is.na(x)]
   if (length(x) == 0) return(NA)
@@ -170,7 +197,7 @@ bootstrap_ci_model <- function(
     data,
     fit_type = c("lm", "glm"),
     link = NULL,
-    R = 250,
+    R = 25000,
     seed = 123,
     conf_level = 0.95,
     show_progress = TRUE,
@@ -621,6 +648,9 @@ run_factor_analysis <- function(
     names(main_df)[names(main_df) == "id"] <- "market_id"
   }
   
+  main_df$market_id <- as.character(main_df$market_id)
+  brier_df$market_id <- as.character(brier_df$market_id)
+  
   required_main_cols <- c(
     "market_id",
     "horizon",
@@ -706,6 +736,8 @@ run_factor_analysis <- function(
 
   main_df$firm_id <- as.character(main_df[[firm_id_col]])
   main_df$earnings_release_datetime <- parse_datetime_utc(main_df$earnings_release_datetime)
+  
+  main_df$market_id <- as.character(main_df$market_id)
 
   # Use the event ordering variable that best reflects the earnings event sequence.
   market_repeat_df <- main_df %>%
@@ -755,10 +787,7 @@ run_factor_analysis <- function(
   
   df$horizon <- factor(df$horizon, levels = selected_horizons, ordered = TRUE)
   df <- df[!is.na(df$horizon), ]
-  
-  model_vars_raw <- c("loss_polymarket", "market_id", "horizon", xvars_raw)
-  df <- df[complete.cases(df[, model_vars_raw]), ]
-  
+
   if (nrow(df) == 0) {
     stop("No usable observations remain after merging and cleaning.", call. = FALSE)
   }
@@ -859,7 +888,7 @@ run_factor_analysis <- function(
     "analysts",
     "log_turnover",
     "log_volatility_6m",
-    "open_time_days".
+    "open_time_days",
     "post_first_market"
   )
   

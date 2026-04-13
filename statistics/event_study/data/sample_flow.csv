@@ -1,0 +1,6 @@
+step,n
+Unique events in dataset_long,695
+Events with matching daily price history,692
+Events with a derived purchase date and event trading date,686
+Events with a non-stale same-day Polymarket signal by the purchase cutoff,678
+"Events with sufficient estimation data and a complete [-5, +5] event window",639

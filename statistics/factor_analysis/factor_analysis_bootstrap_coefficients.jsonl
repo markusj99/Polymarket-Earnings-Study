@@ -1,0 +1,114 @@
+{"model_class":"OLS","model":"Mean loss | Ex-ante","term":"(Intercept)","conf.low_boot":0.168109839189678,"conf.high_boot":0.806635497716586,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Ex-ante","term":"eps_stddev","conf.low_boot":0.0218611315619713,"conf.high_boot":0.397064661993629,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Ex-ante","term":"log_market_cap","conf.low_boot":-0.0304313414222764,"conf.high_boot":-0.00306160753105865,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Ex-ante","term":"analysts","conf.low_boot":-0.00154231599374971,"conf.high_boot":0.00213685837524179,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Ex-ante","term":"log_turnover","conf.low_boot":-0.000996408328717587,"conf.high_boot":0.012849694748954,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Ex-ante","term":"log_volatility_6m","conf.low_boot":-2.53977456839816,"conf.high_boot":0.488487642764974,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Ex-ante","term":"open_time_days","conf.low_boot":-0.00460529605107421,"conf.high_boot":0.00343298093257286,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Ex-ante","term":"post_first_market","conf.low_boot":-0.0289793928584096,"conf.high_boot":0.0392804816038825,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Full","term":"(Intercept)","conf.low_boot":-0.152254917912277,"conf.high_boot":0.497489265868202,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Full","term":"log_volume","conf.low_boot":-0.0543768287541522,"conf.high_boot":0.0607899939673231,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Full","term":"log_volume_per_analyst","conf.low_boot":-0.0330336893838089,"conf.high_boot":0.070404508969965,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Full","term":"eps_stddev","conf.low_boot":0.159711338200237,"conf.high_boot":0.55931348230857,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Full","term":"surprise","conf.low_boot":-0.407184770014467,"conf.high_boot":-0.248400244110307,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Full","term":"log_market_cap","conf.low_boot":-0.0235262151285052,"conf.high_boot":0.00534162585977887,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Full","term":"analysts","conf.low_boot":-0.00244400208633257,"conf.high_boot":0.00389088132605275,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Full","term":"log_turnover","conf.low_boot":-0.00166425853944294,"conf.high_boot":0.0126968823642605,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Full","term":"log_volatility_6m","conf.low_boot":-2.5268284081438,"conf.high_boot":0.686025464065301,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Full","term":"open_time_days","conf.low_boot":-0.00498740261119436,"conf.high_boot":0.00275588796229988,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Mean loss | Full","term":"post_first_market","conf.low_boot":-0.0300958801116608,"conf.high_boot":0.0379295870450914,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Ex-ante","term":"(Intercept)","conf.low_boot":0.167671053136214,"conf.high_boot":0.85706739386109,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Ex-ante","term":"eps_stddev","conf.low_boot":0.000459109987886153,"conf.high_boot":0.4278346470771,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Ex-ante","term":"log_market_cap","conf.low_boot":-0.0324336841965245,"conf.high_boot":-0.00249348506146662,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Ex-ante","term":"analysts","conf.low_boot":-0.00204401893477149,"conf.high_boot":0.00198591291974833,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Ex-ante","term":"log_turnover","conf.low_boot":-0.00224051378043929,"conf.high_boot":0.0125351569910375,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Ex-ante","term":"log_volatility_6m","conf.low_boot":-2.65730741115368,"conf.high_boot":1.09558025025868,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Ex-ante","term":"open_time_days","conf.low_boot":-0.00481791943321812,"conf.high_boot":0.00398180339112278,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Ex-ante","term":"post_first_market","conf.low_boot":-0.0383760766039637,"conf.high_boot":0.0347755531871505,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Full","term":"(Intercept)","conf.low_boot":-0.0900722801479381,"conf.high_boot":0.628606028555104,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Full","term":"log_volume","conf.low_boot":-0.0822826303002743,"conf.high_boot":0.0499907473255233,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Full","term":"log_volume_per_analyst","conf.low_boot":-0.0345460339605682,"conf.high_boot":0.0814398158232116,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Full","term":"eps_stddev","conf.low_boot":0.126897241567444,"conf.high_boot":0.597810842204013,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Full","term":"surprise","conf.low_boot":-0.3991498311869,"conf.high_boot":-0.212060117304622,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Full","term":"log_market_cap","conf.low_boot":-0.0238015687347314,"conf.high_boot":0.00932414902297303,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Full","term":"analysts","conf.low_boot":-0.0028937030119688,"conf.high_boot":0.00416407321049977,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Full","term":"log_turnover","conf.low_boot":-0.00246621968307894,"conf.high_boot":0.0128878218192811,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Full","term":"log_volatility_6m","conf.low_boot":-2.40764547541161,"conf.high_boot":1.60404136336428,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Full","term":"open_time_days","conf.low_boot":-0.00493856411394281,"conf.high_boot":0.00379428751117705,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"OLS","model":"Loss at 6h | Full","term":"post_first_market","conf.low_boot":-0.0402994289576317,"conf.high_boot":0.034896548997563,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Ex-ante","term":"(Intercept)","conf.low_boot":-1.59818293152299,"conf.high_boot":3.2603342434584,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Ex-ante","term":"eps_stddev","conf.low_boot":0.179112676719789,"conf.high_boot":2.64610072200958,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Ex-ante","term":"log_market_cap","conf.low_boot":-0.23294513567013,"conf.high_boot":-0.0225655562400291,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Ex-ante","term":"analysts","conf.low_boot":-0.0121632339294502,"conf.high_boot":0.016124350834833,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Ex-ante","term":"log_turnover","conf.low_boot":-0.00665571486285524,"conf.high_boot":0.0978516910423092,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Ex-ante","term":"log_volatility_6m","conf.low_boot":-19.6362013213611,"conf.high_boot":3.38665599449809,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Ex-ante","term":"open_time_days","conf.low_boot":-0.035110316757279,"conf.high_boot":0.024749033848258,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Ex-ante","term":"post_first_market","conf.low_boot":-0.220622608548,"conf.high_boot":0.289749090873886,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Full","term":"(Intercept)","conf.low_boot":-3.89437818010828,"conf.high_boot":1.04375008905416,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Full","term":"log_volume","conf.low_boot":-0.358589261191695,"conf.high_boot":0.482178301225949,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Full","term":"log_volume_per_analyst","conf.low_boot":-0.279736398149136,"conf.high_boot":0.48024102642716,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Full","term":"eps_stddev","conf.low_boot":0.371583522869186,"conf.high_boot":3.22523805659658,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Full","term":"surprise","conf.low_boot":-3.17650287387718,"conf.high_boot":-1.87067316631138,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Full","term":"log_market_cap","conf.low_boot":-0.187878245092588,"conf.high_boot":0.0344073128350268,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Full","term":"analysts","conf.low_boot":-0.0202057006407714,"conf.high_boot":0.0285085327868783,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Full","term":"log_turnover","conf.low_boot":-0.0135408071945744,"conf.high_boot":0.102095500953868,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Full","term":"log_volatility_6m","conf.low_boot":-20.6076739520139,"conf.high_boot":3.74848078911633,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Full","term":"open_time_days","conf.low_boot":-0.0430547711739216,"conf.high_boot":0.0175400269800989,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Mean loss | Full","term":"post_first_market","conf.low_boot":-0.22262040899811,"conf.high_boot":0.300515921235353,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Ex-ante","term":"(Intercept)","conf.low_boot":-1.58334661349692,"conf.high_boot":3.76439269322527,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Ex-ante","term":"eps_stddev","conf.low_boot":0.0223396583706951,"conf.high_boot":2.88764723031514,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Ex-ante","term":"log_market_cap","conf.low_boot":-0.254519934376369,"conf.high_boot":-0.0199690198429295,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Ex-ante","term":"analysts","conf.low_boot":-0.0169132496583618,"conf.high_boot":0.0151746177188983,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Ex-ante","term":"log_turnover","conf.low_boot":-0.0146500068705228,"conf.high_boot":0.0996079307124469,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Ex-ante","term":"log_volatility_6m","conf.low_boot":-21.1028733041437,"conf.high_boot":7.3747849361484,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Ex-ante","term":"open_time_days","conf.low_boot":-0.0374137233452627,"conf.high_boot":0.028565543818182,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Ex-ante","term":"post_first_market","conf.low_boot":-0.29931744662938,"conf.high_boot":0.262755198019658,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Full","term":"(Intercept)","conf.low_boot":-3.50110250511753,"conf.high_boot":2.05442611328952,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Full","term":"log_volume","conf.low_boot":-0.54630696930878,"conf.high_boot":0.416118312111047,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Full","term":"log_volume_per_analyst","conf.low_boot":-0.308255200433852,"conf.high_boot":0.541603054110107,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Full","term":"eps_stddev","conf.low_boot":0.217928621539399,"conf.high_boot":3.54935625804142,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Full","term":"surprise","conf.low_boot":-3.11588633967777,"conf.high_boot":-1.60442867274579,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Full","term":"log_market_cap","conf.low_boot":-0.194791803802974,"conf.high_boot":0.0627536101521257,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Full","term":"analysts","conf.low_boot":-0.0259917561386494,"conf.high_boot":0.0307721579804082,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Full","term":"log_turnover","conf.low_boot":-0.0189503882366872,"conf.high_boot":0.105244289795526,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Full","term":"log_volatility_6m","conf.low_boot":-20.1925885192112,"conf.high_boot":10.2783547315027,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Full","term":"open_time_days","conf.low_boot":-0.0428117325866387,"conf.high_boot":0.0265896013988526,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional logit","model":"Loss at 6h | Full","term":"post_first_market","conf.low_boot":-0.30845230256115,"conf.high_boot":0.277530266802789,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Ex-ante","term":"(Intercept)","conf.low_boot":-0.940224306977195,"conf.high_boot":1.73274469327423,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Ex-ante","term":"eps_stddev","conf.low_boot":0.108612318747198,"conf.high_boot":1.52040381444822,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Ex-ante","term":"log_market_cap","conf.low_boot":-0.12881604808514,"conf.high_boot":-0.0135213152854903,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Ex-ante","term":"analysts","conf.low_boot":-0.00669054320686281,"conf.high_boot":0.00887751919642061,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Ex-ante","term":"log_turnover","conf.low_boot":-0.00368979646773862,"conf.high_boot":0.0552469653459291,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Ex-ante","term":"log_volatility_6m","conf.low_boot":-10.9315052836406,"conf.high_boot":1.75560642324312,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Ex-ante","term":"open_time_days","conf.low_boot":-0.0193601044461381,"conf.high_boot":0.0136095471863926,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Ex-ante","term":"post_first_market","conf.low_boot":-0.117955922736046,"conf.high_boot":0.163827392637436,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Full","term":"(Intercept)","conf.low_boot":-2.30251323020244,"conf.high_boot":0.444035745270948,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Full","term":"log_volume","conf.low_boot":-0.209884804830936,"conf.high_boot":0.252776467800594,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Full","term":"log_volume_per_analyst","conf.low_boot":-0.142991463647863,"conf.high_boot":0.269656288943012,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Full","term":"eps_stddev","conf.low_boot":0.380323664607796,"conf.high_boot":1.97476228646041,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Full","term":"surprise","conf.low_boot":-1.73021113776776,"conf.high_boot":-1.03054418026957,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Full","term":"log_market_cap","conf.low_boot":-0.101579218757233,"conf.high_boot":0.0219097152402702,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Full","term":"analysts","conf.low_boot":-0.0114292058072584,"conf.high_boot":0.0153448519486428,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Full","term":"log_turnover","conf.low_boot":-0.00496925314035189,"conf.high_boot":0.0576776748681658,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Full","term":"log_volatility_6m","conf.low_boot":-11.0923288031363,"conf.high_boot":2.63802976041679,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Full","term":"open_time_days","conf.low_boot":-0.0237635068546693,"conf.high_boot":0.00883544118461136,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Mean loss | Full","term":"post_first_market","conf.low_boot":-0.120896110153659,"conf.high_boot":0.164063931069365,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Ex-ante","term":"(Intercept)","conf.low_boot":-0.9364829256957,"conf.high_boot":2.00457338427454,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Ex-ante","term":"eps_stddev","conf.low_boot":0.0127585352745104,"conf.high_boot":1.6484728971453,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Ex-ante","term":"log_market_cap","conf.low_boot":-0.139400737719454,"conf.high_boot":-0.0120451463765942,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Ex-ante","term":"analysts","conf.low_boot":-0.00893908382773766,"conf.high_boot":0.00827428667683047,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Ex-ante","term":"log_turnover","conf.low_boot":-0.00834541991046277,"conf.high_boot":0.0558599628366248,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Ex-ante","term":"log_volatility_6m","conf.low_boot":-11.6776635361257,"conf.high_boot":3.93625183932109,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Ex-ante","term":"open_time_days","conf.low_boot":-0.0209339059990773,"conf.high_boot":0.0155421372647902,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Ex-ante","term":"post_first_market","conf.low_boot":-0.164758026172336,"conf.high_boot":0.148730551388067,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Full","term":"(Intercept)","conf.low_boot":-2.08825575967701,"conf.high_boot":1.01866283426858,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Full","term":"log_volume","conf.low_boot":-0.30627957413328,"conf.high_boot":0.219190915915908,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Full","term":"log_volume_per_analyst","conf.low_boot":-0.162000149907179,"conf.high_boot":0.302111080895975,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Full","term":"eps_stddev","conf.low_boot":0.293231029760512,"conf.high_boot":2.14318396250877,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Full","term":"surprise","conf.low_boot":-1.6928477397431,"conf.high_boot":-0.886295909890243,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Full","term":"log_market_cap","conf.low_boot":-0.103819296339025,"conf.high_boot":0.037420264912314,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Full","term":"analysts","conf.low_boot":-0.0145701117211754,"conf.high_boot":0.0161174967956823,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Full","term":"log_turnover","conf.low_boot":-0.00900521556041355,"conf.high_boot":0.0595510903168888,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Full","term":"log_volatility_6m","conf.low_boot":-10.7401482130974,"conf.high_boot":6.1418127039313,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Full","term":"open_time_days","conf.low_boot":-0.023969187578329,"conf.high_boot":0.0136056871944686,"n_boot":25000,"n_boot_success":25000}
+{"model_class":"Fractional probit","model":"Loss at 6h | Full","term":"post_first_market","conf.low_boot":-0.165290553424822,"conf.high_boot":0.153703539175571,"n_boot":25000,"n_boot_success":25000}

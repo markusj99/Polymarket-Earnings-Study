@@ -1,0 +1,146 @@
+{
+  "generated_at_utc": "2026-04-12T14:55:39Z",
+  "rows": 10124,
+  "columns": {
+    "ric": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "event_date": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "event_time": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "event_type": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "event_title": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "asof_date": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "retrieved_at_utc": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "observed_window_start_utc": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "observed_window_end_utc": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "market_cap_usd_asof_evt": {
+      "missing": 6,
+      "total": 10124,
+      "missing_pct": 0.05926511260371395
+    },
+    "analysts_covering_asof_evt": {
+      "missing": 1793,
+      "total": 10124,
+      "missing_pct": 17.710391149743185
+    },
+    "turnover_lookback_sum_volume_asof_evt": {
+      "missing": 55,
+      "total": 10124,
+      "missing_pct": 0.5432635322007112
+    },
+    "turnover_lookback_avg_daily_volume_asof_evt": {
+      "missing": 55,
+      "total": 10124,
+      "missing_pct": 0.5432635322007112
+    },
+    "volatility_lookback_asof_evt": {
+      "missing": 55,
+      "total": 10124,
+      "missing_pct": 0.5432635322007112
+    },
+    "turnover_lookback_window_start_asof_evt": {
+      "missing": 4,
+      "total": 10124,
+      "missing_pct": 0.03951007506914263
+    },
+    "turnover_lookback_window_end_asof_evt": {
+      "missing": 4,
+      "total": 10124,
+      "missing_pct": 0.03951007506914263
+    },
+    "ticker": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "company_name": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "gics_sector": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "gics_industry": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "trbc_industry": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "primary_exchange": {
+      "missing": 10124,
+      "total": 10124,
+      "missing_pct": 100.0
+    },
+    "exchange_mic": {
+      "missing": 10124,
+      "total": 10124,
+      "missing_pct": 100.0
+    },
+    "hq_country": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "hq_country_code": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "country_of_risk": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "exchange_country": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    },
+    "retrieved_at_utc_company": {
+      "missing": 0,
+      "total": 10124,
+      "missing_pct": 0.0
+    }
+  }
+}

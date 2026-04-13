@@ -1,0 +1,12 @@
+{"horizon": "4w", "n": 2, "brier_polymarket": 0.3055625, "brier_dice_50_50": 0.25, "brier_historical_leakage_safe": 0.3222222222222223}
+{"horizon": "3w", "n": 19, "brier_polymarket": 0.15970394736842106, "brier_dice_50_50": 0.25, "brier_historical_leakage_safe": 0.20804935018780368}
+{"horizon": "2w", "n": 137, "brier_polymarket": 0.20122704197080285, "brier_dice_50_50": 0.25, "brier_historical_leakage_safe": 0.21578270043899375}
+{"horizon": "1w", "n": 478, "brier_polymarket": 0.17062981642259403, "brier_dice_50_50": 0.25, "brier_historical_leakage_safe": 0.20206436337875291}
+{"horizon": "6d", "n": 555, "brier_polymarket": 0.17030205405405413, "brier_dice_50_50": 0.25, "brier_historical_leakage_safe": 0.19548639422687966}
+{"horizon": "5d", "n": 610, "brier_polymarket": 0.16288666434426233, "brier_dice_50_50": 0.25, "brier_historical_leakage_safe": 0.19678668399650665}
+{"horizon": "4d", "n": 645, "brier_polymarket": 0.16049992519379855, "brier_dice_50_50": 0.25, "brier_historical_leakage_safe": 0.19752326219245783}
+{"horizon": "3d", "n": 666, "brier_polymarket": 0.16085543355855858, "brier_dice_50_50": 0.25, "brier_historical_leakage_safe": 0.19726591575363345}
+{"horizon": "2d", "n": 678, "brier_polymarket": 0.1596632197640119, "brier_dice_50_50": 0.25, "brier_historical_leakage_safe": 0.1974434540743612}
+{"horizon": "1d", "n": 683, "brier_polymarket": 0.15816177049780394, "brier_dice_50_50": 0.25, "brier_historical_leakage_safe": 0.19887617532321816}
+{"horizon": "12h", "n": 684, "brier_polymarket": 0.1560321301169591, "brier_dice_50_50": 0.25, "brier_historical_leakage_safe": 0.19800819085903598}
+{"horizon": "6h", "n": 684, "brier_polymarket": 0.15760734649122793, "brier_dice_50_50": 0.25, "brier_historical_leakage_safe": 0.19784935199986278}

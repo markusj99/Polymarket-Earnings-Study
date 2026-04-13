@@ -206,6 +206,9 @@ make_gt_table <- function(df, title, subtitle) {
       style = gt::cell_text(weight = "bold"),
       locations = gt::cells_title(groups = "title")
     ) |>
+    gt::tab_source_note(
+      source_note = gt::md("* p < 0.10, ** p < 0.05, *** p < 0.01")
+    ) |>
     gt::tab_options(
       table.font.size = gt::px(12),
       data_row.padding = gt::px(5),

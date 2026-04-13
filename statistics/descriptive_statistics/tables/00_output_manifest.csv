@@ -1,0 +1,73 @@
+type,file,description
+table,01_obs_per_snapshot.csv,Number of observations and distinct markets per snapshot_label (CSV).
+table,01_obs_per_snapshot.jsonl,Number of observations and distinct markets per snapshot_label (JSONL).
+table,01b_price_availability_per_snapshot.csv,Share of sample markets with prices per snapshot (CSV).
+table,01b_price_availability_per_snapshot.jsonl,Share of sample markets with prices per snapshot (JSONL).
+table,02_active_trading_hours_summary.csv,Summary stats for active_trading_hours (CSV).
+table,02_active_trading_hours_summary.jsonl,Summary stats for active_trading_hours (JSONL).
+table,02b_earnings_release_to_uma_end_summary.csv,Summary stats for time between earnings_release_datetime and uma_end_date_utc (CSV).
+table,02b_earnings_release_to_uma_end_summary.jsonl,Summary stats for time between earnings_release_datetime and uma_end_date_utc (JSONL).
+table,03_resolved_counts_by_uma_end_date.csv,Counts of resolved markets per UMA end date (NO shown negative in plot; CSV).
+table,03_resolved_counts_by_uma_end_date.jsonl,Counts of resolved markets per UMA end date (JSONL).
+table,04_resolved_share_yes_no.csv,Overall share of resolved YES vs NO (CSV).
+table,04_resolved_share_yes_no.jsonl,Overall share of resolved YES vs NO (JSONL).
+table,05_calibration_bins_by_snapshot.csv,Calibration bins: mean implied prob vs observed YES rate (and counts) by snapshot (CSV).
+table,05_calibration_bins_by_snapshot.jsonl,Calibration bins: mean implied prob vs observed YES rate (and counts) by snapshot (JSONL).
+table,06_volume_summary_usd.csv,Summary stats for Polymarket volume (USD) (CSV).
+table,06_volume_summary_usd.jsonl,Summary stats for Polymarket volume (USD) (JSONL).
+table,07_eikon_eps_stddev_summary.csv,Summary stats for Eikon EPS stddev estimate (CSV).
+table,07_eikon_eps_stddev_summary.jsonl,Summary stats for Eikon EPS stddev estimate (JSONL).
+table,08_surprise_summary.csv,Summary stats for surprise (val_surprise) (CSV).
+table,08_surprise_summary.jsonl,Summary stats for surprise (val_surprise) (JSONL).
+table,10_firm_market_counts.csv,Count of markets per firm (RIC) in sample (CSV).
+table,10_firm_market_counts.jsonl,Count of markets per firm (RIC) in sample (JSONL).
+table,10b_firms_observed_more_than_once_summary.csv,Summary: how many firms appear >1 time in sample (CSV).
+table,10b_firms_observed_more_than_once_summary.jsonl,Summary: how many firms appear >1 time in sample (JSONL).
+table,10c_markets_per_firm_distribution_table.csv,Distribution table: number of firms by markets-per-firm (CSV).
+table,10c_markets_per_firm_distribution_table.jsonl,Distribution table: number of firms by markets-per-firm (JSONL).
+table,11_market_cap_summary_usd.csv,Summary stats for firm market cap (USD) in sample (CSV).
+table,11_market_cap_summary_usd.jsonl,Summary stats for firm market cap (USD) in sample (JSONL).
+table,13_gics_sector_distribution.csv,Distribution of GICS sector for sample firms (CSV).
+table,13_gics_sector_distribution.jsonl,Distribution of GICS sector for sample firms (JSONL).
+table,14_analysts_covering_summary.csv,Summary stats for analysts covering (CSV).
+table,14_analysts_covering_summary.jsonl,Summary stats for analysts covering (JSONL).
+table,15_event_counts_sample_vs_universe.csv,Counts: sample events vs universe events (CSV).
+table,15_event_counts_sample_vs_universe.jsonl,Counts: sample events vs universe events (JSONL).
+table,16_snapshot_numeric_summary_12h.csv,Snapshot numeric summary (CSV) for snapshot 12h.
+table,16_snapshot_numeric_summary_12h.jsonl,Snapshot numeric summary (JSONL) for snapshot 12h.
+table,16_snapshot_numeric_summary_1d.csv,Snapshot numeric summary (CSV) for snapshot 1d.
+table,16_snapshot_numeric_summary_1d.jsonl,Snapshot numeric summary (JSONL) for snapshot 1d.
+table,16_snapshot_numeric_summary_1w.csv,Snapshot numeric summary (CSV) for snapshot 1w.
+table,16_snapshot_numeric_summary_1w.jsonl,Snapshot numeric summary (JSONL) for snapshot 1w.
+table,16_snapshot_numeric_summary_2d.csv,Snapshot numeric summary (CSV) for snapshot 2d.
+table,16_snapshot_numeric_summary_2d.jsonl,Snapshot numeric summary (JSONL) for snapshot 2d.
+table,16_snapshot_numeric_summary_3d.csv,Snapshot numeric summary (CSV) for snapshot 3d.
+table,16_snapshot_numeric_summary_3d.jsonl,Snapshot numeric summary (JSONL) for snapshot 3d.
+table,16_snapshot_numeric_summary_4d.csv,Snapshot numeric summary (CSV) for snapshot 4d.
+table,16_snapshot_numeric_summary_4d.jsonl,Snapshot numeric summary (JSONL) for snapshot 4d.
+table,16_snapshot_numeric_summary_5d.csv,Snapshot numeric summary (CSV) for snapshot 5d.
+table,16_snapshot_numeric_summary_5d.jsonl,Snapshot numeric summary (JSONL) for snapshot 5d.
+table,16_snapshot_numeric_summary_6d.csv,Snapshot numeric summary (CSV) for snapshot 6d.
+table,16_snapshot_numeric_summary_6d.jsonl,Snapshot numeric summary (JSONL) for snapshot 6d.
+table,16_snapshot_numeric_summary_6h.csv,Snapshot numeric summary (CSV) for snapshot 6h.
+table,16_snapshot_numeric_summary_6h.jsonl,Snapshot numeric summary (JSONL) for snapshot 6h.
+table,16_snapshot_numeric_summary_all.csv,Combined snapshot summary table for all numeric variables (CSV).
+table,16_snapshot_numeric_summary_all.jsonl,Combined snapshot summary table for all numeric variables (JSONL).
+plot,01_obs_per_snapshot.png,Bar chart of observations per snapshot_label.
+plot,01b_price_availability_per_snapshot.png,Bar chart: share of markets with probabilities per snapshot_label.
+plot,02_active_trading_hours_distribution.png,Histogram: active_trading_hours across markets.
+plot,02b_earnings_release_to_uma_end_distribution.png,"Histogram: time between earnings_release_datetime and uma_end_date_utc in hours, zoomed to the 1st-99th percentile range."
+plot,03_resolved_yes_no_over_time.png,Diverging bar chart: resolved YES (positive) and NO (negative) over time.
+plot,04_resolved_share_yes_no.png,Bar chart: share of markets resolved to YES vs NO.
+plot,05_calibration_all_snapshots_faceted.png,Faceted calibration plot: mean implied prob vs observed YES rate for all snapshots.
+plot,06_volume_distribution_log_usd.png,Histogram: volume distribution with log10 x-axis labeled in USD.
+plot,07_eikon_eps_stddev_distribution.png,Histogram: Eikon EPS stddev estimate distribution.
+plot,08_surprise_distribution.png,Histogram: surprise distribution (val_surprise).
+plot,09_active_hours_vs_volume.png,Scatter + LOESS: active trading hours vs volume (log USD).
+plot,10c_markets_per_firm_distribution.png,Bar chart: distribution of markets per firm (RIC).
+plot,11_market_cap_distribution_log_usd.png,Histogram: market cap distribution (log USD).
+plot,12_volume_vs_market_cap.png,Scatter + LOESS: Polymarket volume vs market cap (log-log).
+plot,13_gics_sector_distribution.png,Bar chart: GICS sector distribution.
+plot,14_analysts_covering_distribution.png,Histogram: analysts covering distribution (sample firms).
+plot,15_event_counts_sample_vs_universe.png,Bar chart: number of sample events vs universe events.
+plot,17a_implied_probability_distribution_by_snapshot.png,Faceted histograms: implied probabilities by snapshot_label.
