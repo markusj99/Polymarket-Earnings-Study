@@ -1,0 +1,5 @@
+{"signal_bin":"0.0-0.2","signal_bin_id":1,"n_events":13,"mean_signal":0.15065,"min_signal":0.0635,"max_signal":0.18}
+{"signal_bin":"0.2-0.4","signal_bin_id":2,"n_events":55,"mean_signal":0.32018,"min_signal":0.21,"max_signal":0.395}
+{"signal_bin":"0.4-0.6","signal_bin_id":3,"n_events":74,"mean_signal":0.5075,"min_signal":0.4,"max_signal":0.595}
+{"signal_bin":"0.6-0.8","signal_bin_id":4,"n_events":178,"mean_signal":0.71292,"min_signal":0.6,"max_signal":0.795}
+{"signal_bin":"0.8-1.0","signal_bin_id":5,"n_events":319,"mean_signal":0.87974,"min_signal":0.8,"max_signal":0.9855}

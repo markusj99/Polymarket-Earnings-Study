@@ -1,0 +1,10 @@
+{"term":"(Intercept)","estimate":-0.00719,"std_error":0.00788,"statistic":-0.91278,"p_value":0.3617,"window_name":"CAR[-5,5]","n":639,"r_squared":0.00636}
+{"term":"signal_10pp_centered","estimate":0.00496,"std_error":0.00256,"statistic":1.93837,"p_value":0.05302,"window_name":"CAR[-5,5]","n":639,"r_squared":0.00636}
+{"term":"(Intercept)","estimate":0.00623,"std_error":0.00601,"statistic":1.03617,"p_value":0.30051,"window_name":"AR[0]","n":639,"r_squared":0.00023}
+{"term":"signal_10pp_centered","estimate":0.00069,"std_error":0.00193,"statistic":0.3569,"p_value":0.72129,"window_name":"AR[0]","n":639,"r_squared":0.00023}
+{"term":"(Intercept)","estimate":0.00517,"std_error":0.00656,"statistic":0.78777,"p_value":0.43112,"window_name":"CAR[0,1]","n":639,"r_squared":0.0003}
+{"term":"signal_10pp_centered","estimate":0.00089,"std_error":0.0021,"statistic":0.42417,"p_value":0.67159,"window_name":"CAR[0,1]","n":639,"r_squared":0.0003}
+{"term":"(Intercept)","estimate":-0.00099,"std_error":0.00675,"statistic":-0.1469,"p_value":0.88326,"window_name":"CAR[0,3]","n":639,"r_squared":0.00325}
+{"term":"signal_10pp_centered","estimate":0.00309,"std_error":0.00217,"statistic":1.41893,"p_value":0.15641,"window_name":"CAR[0,3]","n":639,"r_squared":0.00325}
+{"term":"(Intercept)","estimate":2.41681e-06,"std_error":0.007,"statistic":0.00035,"p_value":0.99972,"window_name":"CAR[0,5]","n":639,"r_squared":0.00199}
+{"term":"signal_10pp_centered","estimate":0.00248,"std_error":0.00226,"statistic":1.10041,"p_value":0.27157,"window_name":"CAR[0,5]","n":639,"r_squared":0.00199}

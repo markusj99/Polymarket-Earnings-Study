@@ -230,8 +230,18 @@ make_difference_table_subtitle <- function(reference_bin) {
 make_mean_table_subtitle <- function(bin_description) {
   paste(
     "Cell entries are mean abnormal returns estimated with an event-study market model.",
-    "Rows are the five", bin_description, "Polymarket bins. Standard errors are shown in parentheses.",
+    "Rows are the five", bin_description, "Polymarket bins.",
+    "Robust standard errors are shown in parentheses and the number of events is reported as N.",
     "Signals are selected at the last eligible pre-release close, using non-stale data by default."
+  )
+}
+
+make_trend_table_subtitle <- function() {
+  paste(
+    "Cross-sectional OLS with one row per event. Dependent variable is the event-level abnormal return",
+    "for the stated horizon. The slope coefficient reports the change in abnormal return associated with",
+    "a 10 percentage point increase in the Polymarket YES price observed by the purchase cutoff.",
+    "The intercept corresponds to a signal value of 50%. HC3 robust standard errors are in parentheses."
   )
 }
 
@@ -874,10 +884,54 @@ run_bin_difference_models <- function(event_level_window_cars,
   dplyr::bind_rows(out)
 }
 
+run_signal_trend_models <- function(event_level_window_cars) {
+  windows <- unique(event_level_window_cars$window_name)
+  out <- vector("list", length(windows))
+  
+  for (i in seq_along(windows)) {
+    w <- windows[i]
+    
+    df_w <- event_level_window_cars |>
+      dplyr::filter(
+        .data$window_name == w,
+        !is.na(.data$abnormal_return),
+        !is.na(.data$signal_value)
+      ) |>
+      dplyr::mutate(
+        signal_10pp_centered = 10 * (.data$signal_value - 0.5)
+      )
+    
+    if (nrow(df_w) < 2L || dplyr::n_distinct(df_w$signal_10pp_centered) < 2L) {
+      out[[i]] <- tibble::tibble(
+        window_name = w,
+        term = c("(Intercept)", "signal_10pp_centered"),
+        estimate = NA_real_,
+        std_error = NA_real_,
+        statistic = NA_real_,
+        p_value = NA_real_,
+        n = nrow(df_w),
+        r_squared = NA_real_
+      )
+      next
+    }
+    
+    fit <- stats::lm(abnormal_return ~ signal_10pp_centered, data = df_w)
+    
+    out[[i]] <- robust_coeftest_to_df(fit) |>
+      dplyr::mutate(
+        window_name = w,
+        n = stats::nobs(fit),
+        r_squared = summary(fit)$r.squared
+      )
+  }
+  
+  dplyr::bind_rows(out)
+}
+
 build_mean_test_table <- function(mean_test_results,
                                   window_order = c("AR[0]", "CAR[0,1]", "CAR[0,3]", "CAR[0,5]", "CAR[-5,5]")) {
   bins <- unique(as.character(mean_test_results$bin))
-  rows <- c(rbind(bins, rep("", length(bins))))
+  rows <- c(rbind(bins, rep("", length(bins)), rep("", length(bins))))
   
   table_df <- tibble::tibble(term = rows)
   
@@ -894,11 +948,13 @@ build_mean_test_table <- function(mean_test_results,
       if (nrow(row_b) == 0L) {
         col_values[ptr] <- ""
         col_values[ptr + 1L] <- ""
+        col_values[ptr + 2L] <- ""
       } else {
         col_values[ptr] <- add_significance_stars(row_b$estimate[1], row_b$p_value[1])
         col_values[ptr + 1L] <- format_parenthesized_se(row_b$std_error[1])
+        col_values[ptr + 2L] <- paste0("N = ", row_b$n[1])
       }
-      ptr <- ptr + 2L
+      ptr <- ptr + 3L
     }
     
     table_df[[w]] <- col_values
@@ -957,6 +1013,60 @@ build_difference_table <- function(diff_results,
     if (nrow(df_w) > 0L) {
       col_values[length(row_terms) - 1L] <- as.character(df_w$n[1])
       col_values[length(row_terms)] <- sprintf("%.4f", df_w$r_squared[1])
+    } else {
+      col_values[length(row_terms) - 1L] <- ""
+      col_values[length(row_terms)] <- ""
+    }
+    
+    table_df[[w]] <- col_values
+  }
+  
+  table_df
+}
+
+build_trend_table <- function(trend_results,
+                              window_order = c("AR[0]", "CAR[0,1]", "CAR[0,3]", "CAR[0,5]", "CAR[-5,5]")) {
+  term_sequence <- c("(Intercept)", "signal_10pp_centered")
+  
+  term_labels <- c(
+    "Constant (signal = 50%)",
+    "Trend: abnormal return per +10pp signal"
+  )
+  names(term_labels) <- term_sequence
+  
+  row_terms <- unname(c(rbind(term_labels, rep("", length(term_labels)))))
+  row_terms <- c(row_terms, "N", "R-squared")
+  
+  table_df <- tibble::tibble(term = row_terms)
+  
+  for (w in window_order) {
+    df_w <- trend_results |>
+      dplyr::filter(.data$window_name == w)
+    
+    col_values <- character(length(row_terms))
+    ptr <- 1L
+    
+    for (tm in term_sequence) {
+      row_tm <- df_w[df_w$term == tm, , drop = FALSE]
+      
+      if (nrow(row_tm) == 0L) {
+        col_values[ptr] <- ""
+        col_values[ptr + 1L] <- ""
+      } else {
+        col_values[ptr] <- add_significance_stars(row_tm$estimate[1], row_tm$p_value[1])
+        col_values[ptr + 1L] <- format_parenthesized_se(row_tm$std_error[1])
+      }
+      
+      ptr <- ptr + 2L
+    }
+    
+    if (nrow(df_w) > 0L) {
+      col_values[length(row_terms) - 1L] <- as.character(df_w$n[1])
+      col_values[length(row_terms)] <- ifelse(
+        is.na(df_w$r_squared[1]),
+        "",
+        sprintf("%.4f", df_w$r_squared[1])
+      )
     } else {
       col_values[length(row_terms) - 1L] <- ""
       col_values[length(row_terms)] <- ""
@@ -1285,6 +1395,28 @@ run_polymarket_event_study <- function(root = NULL,
   final_events_eqfreq <- final_events |>
     dplyr::select(-signal_bin, -signal_bin_id) |>
     assign_signal_bins_equal_frequency()
+
+  bin_counts <- final_events |>
+    dplyr::group_by(signal_bin, signal_bin_id, .drop = FALSE) |>
+    dplyr::summarise(
+      n_events = dplyr::n(),
+      mean_signal = mean(signal_value, na.rm = TRUE),
+      min_signal = min(signal_value, na.rm = TRUE),
+      max_signal = max(signal_value, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    dplyr::arrange(signal_bin_id)
+
+  bin_counts_eqfreq <- final_events_eqfreq |>
+    dplyr::group_by(signal_bin, signal_bin_id, .drop = FALSE) |>
+    dplyr::summarise(
+      n_events = dplyr::n(),
+      mean_signal = mean(signal_value, na.rm = TRUE),
+      min_signal = min(signal_value, na.rm = TRUE),
+      max_signal = max(signal_value, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    dplyr::arrange(signal_bin_id)
   
   abnormal_returns_eqfreq <- abnormal_returns |>
     dplyr::select(-signal_bin, -signal_bin_id) |>
@@ -1308,6 +1440,7 @@ run_polymarket_event_study <- function(root = NULL,
   event_level_window_cars <- compute_event_level_window_cars(abnormal_returns)
   mean_test_results <- run_bin_mean_tests(event_level_window_cars)
   diff_results <- run_bin_difference_models(event_level_window_cars)
+  trend_results <- run_signal_trend_models(event_level_window_cars)
   
   # ---------------------------------------------------------------------------
   # Diagnostics and sample-flow output
@@ -1350,6 +1483,9 @@ run_polymarket_event_study <- function(root = NULL,
   write_csv_jsonl(diff_results_eqfreq, file.path(data_dir, "bin_difference_models_equal_frequency"))
   write_csv_jsonl(event_level_window_cars_eqfreq, file.path(data_dir, "event_level_window_cars_equal_frequency"))
   write_csv_jsonl(abnormal_returns_eqfreq, file.path(data_dir, "abnormal_returns_event_window_equal_frequency"))
+  write_csv_jsonl(bin_counts, file.path(data_dir, "bin_counts"))
+  write_csv_jsonl(bin_counts_eqfreq, file.path(data_dir, "bin_counts_equal_frequency"))
+  write_csv_jsonl(trend_results, file.path(data_dir, "signal_trend_models"))
   
   # ---------------------------------------------------------------------------
   # Regression-style HTML tables
@@ -1391,6 +1527,15 @@ run_polymarket_event_study <- function(root = NULL,
     title = "Cross-bin differences in abnormal returns: OLS (equal-frequency bins)",
     subtitle = make_difference_table_subtitle(diff_reference_bin_eqfreq)
   )
+
+  trend_table_df <- build_trend_table(trend_results)
+  trend_gt <- make_gt_table(
+    trend_table_df,
+    title = "Trend test: abnormal returns on Polymarket YES price",
+    subtitle = make_trend_table_subtitle()
+  )
+
+  gt::gtsave(trend_gt, file.path(table_dir, "event_study_signal_trend_table.html"))
   
   gt::gtsave(mean_gt, file.path(table_dir, "event_study_bin_mean_table.html"))
   gt::gtsave(
@@ -1413,6 +1558,11 @@ run_polymarket_event_study <- function(root = NULL,
   write_csv_jsonl(
     diff_table_df_eqfreq,
     file.path(data_dir, "event_study_bin_difference_table_equal_frequency_display")
+  )
+
+  write_csv_jsonl(
+    trend_table_df,
+    file.path(data_dir, "event_study_signal_trend_table_display")
   )
   
   # ---------------------------------------------------------------------------
@@ -1476,6 +1626,7 @@ run_polymarket_event_study <- function(root = NULL,
     event_level_window_cars = event_level_window_cars,
     mean_test_results = mean_test_results,
     diff_results = diff_results,
+    trend_results = trend_results,
     caar_by_bin_eqfreq = caar_by_bin_eqfreq,
     event_level_window_cars_eqfreq = event_level_window_cars_eqfreq,
     mean_test_results_eqfreq = mean_test_results_eqfreq,

@@ -1,0 +1,5 @@
+{"signal_bin":"Q1","signal_bin_id":1,"n_events":128,"mean_signal":0.38186,"min_signal":0.0635,"max_signal":0.58}
+{"signal_bin":"Q2","signal_bin_id":2,"n_events":128,"mean_signal":0.6707,"min_signal":0.58,"max_signal":0.74}
+{"signal_bin":"Q3","signal_bin_id":3,"n_events":128,"mean_signal":0.79309,"min_signal":0.74,"max_signal":0.8305}
+{"signal_bin":"Q4","signal_bin_id":4,"n_events":128,"mean_signal":0.86407,"min_signal":0.835,"max_signal":0.895}
+{"signal_bin":"Q5","signal_bin_id":5,"n_events":127,"mean_signal":0.92767,"min_signal":0.895,"max_signal":0.9855}

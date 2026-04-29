@@ -1,115 +1,103 @@
 "model_class","model","term","conf.low_boot","conf.high_boot","n_boot","n_boot_success"
-"OLS","Mean loss | Ex-ante","(Intercept)",0.168109839189678,0.806635497716586,25000,25000
-"OLS","Mean loss | Ex-ante","eps_stddev",0.0218611315619713,0.397064661993629,25000,25000
-"OLS","Mean loss | Ex-ante","log_market_cap",-0.0304313414222764,-0.00306160753105865,25000,25000
-"OLS","Mean loss | Ex-ante","analysts",-0.00154231599374971,0.00213685837524179,25000,25000
-"OLS","Mean loss | Ex-ante","log_turnover",-0.000996408328717587,0.012849694748954,25000,25000
-"OLS","Mean loss | Ex-ante","log_volatility_6m",-2.53977456839816,0.488487642764974,25000,25000
-"OLS","Mean loss | Ex-ante","open_time_days",-0.00460529605107421,0.00343298093257286,25000,25000
-"OLS","Mean loss | Ex-ante","post_first_market",-0.0289793928584096,0.0392804816038825,25000,25000
-"OLS","Mean loss | Full","(Intercept)",-0.152254917912277,0.497489265868202,25000,25000
-"OLS","Mean loss | Full","log_volume",-0.0543768287541522,0.0607899939673231,25000,25000
-"OLS","Mean loss | Full","log_volume_per_analyst",-0.0330336893838089,0.070404508969965,25000,25000
-"OLS","Mean loss | Full","eps_stddev",0.159711338200237,0.55931348230857,25000,25000
-"OLS","Mean loss | Full","surprise",-0.407184770014467,-0.248400244110307,25000,25000
-"OLS","Mean loss | Full","log_market_cap",-0.0235262151285052,0.00534162585977887,25000,25000
-"OLS","Mean loss | Full","analysts",-0.00244400208633257,0.00389088132605275,25000,25000
-"OLS","Mean loss | Full","log_turnover",-0.00166425853944294,0.0126968823642605,25000,25000
-"OLS","Mean loss | Full","log_volatility_6m",-2.5268284081438,0.686025464065301,25000,25000
-"OLS","Mean loss | Full","open_time_days",-0.00498740261119436,0.00275588796229988,25000,25000
-"OLS","Mean loss | Full","post_first_market",-0.0300958801116608,0.0379295870450914,25000,25000
-"OLS","Loss at 6h | Ex-ante","(Intercept)",0.167671053136214,0.85706739386109,25000,25000
-"OLS","Loss at 6h | Ex-ante","eps_stddev",0.000459109987886153,0.4278346470771,25000,25000
-"OLS","Loss at 6h | Ex-ante","log_market_cap",-0.0324336841965245,-0.00249348506146662,25000,25000
-"OLS","Loss at 6h | Ex-ante","analysts",-0.00204401893477149,0.00198591291974833,25000,25000
-"OLS","Loss at 6h | Ex-ante","log_turnover",-0.00224051378043929,0.0125351569910375,25000,25000
-"OLS","Loss at 6h | Ex-ante","log_volatility_6m",-2.65730741115368,1.09558025025868,25000,25000
-"OLS","Loss at 6h | Ex-ante","open_time_days",-0.00481791943321812,0.00398180339112278,25000,25000
-"OLS","Loss at 6h | Ex-ante","post_first_market",-0.0383760766039637,0.0347755531871505,25000,25000
-"OLS","Loss at 6h | Full","(Intercept)",-0.0900722801479381,0.628606028555104,25000,25000
-"OLS","Loss at 6h | Full","log_volume",-0.0822826303002743,0.0499907473255233,25000,25000
-"OLS","Loss at 6h | Full","log_volume_per_analyst",-0.0345460339605682,0.0814398158232116,25000,25000
-"OLS","Loss at 6h | Full","eps_stddev",0.126897241567444,0.597810842204013,25000,25000
-"OLS","Loss at 6h | Full","surprise",-0.3991498311869,-0.212060117304622,25000,25000
-"OLS","Loss at 6h | Full","log_market_cap",-0.0238015687347314,0.00932414902297303,25000,25000
-"OLS","Loss at 6h | Full","analysts",-0.0028937030119688,0.00416407321049977,25000,25000
-"OLS","Loss at 6h | Full","log_turnover",-0.00246621968307894,0.0128878218192811,25000,25000
-"OLS","Loss at 6h | Full","log_volatility_6m",-2.40764547541161,1.60404136336428,25000,25000
-"OLS","Loss at 6h | Full","open_time_days",-0.00493856411394281,0.00379428751117705,25000,25000
-"OLS","Loss at 6h | Full","post_first_market",-0.0402994289576317,0.034896548997563,25000,25000
-"Fractional logit","Mean loss | Ex-ante","(Intercept)",-1.59818293152299,3.2603342434584,25000,25000
-"Fractional logit","Mean loss | Ex-ante","eps_stddev",0.179112676719789,2.64610072200958,25000,25000
-"Fractional logit","Mean loss | Ex-ante","log_market_cap",-0.23294513567013,-0.0225655562400291,25000,25000
-"Fractional logit","Mean loss | Ex-ante","analysts",-0.0121632339294502,0.016124350834833,25000,25000
-"Fractional logit","Mean loss | Ex-ante","log_turnover",-0.00665571486285524,0.0978516910423092,25000,25000
-"Fractional logit","Mean loss | Ex-ante","log_volatility_6m",-19.6362013213611,3.38665599449809,25000,25000
-"Fractional logit","Mean loss | Ex-ante","open_time_days",-0.035110316757279,0.024749033848258,25000,25000
-"Fractional logit","Mean loss | Ex-ante","post_first_market",-0.220622608548,0.289749090873886,25000,25000
-"Fractional logit","Mean loss | Full","(Intercept)",-3.89437818010828,1.04375008905416,25000,25000
-"Fractional logit","Mean loss | Full","log_volume",-0.358589261191695,0.482178301225949,25000,25000
-"Fractional logit","Mean loss | Full","log_volume_per_analyst",-0.279736398149136,0.48024102642716,25000,25000
-"Fractional logit","Mean loss | Full","eps_stddev",0.371583522869186,3.22523805659658,25000,25000
-"Fractional logit","Mean loss | Full","surprise",-3.17650287387718,-1.87067316631138,25000,25000
-"Fractional logit","Mean loss | Full","log_market_cap",-0.187878245092588,0.0344073128350268,25000,25000
-"Fractional logit","Mean loss | Full","analysts",-0.0202057006407714,0.0285085327868783,25000,25000
-"Fractional logit","Mean loss | Full","log_turnover",-0.0135408071945744,0.102095500953868,25000,25000
-"Fractional logit","Mean loss | Full","log_volatility_6m",-20.6076739520139,3.74848078911633,25000,25000
-"Fractional logit","Mean loss | Full","open_time_days",-0.0430547711739216,0.0175400269800989,25000,25000
-"Fractional logit","Mean loss | Full","post_first_market",-0.22262040899811,0.300515921235353,25000,25000
-"Fractional logit","Loss at 6h | Ex-ante","(Intercept)",-1.58334661349692,3.76439269322527,25000,25000
-"Fractional logit","Loss at 6h | Ex-ante","eps_stddev",0.0223396583706951,2.88764723031514,25000,25000
-"Fractional logit","Loss at 6h | Ex-ante","log_market_cap",-0.254519934376369,-0.0199690198429295,25000,25000
-"Fractional logit","Loss at 6h | Ex-ante","analysts",-0.0169132496583618,0.0151746177188983,25000,25000
-"Fractional logit","Loss at 6h | Ex-ante","log_turnover",-0.0146500068705228,0.0996079307124469,25000,25000
-"Fractional logit","Loss at 6h | Ex-ante","log_volatility_6m",-21.1028733041437,7.3747849361484,25000,25000
-"Fractional logit","Loss at 6h | Ex-ante","open_time_days",-0.0374137233452627,0.028565543818182,25000,25000
-"Fractional logit","Loss at 6h | Ex-ante","post_first_market",-0.29931744662938,0.262755198019658,25000,25000
-"Fractional logit","Loss at 6h | Full","(Intercept)",-3.50110250511753,2.05442611328952,25000,25000
-"Fractional logit","Loss at 6h | Full","log_volume",-0.54630696930878,0.416118312111047,25000,25000
-"Fractional logit","Loss at 6h | Full","log_volume_per_analyst",-0.308255200433852,0.541603054110107,25000,25000
-"Fractional logit","Loss at 6h | Full","eps_stddev",0.217928621539399,3.54935625804142,25000,25000
-"Fractional logit","Loss at 6h | Full","surprise",-3.11588633967777,-1.60442867274579,25000,25000
-"Fractional logit","Loss at 6h | Full","log_market_cap",-0.194791803802974,0.0627536101521257,25000,25000
-"Fractional logit","Loss at 6h | Full","analysts",-0.0259917561386494,0.0307721579804082,25000,25000
-"Fractional logit","Loss at 6h | Full","log_turnover",-0.0189503882366872,0.105244289795526,25000,25000
-"Fractional logit","Loss at 6h | Full","log_volatility_6m",-20.1925885192112,10.2783547315027,25000,25000
-"Fractional logit","Loss at 6h | Full","open_time_days",-0.0428117325866387,0.0265896013988526,25000,25000
-"Fractional logit","Loss at 6h | Full","post_first_market",-0.30845230256115,0.277530266802789,25000,25000
-"Fractional probit","Mean loss | Ex-ante","(Intercept)",-0.940224306977195,1.73274469327423,25000,25000
-"Fractional probit","Mean loss | Ex-ante","eps_stddev",0.108612318747198,1.52040381444822,25000,25000
-"Fractional probit","Mean loss | Ex-ante","log_market_cap",-0.12881604808514,-0.0135213152854903,25000,25000
-"Fractional probit","Mean loss | Ex-ante","analysts",-0.00669054320686281,0.00887751919642061,25000,25000
-"Fractional probit","Mean loss | Ex-ante","log_turnover",-0.00368979646773862,0.0552469653459291,25000,25000
-"Fractional probit","Mean loss | Ex-ante","log_volatility_6m",-10.9315052836406,1.75560642324312,25000,25000
-"Fractional probit","Mean loss | Ex-ante","open_time_days",-0.0193601044461381,0.0136095471863926,25000,25000
-"Fractional probit","Mean loss | Ex-ante","post_first_market",-0.117955922736046,0.163827392637436,25000,25000
-"Fractional probit","Mean loss | Full","(Intercept)",-2.30251323020244,0.444035745270948,25000,25000
-"Fractional probit","Mean loss | Full","log_volume",-0.209884804830936,0.252776467800594,25000,25000
-"Fractional probit","Mean loss | Full","log_volume_per_analyst",-0.142991463647863,0.269656288943012,25000,25000
-"Fractional probit","Mean loss | Full","eps_stddev",0.380323664607796,1.97476228646041,25000,25000
-"Fractional probit","Mean loss | Full","surprise",-1.73021113776776,-1.03054418026957,25000,25000
-"Fractional probit","Mean loss | Full","log_market_cap",-0.101579218757233,0.0219097152402702,25000,25000
-"Fractional probit","Mean loss | Full","analysts",-0.0114292058072584,0.0153448519486428,25000,25000
-"Fractional probit","Mean loss | Full","log_turnover",-0.00496925314035189,0.0576776748681658,25000,25000
-"Fractional probit","Mean loss | Full","log_volatility_6m",-11.0923288031363,2.63802976041679,25000,25000
-"Fractional probit","Mean loss | Full","open_time_days",-0.0237635068546693,0.00883544118461136,25000,25000
-"Fractional probit","Mean loss | Full","post_first_market",-0.120896110153659,0.164063931069365,25000,25000
-"Fractional probit","Loss at 6h | Ex-ante","(Intercept)",-0.9364829256957,2.00457338427454,25000,25000
-"Fractional probit","Loss at 6h | Ex-ante","eps_stddev",0.0127585352745104,1.6484728971453,25000,25000
-"Fractional probit","Loss at 6h | Ex-ante","log_market_cap",-0.139400737719454,-0.0120451463765942,25000,25000
-"Fractional probit","Loss at 6h | Ex-ante","analysts",-0.00893908382773766,0.00827428667683047,25000,25000
-"Fractional probit","Loss at 6h | Ex-ante","log_turnover",-0.00834541991046277,0.0558599628366248,25000,25000
-"Fractional probit","Loss at 6h | Ex-ante","log_volatility_6m",-11.6776635361257,3.93625183932109,25000,25000
-"Fractional probit","Loss at 6h | Ex-ante","open_time_days",-0.0209339059990773,0.0155421372647902,25000,25000
-"Fractional probit","Loss at 6h | Ex-ante","post_first_market",-0.164758026172336,0.148730551388067,25000,25000
-"Fractional probit","Loss at 6h | Full","(Intercept)",-2.08825575967701,1.01866283426858,25000,25000
-"Fractional probit","Loss at 6h | Full","log_volume",-0.30627957413328,0.219190915915908,25000,25000
-"Fractional probit","Loss at 6h | Full","log_volume_per_analyst",-0.162000149907179,0.302111080895975,25000,25000
-"Fractional probit","Loss at 6h | Full","eps_stddev",0.293231029760512,2.14318396250877,25000,25000
-"Fractional probit","Loss at 6h | Full","surprise",-1.6928477397431,-0.886295909890243,25000,25000
-"Fractional probit","Loss at 6h | Full","log_market_cap",-0.103819296339025,0.037420264912314,25000,25000
-"Fractional probit","Loss at 6h | Full","analysts",-0.0145701117211754,0.0161174967956823,25000,25000
-"Fractional probit","Loss at 6h | Full","log_turnover",-0.00900521556041355,0.0595510903168888,25000,25000
-"Fractional probit","Loss at 6h | Full","log_volatility_6m",-10.7401482130974,6.1418127039313,25000,25000
-"Fractional probit","Loss at 6h | Full","open_time_days",-0.023969187578329,0.0136056871944686,25000,25000
-"Fractional probit","Loss at 6h | Full","post_first_market",-0.165290553424822,0.153703539175571,25000,25000
+"OLS","Mean loss | Ex-ante","(Intercept)",0.168459893872225,0.806647744567878,25000,25000
+"OLS","Mean loss | Ex-ante","eps_stddev",0.0234762937857909,0.396755954181217,25000,25000
+"OLS","Mean loss | Ex-ante","log_market_cap",-0.0304571297416847,-0.00310913135911037,25000,25000
+"OLS","Mean loss | Ex-ante","analysts",-0.00149722814794709,0.00217161126918419,25000,25000
+"OLS","Mean loss | Ex-ante","log_turnover",-0.000914941354406676,0.0128279159639197,25000,25000
+"OLS","Mean loss | Ex-ante","log_volatility_6m",-2.52911826472296,0.48423745612607,25000,25000
+"OLS","Mean loss | Ex-ante","open_time_days",-0.00414005923555905,0.00338368164667028,25000,25000
+"OLS","Mean loss | Full","(Intercept)",-0.15136144347125,0.497466250662723,25000,25000
+"OLS","Mean loss | Full","log_volume",-0.0543879215114218,0.0597408053187373,25000,25000
+"OLS","Mean loss | Full","log_volume_per_analyst",-0.032564464475274,0.0704842693513769,25000,25000
+"OLS","Mean loss | Full","eps_stddev",0.160557403654406,0.559862402621311,25000,25000
+"OLS","Mean loss | Full","surprise",-0.407919251609791,-0.24939547248042,25000,25000
+"OLS","Mean loss | Full","log_market_cap",-0.023449903199285,0.00544015428654129,25000,25000
+"OLS","Mean loss | Full","analysts",-0.00237426738593009,0.00388892074530161,25000,25000
+"OLS","Mean loss | Full","log_turnover",-0.00159441737995383,0.0126760925413017,25000,25000
+"OLS","Mean loss | Full","log_volatility_6m",-2.50968598236877,0.683597004162423,25000,25000
+"OLS","Mean loss | Full","open_time_days",-0.0046204507851561,0.0026439766256457,25000,25000
+"OLS","Loss at 6h | Ex-ante","(Intercept)",0.167384232930681,0.856236351245255,25000,25000
+"OLS","Loss at 6h | Ex-ante","eps_stddev",0.000764063950778115,0.427628022523005,25000,25000
+"OLS","Loss at 6h | Ex-ante","log_market_cap",-0.0325104660726865,-0.00248077178732602,25000,25000
+"OLS","Loss at 6h | Ex-ante","analysts",-0.00205615909998644,0.00198066308938622,25000,25000
+"OLS","Loss at 6h | Ex-ante","log_turnover",-0.00223211138001643,0.0125059754839384,25000,25000
+"OLS","Loss at 6h | Ex-ante","log_volatility_6m",-2.65648390333086,1.08492456246643,25000,25000
+"OLS","Loss at 6h | Ex-ante","open_time_days",-0.00463844239992764,0.00366183276553745,25000,25000
+"OLS","Loss at 6h | Full","(Intercept)",-0.0903195862717065,0.627708590345161,25000,25000
+"OLS","Loss at 6h | Full","log_volume",-0.0812043274021736,0.0491950318029188,25000,25000
+"OLS","Loss at 6h | Full","log_volume_per_analyst",-0.0341219888065622,0.0812790672108014,25000,25000
+"OLS","Loss at 6h | Full","eps_stddev",0.127035624474286,0.595298958411824,25000,25000
+"OLS","Loss at 6h | Full","surprise",-0.398349172577537,-0.212060936624289,25000,25000
+"OLS","Loss at 6h | Full","log_market_cap",-0.0238059493955636,0.00920231687993403,25000,25000
+"OLS","Loss at 6h | Full","analysts",-0.00286807598755294,0.0041157429241116,25000,25000
+"OLS","Loss at 6h | Full","log_turnover",-0.00250549990442833,0.012820203480813,25000,25000
+"OLS","Loss at 6h | Full","log_volatility_6m",-2.40039529035695,1.59153810986491,25000,25000
+"OLS","Loss at 6h | Full","open_time_days",-0.00481975085399069,0.00343956362721423,25000,25000
+"Fractional logit","Mean loss | Ex-ante","(Intercept)",-1.59027793133152,3.25911455065161,25000,25000
+"Fractional logit","Mean loss | Ex-ante","eps_stddev",0.189813956065249,2.63747352150353,25000,25000
+"Fractional logit","Mean loss | Ex-ante","log_market_cap",-0.233061586349336,-0.0235583409682232,25000,25000
+"Fractional logit","Mean loss | Ex-ante","analysts",-0.0119205139592424,0.0162032603190689,25000,25000
+"Fractional logit","Mean loss | Ex-ante","log_turnover",-0.0060152717050204,0.0977474603293879,25000,25000
+"Fractional logit","Mean loss | Ex-ante","log_volatility_6m",-19.5170357253799,3.38561495290549,25000,25000
+"Fractional logit","Mean loss | Ex-ante","open_time_days",-0.0313607246554615,0.0243493057705105,25000,25000
+"Fractional logit","Mean loss | Full","(Intercept)",-3.89619099090164,1.0387057631234,25000,25000
+"Fractional logit","Mean loss | Full","log_volume",-0.358890160720403,0.473611186785761,25000,25000
+"Fractional logit","Mean loss | Full","log_volume_per_analyst",-0.279312117311836,0.481954674745592,25000,25000
+"Fractional logit","Mean loss | Full","eps_stddev",0.373583786966214,3.223348951227,25000,25000
+"Fractional logit","Mean loss | Full","surprise",-3.18125277049333,-1.8758926670149,25000,25000
+"Fractional logit","Mean loss | Full","log_market_cap",-0.186929897276481,0.0347175209374633,25000,25000
+"Fractional logit","Mean loss | Full","analysts",-0.0193963198508594,0.0285820113433982,25000,25000
+"Fractional logit","Mean loss | Full","log_turnover",-0.0127528134561912,0.101899790290127,25000,25000
+"Fractional logit","Mean loss | Full","log_volatility_6m",-20.4671377006622,3.72294212070843,25000,25000
+"Fractional logit","Mean loss | Full","open_time_days",-0.0388895389164206,0.0169252787430557,25000,25000
+"Fractional logit","Loss at 6h | Ex-ante","(Intercept)",-1.59522636603527,3.75509593543426,25000,25000
+"Fractional logit","Loss at 6h | Ex-ante","eps_stddev",0.0249950342736455,2.88647343211478,25000,25000
+"Fractional logit","Loss at 6h | Ex-ante","log_market_cap",-0.254468485140317,-0.019250317462871,25000,25000
+"Fractional logit","Loss at 6h | Ex-ante","analysts",-0.0171084278365946,0.0150967441593862,25000,25000
+"Fractional logit","Loss at 6h | Ex-ante","log_turnover",-0.0144966949275874,0.0987870875819504,25000,25000
+"Fractional logit","Loss at 6h | Ex-ante","log_volatility_6m",-21.1049521288354,7.32569479105106,25000,25000
+"Fractional logit","Loss at 6h | Ex-ante","open_time_days",-0.0360067484100686,0.0261928177435572,25000,25000
+"Fractional logit","Loss at 6h | Full","(Intercept)",-3.5071237933052,2.03849673611427,25000,25000
+"Fractional logit","Loss at 6h | Full","log_volume",-0.541554546987576,0.410023005781761,25000,25000
+"Fractional logit","Loss at 6h | Full","log_volume_per_analyst",-0.30828039066153,0.538655098188315,25000,25000
+"Fractional logit","Loss at 6h | Full","eps_stddev",0.217596786853284,3.54489030142719,25000,25000
+"Fractional logit","Loss at 6h | Full","surprise",-3.11492493630452,-1.60407849139352,25000,25000
+"Fractional logit","Loss at 6h | Full","log_market_cap",-0.194423847716633,0.0622698645477889,25000,25000
+"Fractional logit","Loss at 6h | Full","analysts",-0.0258363930573315,0.0302498629606314,25000,25000
+"Fractional logit","Loss at 6h | Full","log_turnover",-0.0184558901933672,0.104341632725267,25000,25000
+"Fractional logit","Loss at 6h | Full","log_volatility_6m",-20.2105613265946,10.2083465877398,25000,25000
+"Fractional logit","Loss at 6h | Full","open_time_days",-0.0402187077357173,0.0238866391896568,25000,25000
+"Fractional probit","Mean loss | Ex-ante","(Intercept)",-0.940340349158663,1.72598983731312,25000,25000
+"Fractional probit","Mean loss | Ex-ante","eps_stddev",0.11222127779463,1.51495542720173,25000,25000
+"Fractional probit","Mean loss | Ex-ante","log_market_cap",-0.128921975391171,-0.013957689076873,25000,25000
+"Fractional probit","Mean loss | Ex-ante","analysts",-0.00652387973157727,0.00894862089219818,25000,25000
+"Fractional probit","Mean loss | Ex-ante","log_turnover",-0.00347079623512314,0.0553269212840165,25000,25000
+"Fractional probit","Mean loss | Ex-ante","log_volatility_6m",-10.8628159245531,1.74353458799764,25000,25000
+"Fractional probit","Mean loss | Ex-ante","open_time_days",-0.0173046792307489,0.0130639944690567,25000,25000
+"Fractional probit","Mean loss | Full","(Intercept)",-2.30162992849054,0.441821569791032,25000,25000
+"Fractional probit","Mean loss | Full","log_volume",-0.210085040486438,0.247556591414697,25000,25000
+"Fractional probit","Mean loss | Full","log_volume_per_analyst",-0.141427768336252,0.270257063048,25000,25000
+"Fractional probit","Mean loss | Full","eps_stddev",0.385189276480671,1.97459602183151,25000,25000
+"Fractional probit","Mean loss | Full","surprise",-1.73595137037815,-1.03371032115768,25000,25000
+"Fractional probit","Mean loss | Full","log_market_cap",-0.100933652426034,0.0226186483250513,25000,25000
+"Fractional probit","Mean loss | Full","analysts",-0.0111705837440747,0.0154038657046577,25000,25000
+"Fractional probit","Mean loss | Full","log_turnover",-0.00448779244520215,0.0577386191161874,25000,25000
+"Fractional probit","Mean loss | Full","log_volatility_6m",-11.0377335286164,2.65612969109039,25000,25000
+"Fractional probit","Mean loss | Full","open_time_days",-0.021768038006867,0.00863459611030451,25000,25000
+"Fractional probit","Loss at 6h | Ex-ante","(Intercept)",-0.944189078604276,2.00554002815581,25000,25000
+"Fractional probit","Loss at 6h | Ex-ante","eps_stddev",0.0139072201344393,1.64361278014639,25000,25000
+"Fractional probit","Loss at 6h | Ex-ante","log_market_cap",-0.139241859481589,-0.0111869172028118,25000,25000
+"Fractional probit","Loss at 6h | Ex-ante","analysts",-0.00901042934721053,0.00824908040547798,25000,25000
+"Fractional probit","Loss at 6h | Ex-ante","log_turnover",-0.00834202848877053,0.0556313183945522,25000,25000
+"Fractional probit","Loss at 6h | Ex-ante","log_volatility_6m",-11.6611875537657,3.93241032809249,25000,25000
+"Fractional probit","Loss at 6h | Ex-ante","open_time_days",-0.0198643923229612,0.0144150392063693,25000,25000
+"Fractional probit","Loss at 6h | Full","(Intercept)",-2.09209174912181,1.01283658661609,25000,25000
+"Fractional probit","Loss at 6h | Full","log_volume",-0.304375524147245,0.217005946680328,25000,25000
+"Fractional probit","Loss at 6h | Full","log_volume_per_analyst",-0.162310640436398,0.301083915731419,25000,25000
+"Fractional probit","Loss at 6h | Full","eps_stddev",0.292470632195828,2.13580329226303,25000,25000
+"Fractional probit","Loss at 6h | Full","surprise",-1.69309451960671,-0.883701254099787,25000,25000
+"Fractional probit","Loss at 6h | Full","log_market_cap",-0.103505549764993,0.0373182916981364,25000,25000
+"Fractional probit","Loss at 6h | Full","analysts",-0.0145308100781831,0.0158828247711198,25000,25000
+"Fractional probit","Loss at 6h | Full","log_turnover",-0.00879131316522897,0.0594043577379422,25000,25000
+"Fractional probit","Loss at 6h | Full","log_volatility_6m",-10.7310791659806,6.12092066360782,25000,25000
+"Fractional probit","Loss at 6h | Full","open_time_days",-0.0228834105894543,0.0124124757629034,25000,25000
