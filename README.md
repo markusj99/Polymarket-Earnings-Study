@@ -16,7 +16,7 @@ To automatically fetch the data, calculate statistics and produce the final outp
 4. Run the script "run_all.py"
 5. Paste the API key in the prompt
 
-NOTE: The scripts takes a long time to complete. A normal laptop usually takes about 1 hour to complete all scripts, however, it depends on your network connection and the computational power of your device. If you loose connection to Refinitive, you will not be able to fetch the data from LSEG. If there is a problem during the execution, some data may be missing. In that case, you can run the scripts one-by-one from the point of failure.
+NOTE: The scripts takes a long time to complete. A normal laptop usually takes about 1 hour to complete all scripts, however, it depends on your network connection and the computational power of your device. If you loose connection to Refinitive, you will not be able to fetch the data from LSEG. Without an LSEG API key, you will not be able to calculate most of the statistics, you can however still fetch all Polymarket markets. If there is a problem during the execution, some data may be missing. In that case, you can run the scripts one-by-one from the point of failure.
 ---
 
 ## What this project does
