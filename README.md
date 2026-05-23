@@ -10,7 +10,7 @@ If you have any questions about this project, contact **Markus Johansson**:
 ---
 ## Quickstart
 To automatically fetch the data, calculate statistics and produce the final output, run the python script "run_all.py" after installing the required packages. Quickest way to get started is to follow these steps:
-1. Install R and Python3.13
+1. Install R and Python 3.12 or 3.13
 2. Run "python -m pip install -r requirements-lock.txt" and then "Rscript install_r_packages.R" in your terminal.
 3. Open Refinitive Workspace, log in, find the API key, keep the app running
 4. Run the script "run_all.py"
