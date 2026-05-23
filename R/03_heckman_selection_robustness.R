@@ -1351,7 +1351,7 @@ build_outcome_pretty_table <- function(df, title, subtitle) {
 run_heckman_selection_robustness <- function(
     root = NULL,
     selected_horizons = c("1w", "6d", "5d", "4d", "3d", "2d", "1d", "12h", "6h"),
-    target_horizon = "1d",
+    target_horizon = "6h",
     require_complete_panel_for_mean = FALSE,
     min_level_n = 25L,
     output_dir = NULL,
