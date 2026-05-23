@@ -16,10 +16,69 @@ To automatically fetch the data, calculate statistics and produce the final outp
 4. Run the script "run_all.py"
 5. Paste the API key in the prompt
 
-NOTE: The scripts takes a long time to complete. A normal laptop usually takes about 1 hour to complete all scripts, however, it depends on your network connection and the computational power of your device. If you loose connection to Refinitive, you will not be able to fetch the data from LSEG. Without an LSEG API key, you will not be able to calculate most of the statistics, you can however still fetch all Polymarket markets. If there is a problem during the execution, some data may be missing. In that case, you can run the scripts one-by-one from the point of failure.
+NOTE: The scripts takes a long time to complete. A normal laptop usually take more than 1 hour to complete all scripts, however, it depends on your network connection and the computational power of your device. If you lose connection to Refinitive, you will not be able to fetch the data. Without an LSEG API key, you will not be able to calculate most of the statistics, you can however still fetch all Polymarket markets. If there is a problem during the execution, some data may be missing. In that case, you can run the scripts one-by-one from the point of failure.
 ---
 
-## What this project does
+## Table of contents
+
+1. [What this project does](#1-what-this-project-does)
+2. [Important before you start](#2-important-before-you-start)
+3. [Required software](#3-required-software)
+   - [Python](#1-python)
+   - [R](#2-r)
+   - [Refinitiv Workspace or Eikon Desktop](#3-refinitiv-workspace-or-eikon-desktop)
+4. [How to set up Refinitiv/Eikon](#4-how-to-set-up-refinitiveikon)
+   - [Open Workspace or Eikon Desktop](#step-1-open-workspace-or-eikon-desktop)
+   - [Create or retrieve an API key](#step-2-create-or-retrieve-an-api-key)
+   - [Provide the API key when running the project](#step-3-provide-the-api-key-when-running-the-project)
+5. [Recommended folder structure](#5-recommended-folder-structure)
+6. [First-time setup for users with no coding experience](#6-first-time-setup-for-users-with-no-coding-experience)
+   - [Open a terminal](#step-1-open-a-terminal)
+   - [Move into the project folder](#step-2-move-into-the-project-folder)
+   - [Create a Python virtual environment](#step-3-create-a-python-virtual-environment)
+   - [Upgrade Python packaging tools](#step-4-upgrade-python-packaging-tools)
+   - [Install Python packages](#step-5-install-python-packages)
+   - [Install R packages](#step-6-install-r-packages)
+   - [Test what will run](#step-7-test-what-will-run)
+7. [How to run the full project](#7-how-to-run-the-full-project)
+   - [Full run with API key prompt](#full-run-with-api-key-prompt)
+   - [Full run with environment variable](#full-run-with-environment-variable)
+   - [Full run with key passed directly](#full-run-with-key-passed-directly)
+   - [Run without an API key](#run-without-an-api-key)
+   - [Continue even if one step fails](#continue-even-if-one-step-fails)
+   - [Run only Python scripts](#run-only-python-scripts)
+   - [Run only R scripts](#run-only-r-scripts)
+8. [How to run individual scripts](#8-how-to-run-individual-scripts)
+   - [Run one Python script](#run-one-python-script)
+   - [Run one R script](#run-one-r-script)
+9. [Script run order](#9-script-run-order)
+   - [Python pipeline](#python-pipeline)
+   - [R statistics pipeline](#r-statistics-pipeline)
+10. [Folder structure and outputs](#10-folder-structure-and-outputs)
+    - [`data/`](#data)
+    - [`statistics/`](#statistics)
+11. [Expected outputs after a successful full run](#11-expected-outputs-after-a-successful-full-run)
+12. [Troubleshooting](#12-troubleshooting)
+    - [`python` is not recognized](#python-is-not-recognized)
+    - [`Rscript` is not recognized or not found](#rscript-is-not-recognized-or-not-found)
+    - [Python package installation fails](#python-package-installation-fails)
+    - [R package installation fails](#r-package-installation-fails)
+    - [Refinitiv/Eikon scripts fail with network or proxy errors](#refinitiveikon-scripts-fail-with-network-or-proxy-errors)
+    - [`Input file not found`](#input-file-not-found)
+    - [The R scripts cannot find the project root](#the-r-scripts-cannot-find-the-project-root)
+    - [The pipeline stops after one failed script](#the-pipeline-stops-after-one-failed-script)
+    - [The project folder is in a synced or protected folder](#the-project-folder-is-in-a-synced-or-protected-folder)
+13. [Reproducibility notes](#13-reproducibility-notes)
+    - [Relative paths](#relative-paths)
+    - [API data may change over time](#api-data-may-change-over-time)
+    - [Package versions](#package-versions)
+    - [API keys and credentials](#api-keys-and-credentials)
+    - [Recommended reproducibility workflow](#recommended-reproducibility-workflow)
+14. [Quick command summary](#14-quick-command-summary)
+
+---
+
+## 1. What this project does
 
 This project builds a dataset and statistical analysis for Polymarket earnings markets. It collects closed Polymarket markets, validates earnings outcomes using Refinitiv/Eikon data, fetches company and stock-price data, fetches Polymarket historical prices, computes Brier scores, creates complete analysis datasets, and then runs R-based statistical analyses.
 
@@ -33,7 +92,7 @@ The full pipeline requires both **Python** and **R**. Some data-collection steps
 
 ---
 
-## Important before you start
+## 2. Important before you start
 
 There are two types of scripts in this project:
 
@@ -49,68 +108,7 @@ If you do not provide a Refinitiv/Eikon API key, `run_all.py` will skip the scri
 
 ---
 
-## Table of contents
-
-1. [Polymarket Earnings Study](#polymarket-earnings-study)
-2. [Questions or contact](#questions-or-contact)
-3. [What this project does](#what-this-project-does)
-4. [Important before you start](#important-before-you-start)
-5. [Required software](#required-software)
-   - [Python](#1-python)
-   - [R](#2-r)
-   - [Refinitiv Workspace or Eikon Desktop](#3-refinitiv-workspace-or-eikon-desktop)
-6. [How to set up Refinitiv/Eikon](#how-to-set-up-refinitiveikon)
-   - [Open Workspace or Eikon Desktop](#step-1-open-workspace-or-eikon-desktop)
-   - [Create or retrieve an API key](#step-2-create-or-retrieve-an-api-key)
-   - [Provide the API key when running the project](#step-3-provide-the-api-key-when-running-the-project)
-7. [Recommended folder structure](#recommended-folder-structure)
-8. [First-time setup for users with no coding experience](#first-time-setup-for-users-with-no-coding-experience)
-   - [Open a terminal](#step-1-open-a-terminal)
-   - [Move into the project folder](#step-2-move-into-the-project-folder)
-   - [Create a Python virtual environment](#step-3-create-a-python-virtual-environment)
-   - [Upgrade Python packaging tools](#step-4-upgrade-python-packaging-tools)
-   - [Install Python packages](#step-5-install-python-packages)
-   - [Install R packages](#step-6-install-r-packages)
-   - [Test what will run](#step-7-test-what-will-run)
-9. [How to run the full project](#how-to-run-the-full-project)
-   - [Full run with API key prompt](#full-run-with-api-key-prompt)
-   - [Full run with environment variable](#full-run-with-environment-variable)
-   - [Full run with key passed directly](#full-run-with-key-passed-directly)
-   - [Run without an API key](#run-without-an-api-key)
-   - [Continue even if one step fails](#continue-even-if-one-step-fails)
-   - [Run only Python scripts](#run-only-python-scripts)
-   - [Run only R scripts](#run-only-r-scripts)
-10. [How to run individual scripts](#how-to-run-individual-scripts)
-    - [Run one Python script](#run-one-python-script)
-    - [Run one R script](#run-one-r-script)
-11. [Script run order](#script-run-order)
-    - [Python pipeline](#python-pipeline)
-    - [R statistics pipeline](#r-statistics-pipeline)
-12. [Folder structure and outputs](#folder-structure-and-outputs)
-    - [`data/`](#data)
-    - [`statistics/`](#statistics)
-13. [Expected outputs after a successful full run](#expected-outputs-after-a-successful-full-run)
-14. [Troubleshooting](#troubleshooting)
-    - [`python` is not recognized](#python-is-not-recognized)
-    - [`Rscript` is not recognized or not found](#rscript-is-not-recognized-or-not-found)
-    - [Python package installation fails](#python-package-installation-fails)
-    - [R package installation fails](#r-package-installation-fails)
-    - [Refinitiv/Eikon scripts fail with network or proxy errors](#refinitiveikon-scripts-fail-with-network-or-proxy-errors)
-    - [`Input file not found`](#input-file-not-found)
-    - [The R scripts cannot find the project root](#the-r-scripts-cannot-find-the-project-root)
-    - [The pipeline stops after one failed script](#the-pipeline-stops-after-one-failed-script)
-    - [The project folder is in a synced or protected folder](#the-project-folder-is-in-a-synced-or-protected-folder)
-15. [Reproducibility notes](#reproducibility-notes)
-    - [Relative paths](#relative-paths)
-    - [API data may change over time](#api-data-may-change-over-time)
-    - [Package versions](#package-versions)
-    - [API keys and credentials](#api-keys-and-credentials)
-    - [Recommended reproducibility workflow](#recommended-reproducibility-workflow)
-16. [Quick command summary](#quick-command-summary)
-
----
-
-## Required software
+## 3. Required software
 
 ### 1. Python
 
@@ -194,7 +192,7 @@ Official LSEG/Refinitiv setup references:
 
 ---
 
-## How to set up Refinitiv/Eikon
+## 4. How to set up Refinitiv/Eikon
 
 ### Step 1: Open Workspace or Eikon Desktop
 
@@ -276,7 +274,7 @@ python run_all.py
 
 ---
 
-## Recommended folder structure
+## 5. Recommended folder structure
 
 The project folder should look like this:
 
@@ -317,7 +315,7 @@ Important: several R scripts search for the project root using markers such as `
 
 ---
 
-## First-time setup for users with no coding experience
+## 6. First-time setup for users with no coding experience
 
 The steps below assume you have downloaded and unzipped the project folder.
 
@@ -479,7 +477,7 @@ Change `R-4.4.0` to the R version installed on your computer.
 
 ---
 
-## How to run the full project
+## 7. How to run the full project
 
 ### Full run with API key prompt
 
@@ -561,7 +559,7 @@ This requires the data files created by the Python pipeline to already exist.
 
 ---
 
-## How to run individual scripts
+## 8. How to run individual scripts
 
 You normally do not need to run scripts one by one. Use `run_all.py` unless you are debugging.
 
@@ -609,7 +607,7 @@ Some R scripts expect the Python pipeline outputs to exist before they can run.
 
 ---
 
-## Script run order
+## 9. Script run order
 
 `run_all.py` runs the following scripts in this order.
 
@@ -639,7 +637,7 @@ Some R scripts expect the Python pipeline outputs to exist before they can run.
 
 ---
 
-## Folder structure and outputs
+## 10. Folder structure and outputs
 
 ### `data/`
 
@@ -853,7 +851,7 @@ Contains event-study datasets, plots, CAAR outputs, and HTML tables.
 
 ---
 
-## Expected outputs after a successful full run
+## 11. Expected outputs after a successful full run
 
 After a successful full run, the most important outputs are:
 
@@ -877,7 +875,7 @@ For most users, the best starting points are:
 
 ---
 
-## Troubleshooting
+## 12. Troubleshooting
 
 ### `python` is not recognized
 
@@ -1059,7 +1057,7 @@ macOS/Linux:
 
 ---
 
-## Reproducibility notes
+## 13. Reproducibility notes
 
 ### Relative paths
 
@@ -1142,7 +1140,7 @@ python -m pip freeze > requirements-lock.txt
 
 ---
 
-## Quick command summary
+## 14. Quick command summary
 
 From the project root:
 
