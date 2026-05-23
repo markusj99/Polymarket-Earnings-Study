@@ -106,9 +106,7 @@ If you do not provide a Refinitiv/Eikon API key, `run_all.py` will skip the scri
 
 Install Python before running the Python scripts.
 
-Recommended version: **Python 3.10, 3.11, or 3.12**.
-
-Avoid very new Python versions unless you have verified that the Refinitiv `eikon` Python package works with them.
+Recommended version: **Python 3.12 or 3.13**.
 
 #### Check whether Python is installed
 
