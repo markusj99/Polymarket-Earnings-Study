@@ -1,0 +1,6 @@
+requests
+pandas
+tqdm
+numpy
+eikon
+python-dotenv
