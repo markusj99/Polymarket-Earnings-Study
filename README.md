@@ -8,6 +8,16 @@ If you have any questions about this project, contact **Markus Johansson**:
 - Email: [markusj.99@outlook.com](mailto:markusj.99@outlook.com)
 
 ---
+## Quickstart
+To automatically fetch the data, calculate statistics and produce the final output, run the python script "run_all.py" after installing the required packages. Quickest way to get started is to follow these steps:
+1. Install R and Python3.13
+2. Run "python -m pip install -r requirements-lock.txt" and then "Rscript install_r_packages.R" in your terminal.
+3. Open Refinitive Workspace, log in, find the API key, keep the app running
+4. Run the script "run_all.py"
+5. Paste the API key in the prompt
+
+NOTE: The scripts takes a long time to complete. A normal laptop usually takes about 1 hour to complete all scripts, however, it depends on your network connection and the computational power of your device. If you loose connection to Refinitive, you will not be able to fetch the data from LSEG. If there is a problem during the execution, some data may be missing. In that case, you can run the scripts one-by-one from the point of failure.
+---
 
 ## What this project does
 
