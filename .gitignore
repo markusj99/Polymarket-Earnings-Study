@@ -6,6 +6,8 @@ renv/library/
 renv/staging/data/heckman_selection_model/_resume/
 .venv/
 venv/
+renv/
+.renv/
 python/.venv/
 __pycache__/
 *.pyc
