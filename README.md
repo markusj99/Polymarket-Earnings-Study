@@ -2,7 +2,7 @@
 
 ## Questions or contact
 
-If you have any questions about this project, contact **Markus Johansson**:
+If you have any questions about this project, contact **Markus Brehmer**:
 
 - LinkedIn: [www.linkedin.com/in/markus-johansson](https://www.linkedin.com/in/markus-johansson)
 - Email: [markusj.99@outlook.com](mailto:markusj.99@outlook.com)
